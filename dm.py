@@ -19,12 +19,13 @@ scal = 0.15 #greediness
 pseudo = 0.0001
 
 # These are the functions Simon defined to test it on:
-def simon_f1(x, y):
+def simon_f1(xy):
+    x, y = xy
     return 0.2 * (x**2 + y**2) / 2 + 10 * sin(x+y)**2 + 10 * sin(100 * (x - y))**2
 
 def simon_f2(xs):
-    x, y = xs
-    return simon_f1(x - 100, y - 100)
+    xy = xs - [100, 100]
+    return simon_f1(xy)
 
 #Find the n smallest values in xs
 def mins(xs_, n):
@@ -105,8 +106,29 @@ def refreshTarget(vals):
         print("Warning: difference between two best minima is nonnegative!")
     return bests[0][0] + scal * (-abs(diff))
 
+def nearestMinimum(vals, pmin, tol, fun):
+    # get the x-coordinates of the two previously-found minima closest to the current minimum
+    near = nears(map((lambda x: x[1]), vals), pmin) #map to extract x values (vals :: [(y,x)])
+
+    if near[0][1] < tol:
+        if verbose: print("Closest old minimum is too close. Choosing second-closest.")
+        nnear = near[1][0]
+    else:
+        nnear = near[0][0]
+
+    fnear = fun(nnear) # function-value at the minimum nearest to pmin
+    return (fnear, nnear)
+
+def bestMinimum(vals, target):
+    currentBestY, currentBestX = vals[0][0], vals[0][1]
+    for y, x in vals:
+        if abs(y - target) < abs(currentBestY - target):
+            currentBestY, currentBestX = y, x
+
+    return currentBestY, currentBestX
+
 # perform the optimization
-def down(fun, niter, tol, x0, x1, dim):
+def down(fun, niter, tol, x0, x1):
     if verbose: print("Starting positions: " + str(x0) + ", " + str(x1) + ".")
 
     #fcs = 0 # total number of function calls required.
@@ -124,69 +146,66 @@ def down(fun, niter, tol, x0, x1, dim):
     if verbose2: print("Initialized target to " + str(target))
 
     nx1 = x1
-    lpos = [nx1]
+    lpos = [(fun(nx1), nx1)]
 
     if verbose: print("Entering loop.")
 
-    for i in xrange(niter):
-        print("Guess point for this iteration: ", nx1)
-        pmin = fmin(fun, nx1, disp=verbose) #pmin is the x of the local minimum found in this iteration
-        fv = fun(pmin)
-        if verbose: print("Found new local minimum f", pmin, " = ", fv, sep='')
-        delta = fv - target # how far are we from the target y value
-        if verbose: print("Got delta: " + str(delta))
+    try:
+        for i in xrange(niter):
+            if verbose: print("Guess point for this iteration: ", nx1)
+            pmin = fmin(fun, nx1, disp=verbose) #pmin is the x of the local minimum found in this iteration
+            fv = fun(pmin) #fv is the function-value at that local minimum
+            if verbose: print("Found new local minimum f", pmin, " = ", fv, sep='')
 
-        if delta < 0: # we've fallen below the target, so we must update it.
-            target = newTarget(vals, fv)
-            if verbose: print("Target updated to " + str(target))
-            delta = fv - target #recalculate delta for the new target
-            if verbose: print("New delta: " + str(delta))
+            delta = fv - target # how far are we from the target y value
 
-        if verbose: print("Target y-value ", target)
+            if verbose: print("Got delta: " + str(delta))
 
-        near = nears(map((lambda x: x[1]), vals), pmin) #map to extract x values (vals :: [(y,x)])
-        # near :: [(x, distance)]
-        if verbose: print("Got near values " + str(near))
+            if delta < 0: # we've fallen below the target, so we must update it.
+                target = newTarget(vals, fv)
+                if verbose2: print("Target updated to " + str(target))
+                delta = fv - target #recalculate delta for the new target
+                if verbose: print("New delta: " + str(delta))
 
-        if near[0][1] < tol:
-            if verbose: print("Closest old minimum is too close. Choosing second-closest.")
-            nnear = near[1][0]
-        else:
-            nnear = near[0][0]
+            if verbose: print("Target y-value ", target)
 
-        fnear = fun(nnear) # function-value at the minimum nearest to pmin
+            ## wait this is no good...
+            #fnear, nnear = nearestMinimum(vals, pmin, tol, fun)
 
-        if verbose: print("Nearest old minimum f", nnear, " = ", fnear, sep='')
+            # let's take the *best* minimum instead.
+            fnear, nnear = bestMinimum(vals, target)
 
-        deltan = fnear - target # how far away from the target are we
-        if verbose: print("Got deltan: " + str(deltan))
+            if verbose: print("Nearest old minimum f", nnear, " = ", fnear, sep='')
 
-        if (delta - deltan)**2 < pseudo**2:
-            step = -delta / pseudo * (pmin - nnear)
-        else:
-            step = -delta / (delta - deltan) * (pmin - nnear)
+            deltan = fnear - target # how far away is the best previously-found local minimum
 
-        if verbose: print("Step endpoints: ", pmin, " and ", nnear)
+            if verbose: print("Got deltan: ", deltan)
 
-        # if verbose: print("Got step " + str(target)) # we don't need this *again*...
+            stepdir = pmin - nnear
 
-        nx1 += step
-        lpos.append(copy(nx1))
-        if verbose2: print("Took step ", step)
+            step = -delta / (pseudo if (delta - deltan)**2 < pseudo**2 else (delta - deltan)) * stepdir
 
-        vals.append((fv, pmin))
+            if verbose: print("Step endpoints: ", pmin, " and ", nnear)
 
-        if norm(step) < tol:
-            if verbose2: print("Found fixed point: f", pmin, " = ", nnear, sep='')
-            return pmin, fv, lpos
-        if i % 10 == 0: # A CONSTANT ! Consider changing this.
-            oldtarget = target
-            target = refreshTarget(vals)
-            if target > oldtarget:
-                print("Target increased! Undoing refresh.")
-                target = oldtarget
-            if verbose2: print("Refreshed target to " + str(target))
-            # if ((oldtarget - target) / target)**2 > 0.01: # i.e. 0.1**2 # why?
+            nx1 += step
+            lpos.append((fun(nx1), copy(nx1)))
+            if verbose2: print("Took step ", step)
+
+            vals.append((fv, pmin))
+
+            if norm(step) < tol:
+                if verbose2: print("Found fixed point: f", pmin, " = ", fnear, sep='')
+                return pmin, fv, lpos
+            if i % 10 == 0: # A CONSTANT ! Consider changing this.
+                oldtarget = target
+                target = refreshTarget(vals)
+                # target increase can occur during the first iteration or so.
+                if verbose2: print("Refreshed target to " + str(target))
+                # if ((oldtarget - target) / target)**2 > 0.01: # i.e. 0.1**2 # why?
+    except KeyboardInterrupt:
+        # Note: when running interactively, the second keyboard interrupt caught will just kill the interpreter.
+        # note2: ipython doesn't die the second time.
+        print("Halting optimization.")
 
     return sorted(vals)[0], fv, lpos
 
@@ -199,19 +218,34 @@ def unwrapBench(f):
     return lambda x: f(x)[0]
 
 def test(f):
-    xmin, fv, lpos = down(f, 2500, 0.1, randomGuess(2, 10), randomGuess(2, 10), 2)
+    xmin, fv, lpos = down(f, 2500, 0.000001, randomGuess(2, 10), randomGuess(2, 10))
     print("Found global minimum f", xmin, " = ", fv, sep='')
     print("Steps taken: ")
     map((lambda p: print(" ", p)), lpos)
+    if len(xmin) == 2: #only plot if in 3D !
+        plotf(f, lpos, -10, 10)
 
-def plotf(f, start=-10, end=10, smoothness=0.4):
+def testAckley():
+    test(unwrapBench(bench.ackley))
+
+def testSimon1():
+    test(simon_f1)
+
+# A visual debug tool, basically.
+def plotf(f, xyzs_, start=-10, end=10, smoothness=0.3):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     xs = ys = np.arange(start, end, smoothness)
     X, Y = np.meshgrid(xs, ys)
     zs = np.array([f((x,y)) for x,y in zip(np.ravel(X), np.ravel(Y))])
     Z = zs.reshape(X.shape)
-    surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm,
+    surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm, # draw the surface
             linewidth=0, antialiased=False)
     fig.colorbar(surf, shrink=0.5, aspect=5)
+
+    z, xys = zip(*xyzs_) # prepare to draw the line
+    x, y = zip(*xys)
+    N = len(x)
+    for i in xrange(N-1):
+        ax.plot(x[i:i+2], y[i:i+2], z[i:i+2], color=plt.cm.jet(255*i/N))
     plt.show()

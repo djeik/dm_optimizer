@@ -3,3 +3,5 @@ THE PROBLEM IS THIS:
 
 A SOLUTION?
     Maybe include a check that the function value we get after adding the step-vector is closer to the target value. If it is, then proceed with the step, otherwise... I'm not sure what alternatives we have. Move in a perpendicular direction? Randomize the direction? Use a direction based on other pairs of minima? What if we're at the beginning and only have one pair, and the only direction we have is a bad one? :/
+
+It turns out that 2D is a special case because there's only "one" way of approach to the optimum. In higher dimensions, there're more possibilities for approaching, so testing in higher dimensional spaces may prove more fruitful. Alas, no. Higher dimensions still get the weird problem in which the Ackley function misbehaves exceptionally badly, as the optimizer just "runs away". It would be nice if the optimizer were guaranteed algorithmic and total, in the sense that running it several times always produces the same output (sure, we have that) but also that termination is guaranteed. At this point, it blows outside the range of double-precision floating arithmetic, which is very very bad.
