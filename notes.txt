@@ -1,0 +1,5 @@
+THE PROBLEM IS THIS:
+    The direction of the step to take is given by 'nnear - pmin', where nnear is the previously found local minimum closest to pmin, with provisions in place to avoid that these two values end up being the same thing. In the case of the Ackley function, on which DM fails, we have a global minimum at (0,0) and many local minima elsewhere. We successfully find two of these local minima -- let them be m1 and m2 -- but the step vector, whose direction is given by 'm2 - m1', will bring us further away from the global minimum when added to our current position vector nx1! 
+
+A SOLUTION?
+    Maybe include a check that the function value we get after adding the step-vector is closer to the target value. If it is, then proceed with the step, otherwise... I'm not sure what alternatives we have. Move in a perpendicular direction? Randomize the direction? Use a direction based on other pairs of minima? What if we're at the beginning and only have one pair, and the only direction we have is a bad one? :/
