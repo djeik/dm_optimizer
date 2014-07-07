@@ -1,5 +1,8 @@
 from __future__ import print_function
 
+import matplotlib
+matplotlib.use("TkAgg")
+
 import sys
 import random
 from time import time
@@ -97,14 +100,12 @@ def optimization_stats(results, time, target, success_threshold):
         raise ValueError("Results list must be nonempty.")
     t = success_threshold
     n = float(len(results))
-    nfev, s, b = 0, 0, 0
+    nfev, s = 0, 0
     for r in results:
         if (not 'success' in r.keys()) or ('success' in r.keys() and r.success):
             nfev += r.nfev
             s += 1 if (r.fun - target)**2 < t**2 else 0
-            b += 1 if norm(r.x) > 1.0e+6         else 0
             print(r.message, file=sys.stderr),
-    print("Number of really bad solutions:", b)
     return (s/n, time/n, nfev/n)
 
 def read_2d_csv(filename):
@@ -119,6 +120,16 @@ def write_2d_csv(fname, dats):
     for (iter_count, success_rate) in dats:
         print(iter_count, success_rate, sep=',', file=f)
     f.close()
+
+def tuples_to_csv(dats):
+    return '\n'.join([','.join(map(str, x)) for x in dats])
+
+def csv_to_tuples(csv):
+    return [tuple(x.split(',')) for x in csv.split('\n')]
+
+def write_str(fname, string):
+    with open(fname, 'w') as f:
+        f.write(string)
 
 def fig_gen(fname, title):
     plt.clf()
@@ -178,3 +189,82 @@ def save_plots(dats):
     plt.title("Average time vs iterations (ackley 64, 3D)")
     plt.plot(*zip(*map(lambda (i, _1, t, _2): (i, t), dats)))
     plt.savefig("sa-ackley-64-3d-t-vs-i.pdf")
+
+def dm_callback_vs_i(f, callback, color='0.6', *args, **kwargs):
+    r = dm.minimize(f, *args, callback=callback, **kwargs)
+    (xs, ys) = zip(*[(i, y) for (i, y) in enumerate(r.opt.vs, 1)])
+    plt.plot(xs, ys, color=color)
+    return list(ys), r
+
+def dm_callback_vs_i_with_trend(f, callback, trend_color='blue', main_color='0.6', n=100, d=2, scale=64, dm_opts={}):
+    yss = []
+    rs  = []
+    for i in xrange(n):
+        ys, r = dm_callback_vs_i(f, callback, main_color, random_guess(d, scale), random_guess(d, scale), **dm_opts)
+        yss.append(ys)
+        rs.append(r)
+    avgs = [sum(ys) / float(len(ys)) for ys in map(list, zip(*yss))]
+    plt.plot(*zip(*list(enumerate(avgs, 1))), color=trend_color)
+    return yss, rs
+
+def dm_best_minimum_vs_i_with_trend():
+    def record_best_minimum(self):
+        self.vs.append(self.vals[0].y)
+
+    dm_callback_vs_i_with_trend(unwrap_bench(bench.ackley), record_best_minimum, 100, 3, 64, dm_opts={'max_iterations':100})
+
+def dm_current_minimum_vs_i_with_trend():
+    def record_current_minimum(self):
+        self.vs.append(self.fv)
+
+    dm_callback_vs_i_with_trend(unwrap_bench(bench.ackley), record_current_minimum, 100, 3, 64, dm_opts={'max_iterations':100})
+
+def dm_stepsize_vs_i_with_trend(f, d, n, scale):
+    def record_stepsize(self):
+        n = norm(self.step)
+        self.vs.append(n)
+
+    dm_callback_vs_i_with_trend(f, record_stepsize, n, d, scale, dm_opts={'max_iterations':100})
+
+def dm_success_rate_vs_distance_from_minimum(f, n=100, dm_opts={}):
+    def random_unit_vector(dim):
+        v = []
+        [v.append(random.uniform(0, 1)) for i in xrange(dim)]
+        vec = np.array(v)
+        return vec / norm(vec) # the division distributes to every element in the array
+
+    def random_dm(f, d, scale, dm_args={}):
+        return dm.minimize(f, scale * random_unit_vector(d), scale * random_unit_vector(d), **dm_args)
+
+    dats = []
+    for scale in xrange(2, 150, 2):
+        dats.append((scale,) + optimization_stats(*optimizer_test(unwrap_bench(bench.ackley), random_dm, 2, scale, n=n, opt_args=kwargs),
+                                              target=0.0, success_threshold=0.001)),
+    return dats
+
+def multiplot(dats, names=[], nrows=None, ncols=1):
+    """ Make multiple plots in the case where each x value has several y values associated with it.
+        If nrows is None, then the number of rows is calculated based on the size of the tuples in dats and
+        the number of columns specified. """
+
+    if len(dats) == 0:
+        raise ValueError("No data.")
+
+    if len(dats[0]) == 1:
+        raise ValueError("Can't plot a 1D object.")
+
+    if len(names) != 0 and len(names) != len(dats[0]) - 1:
+        raise ValueError("Incorrect number of names given for subplots.")
+
+    if nrows is None:
+        nrows = int(np.ceil((len(dats[0]) - 1) / float(ncols)))
+
+    plt.subplots(nrows=nrows, ncols=ncols)
+    plt.tight_layout()
+
+    for i in xrange(1, len(dats[0])):
+        plt.subplot(nrows, ncols, i)
+        if names:
+            plt.title(names[i-1])
+        plt.plot(*zip(*map(lambda dat: (dat[0], dat[i]), dats)))
+

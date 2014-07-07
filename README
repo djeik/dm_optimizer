@@ -1,0 +1,3 @@
+The stats tuple is in the format (success rate, average time per run, average
+number of function evaluations per run). Therefore, a file such as
+'*-*-*-stats-vs-X.csv' will generally be formatted as 'X,<stats-tuple>'.
