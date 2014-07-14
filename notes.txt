@@ -1,0 +1,4 @@
+07-14
+Writing the test sequence for the optimizer. This will pipeline testing.
+The idea is to just have to run this nice ``conduct_experiment'' function that will simply collect all the relevant statistics about a run of 100 optimizations (or some other configurable number) on many different objective functions.
+Such an experiment might take up to 10 minutes to run, and we need to ensure a way to reproduce these experiments reliably. It seems to me that the simplest way of doing so would be to clone the source code of the optimizer (dm_optimizer.py) into the experiment folder, as well as provide a way to dump the configuration of the optimizer. Doing so, it will become possible to definitely reproduce any past experiment.

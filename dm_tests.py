@@ -3,8 +3,10 @@ from __future__ import print_function
 import matplotlib
 matplotlib.use("TkAgg")
 
+from datetime import datetime
 import sys
 import random
+import os
 from time import time
 from math import sin
 from copy import copy
@@ -17,6 +19,8 @@ from scipy.optimize import basinhopping
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
+
+from itertools import repeat, imap, ifilter, islice
 
 import dm_optimizer as dm
 from dm_optimizer import dm_optimizer
@@ -37,6 +41,9 @@ def unwrap_bench(f):
 
 def random_guess(dim, scale = 1):
     return np.array([scale * (random.uniform(0,1) - 1/2.0) for _ in xrange(dim)])
+
+def randomr_guess(dim, r=(-1,1)):
+    return np.array([random.uniform(*rr) for rr in repeat(r, dim)])
 
 def test(f, d=2, scale=64, show_plot=True):
     """ Run the dm optimizer on a given function in a given number of dimensions (assuming the given function supports it)
@@ -116,16 +123,18 @@ def read_2d_csv(filename):
     return zip(*dats)
 
 def write_2d_csv(fname, dats):
-    f = open(fname, 'w')
-    for (iter_count, success_rate) in dats:
-        print(iter_count, success_rate, sep=',', file=f)
-    f.close()
+    with open(fname, 'w') as f:
+        for (iter_count, success_rate) in dats:
+            print(iter_count, success_rate, sep=',', file=f)
 
 def tuples_to_csv(dats):
     return '\n'.join([','.join(map(str, x)) for x in dats])
 
 def csv_to_tuples(csv):
     return [tuple(x.split(',')) for x in csv.split('\n')]
+
+def print_csv(*args, **kwargs):
+    print(*args, sep=',', **kwargs)
 
 def write_str(fname, string):
     with open(fname, 'w') as f:
@@ -168,27 +177,42 @@ def plotf(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0
 
     plt.show()
 
-def perf_vs_iters(f, algo, d, scale, iters, niter_name='max_iterations', m=100, opt_args={}, target=0.0):
+def perf_vs_args(f, algo, dim, scale, iters, argf, target, m=100):
+    """ Evaluate the performance of the given optimizer as a function of its arguments.
+        Note that the dimension and scale cannot be abstracted over because they are not actually arguments to the optimizer, but rather to the
+        underlying optimizer 'constructor constructor', e.g. random_dm, passed as the algo parameter.
+
+        Arguments:
+            argf     -- unary function of values in iters that should product a dict of arguments
+                        to be expanded into the construction of the optimizer.
+        """
     dats = []
     for i in iters:
-        (s, t_avg, nfev_avg) = optimization_stats(*optimizer_test(f, algo, d, scale, m, opt_args={niter_name:i}), target=0.0, success_threshold=0.001)
-        dats.append( (i, s, t_avg, nfev_avg) )
+        d = optimization_stats(*optimizer_test(f, algo, dim, scale, m, opt_args=argf(i)), target=0.0, success_threshold=0.001)
+        dats.append( (i,) + d )
         print(dats[-1])
     return dats
 
-def save_plots(dats):
-    plt.clf()
-    plt.title("Success rate vs iterations (ackley 64, 3D)")
-    plt.plot(*zip(*map(lambda (i, s, _1, _2): (i, s), dats)))
-    plt.savefig("sa-ackley-64-3d-s-vs-i.pdf")
-    plt.clf()
-    plt.title("Average function evaluations vs iterations (ackley 64, 3D)")
-    plt.plot(*zip(*map(lambda (i, _1, _2, f): (i, f), dats)))
-    plt.savefig("sa-ackley-64-3d-f-vs-i.pdf")
-    plt.clf()
-    plt.title("Average time vs iterations (ackley 64, 3D)")
-    plt.plot(*zip(*map(lambda (i, _1, t, _2): (i, t), dats)))
-    plt.savefig("sa-ackley-64-3d-t-vs-i.pdf")
+
+def perf_vs_iters(f, algo, dim, scale, iters, niter_name='max_iterations', m=100, opt_args={}, target=0.0):
+    """ Measure average performance versus maximum number of iterations. """
+    dats = []
+    for i in iters:
+        d = optimization_stats(*optimizer_test(f, algo, dim, scale, m, opt_args=dict(opt_args.items() + [(niter_name, i)])),
+                               target=0.0, success_threshold=0.001)
+        dats.append( (i,) + d )
+        print(dats[-1])
+    return dats
+
+def dm_perf_vs_refresh_rate(f, d, scale, iters, refresh_rates, m=100, opt_args={'max_iterations':100}, target=0.0):
+    dats = []
+    for i in iters:
+        d = optimization_stats(*optimizer_test(f, algo, d, scale, m, opt_args={niter_name:i}), target=0.0, success_threshold=0.001)
+        dats.append( (i,) + d )
+        print(dats[-1])
+    return dats
+
+statnames = ['Success rate vs. iters.', 'Average runtime vs. iters.', 'Average function evals. vs. iters.']
 
 def dm_callback_vs_i(f, callback, color='0.6', *args, **kwargs):
     r = dm.minimize(f, *args, callback=callback, **kwargs)
@@ -222,9 +246,36 @@ def dm_current_minimum_vs_i_with_trend():
 def dm_stepsize_vs_i_with_trend(f, d, n, scale):
     def record_stepsize(self):
         n = norm(self.step)
-        self.vs.append(n)
+        if n < 100000:
+            self.vs.append(n)
 
-    dm_callback_vs_i_with_trend(f, record_stepsize, n, d, scale, dm_opts={'max_iterations':100})
+    dm_callback_vs_i_with_trend(f, record_stepsize, 'blue', '0.6', n, d, scale, dm_opts={'max_iterations':100})
+
+def dm_position_vs_i_with_trend(f, n, d, scale, dm_opts={'max_iterations':100}):
+    yss = []
+    rs  = []
+    for i in xrange(n):
+        r = dm.minimize(f, random_guess(d, scale), random_guess(d, scale), **dm_opts)
+        yss.append(map(lambda x: x[0], r.lpos))
+        rs.append(r)
+        plt.plot(*zip(*list(enumerate(yss, 1))), color='0.6')
+    avgs = [sum(ys) / float(len(ys)) for ys in map(list, zip(*yss))]
+    plt.plot(*zip(*list(enumerate(avgs, 1))), color='blue')
+
+def stats_vs_N(f, opt, dims, scale, target, success_threshold, n=100, opt_args={}):
+    dats = []
+    for d in dims:
+        stats = optimization_stats(*optimizer_test(f, opt, d, scale, n, opt_args), target=target, success_threshold=success_threshold)
+        dats.append( (d,) + stats )
+    return dats
+
+def dm_stats_vs_maxiters(f, d, maxiters, scale, target, success_threshold, n=100):
+    dats = []
+    for iters in maxiters:
+        stats = optimization_stats(*optimizer_test(f, random_dm, d, scale, n, opt_args={'max_iterations':iters}), target=target,
+                success_threshold=success_threshold)
+        dats.append( (iters,) + stats )
+    return dats
 
 def dm_success_rate_vs_distance_from_minimum(f, n=100, dm_opts={}):
     def random_unit_vector(dim):
@@ -267,4 +318,105 @@ def multiplot(dats, names=[], nrows=None, ncols=1):
         if names:
             plt.title(names[i-1])
         plt.plot(*zip(*map(lambda dat: (dat[0], dat[i]), dats)))
+
+minimization = 1
+maximization = -1
+
+tests = map(lambda xs: dict(zip(["name", "function", "optimization_type", "dimensions", "range", "optimum"], xs)),
+        [("ackley", unwrap_bench(bench.ackley), minimization, None, (-15, 30), 0),
+        ("cigar", unwrap_bench(bench.cigar), minimization, None, None, 0),
+        #(unwrap_bench(bench.plane), minimization, None, None, 0),
+        ("sphere", unwrap_bench(bench.sphere), minimization, None, None, 0),
+        #(unwrap_bench(bench.rand), None, None, None, None),
+        ("bohachevsky", unwrap_bench(bench.bohachevsky), minimization, None, (-100, 100), 0),
+        ("griewank", unwrap_bench(bench.griewank), minimization, None, (-600, 600), 0),
+        ("h1", unwrap_bench(bench.h1), maximization, 2, (-100, 100), 2),
+        ("himmelblau", unwrap_bench(bench.himmelblau), minimization, 2, (-6, 6), 0),
+        ("rastrigin", unwrap_bench(bench.rastrigin), minimization, None, (-5.12, 5.12), 0),
+        #(unwrap_bench(bench.rastrigin_scaled),
+        #(bench.rastrigin_skew
+        ("rosenbrock", unwrap_bench(bench.rosenbrock), minimization, None, None, 0),
+        ("schaffer", unwrap_bench(bench.schaffer), minimization, None, (-100, 100), 0),
+        ("schwefel", unwrap_bench(bench.schwefel), minimization, None, (-500, 500), 0)])
+
+def jul10callback(self):
+    self.vs.append( (self.fv, self.vals[0].y, norm(self.step)) )
+jul10defaults = {"dimensions":2, "range":(-100, 100), "refresh_rate":4, "max_iterations":100, "runs":100, "success_threshold":0.001,
+                 "callback":jul10callback}
+jul10names = ["function_value", "best_minimum", "step_size"]
+
+def conduct_experiment(test, defaults):
+    runs         = defaults["runs"]
+    dimensions   = test["dimensions"] or defaults["dimensions"]
+    range        = test["range"]      or defaults["range"]
+    refresh_rate = defaults["refresh_rate"]
+
+    rs = [] # collect the OptimizeResult objects in here.
+    start_time = time()
+    for i in xrange(runs):
+        #import pdb; pdb.set_trace()
+        rs.append(dm.minimize(test["function"], randomr_guess(dimensions, range),
+            randomr_guess(dimensions, range), max_iterations=defaults["max_iterations"],
+            refresh_rate=defaults["refresh_rate"], callback=defaults["callback"]))
+    end_time   = time()
+
+    time_total    = end_time - start_time
+    time_avg      = time_total / float(runs)
+    nfev_total    = sum(imap(lambda r: r.opt.nfev, rs))
+    nfev_avg      = nfev_total / float(runs)
+    success_total = len(filter(lambda r: r.success and abs(r.lpos[-1][0] - test["optimum"]) < defaults["success_threshold"], rs))
+    success_rate  = success_total / float(runs)
+    failures      = len(filter(lambda r: not r.success, rs))
+
+    vss = zip(*imap(lambda r: r.opt.vs, rs)) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
+
+    return (failures, success_rate, time_avg, nfev_avg, vss)
+
+def calculate_averages(statistics): # [[[a]]] -> [[a]]
+    """ Take a [[[a]]], where [a] is the period sampling of a datum each iteration, [[a]] is such a sampling done on many individual runs,
+        and finally [[[a]]] is a list of such statistics, and produce a [[a]] the same length as the input [[[a]]] that is a a list of averages
+        w.r.t. time.
+        """
+    def avg_vs_t(s):
+# take in the list of runs and their courses, and line them up
+        s_ = zip(*s) # the first element of this thing is the list of values of the variable at the first iteration
+        # for each list in s_, we compute the average, making a list of averages. That is the progression of the average value over time.
+        return map(lambda x: sum(x) / float(len(x)), s_)
+    return map(avg_vs_t, statistics)
+
+def write_experiment_data(exp_dir, complete_experiment):
+    """ Expects a tuple in the form (name, averages, all runs), and writes out all the data for this experiment into directory. """
+    for (name, average_vs_t, data) in complete_experiment:
+        with open(exp_dir + "/" + name + ".txt", 'w') as f:
+            for (i, run_i) in enumerate(zip(*data)):
+                f.write(str(i) + ',')
+                f.write(str(average_vs_t[i]))
+                for value in run_i:
+                    f.write(',' + str(value))
+                f.write('\n')
+
+# statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
+def conduct_all_experiments(defaults=jul10defaults, names=jul10names):
+    edir = "experiments/" + str(datetime.now())
+    os.makedirs(edir)
+
+    start_time = time()
+    for test in tests:
+        print("Conducting experiment:", test["name"])
+        exp_dir = edir + "/" + test["name"]
+        os.makedirs(exp_dir)
+        # test_data holds those data that fluctuate over time
+        (failures, success_rate, time_avg, nfev_avg, test_data) = conduct_experiment(test, defaults);
+        with open(exp_dir + '/' + "averages.txt", 'w') as f:
+            print_csv("success rate", success_rate, file=f)
+            print_csv("average time", time_avg, file=f)
+            print_csv("average fun. evals.", nfev_avg, file=f)
+            print_csv("failures", failures, file=f)
+
+        avgs = calculate_averages(test_data)
+        complete_data = zip(names, avgs, test_data)
+        write_experiment_data(exp_dir, complete_data)
+
+
+
 
