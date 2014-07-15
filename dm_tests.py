@@ -433,6 +433,10 @@ def conduct_all_experiments(defaults=defaults, names=poll_names):
         global_statistics = tuple(map(lambda stat: sum(stat) / float(len(stat)), zip(*all_statistics)))
         # record the data
         print_csv("AVERAGE", *global_statistics, file=f)
+        end_time = time()
+
+    with open(edir + '/' + "time.txt") as f:
+        print(end_time - start_time, file=f)
 
     return edir
 

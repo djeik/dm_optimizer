@@ -341,6 +341,7 @@ class dm_optimizer:
                 try:
                     ynear, xnear = self.best_minimum_x().unbox()
                 except BestMinimumException:
+                    print("Best minimum exception.")
 # TODO make a method to prepare the optimize result
                     res = sopt.OptimizeResult()
                     res.nit     = self.iteration
