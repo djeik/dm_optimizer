@@ -2,3 +2,5 @@ The preferred way to test the optimizer is to run the conduct_all_experiments fu
 iteration number, average value, #1, #2, ..., #n
 where n is the total number of individual runs per test.
 Each versus time dataset is stored in its own file, and each test has its own folder as well.
+
+A race condition exists in run_tests.py. If a commit is made while run_tests.py is running, then the integrity of the information in the experiment directory (namely the SHA recorded to rev.txt) is invalid.

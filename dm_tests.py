@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-from itertools import repeat, imap, ifilter, islice
+from itertools import repeat, imap, ifilter, islice, chain
 
 import dm_optimizer as dm
 from dm_optimizer import dm_optimizer
@@ -44,6 +44,9 @@ def random_guess(dim, scale = 1):
 
 def randomr_guess(dim, r=(-1,1)):
     return np.array([random.uniform(*rr) for rr in repeat(r, dim)])
+
+def intersperse(delimiter, seq):
+        return islice(chain.from_iterable(izip(repeat(delimiter), seq)), 1, None)
 
 def test(f, d=2, scale=64, show_plot=True):
     """ Run the dm optimizer on a given function in a given number of dimensions (assuming the given function supports it)
@@ -370,9 +373,7 @@ def conduct_experiment(test, defaults):
     success_rate  = success_total / float(runs)
     failures      = len(filter(lambda r: not r.success, rs))
 
-    vss = zip(*imap(lambda r: r.opt.vs, rs)) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
-
-    return (failures, success_rate, time_avg, nfev_avg, vss)
+    return (failures, success_rate, time_avg, nfev_avg, rs)
 
 def calculate_averages(statistics): # [[[a]]] -> [[a]]
     """ Take a [[[a]]], where [a] is the period sampling of a datum each iteration, [[a]] is such a sampling done on many individual runs,
@@ -391,11 +392,15 @@ def write_experiment_data(exp_dir, complete_experiment):
     for (name, average_vs_t, data) in complete_experiment:
         with open(exp_dir + "/" + name + ".txt", 'w') as f:
             for (i, run_i) in enumerate(zip(*data)):
-                f.write(str(i) + ',')
+                #f.write(str(i) + ',') # writing the iteration number is not useful, since they're in order. Therefore, line # = iteration #.
                 f.write(str(average_vs_t[i]))
                 for value in run_i:
                     f.write(',' + str(value))
                 f.write('\n')
+
+def write_experiment_messages(exp_dir, rs):
+    with open(exp_dir + '/' + "messages.txt", 'w') as f:
+        map(lambda r: print(*tuple(r.message), sep='||', file=f), rs)
 
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
 def conduct_all_experiments(defaults=defaults, names=poll_names):
@@ -407,7 +412,7 @@ def conduct_all_experiments(defaults=defaults, names=poll_names):
     edir = "experiments/" + str(datetime.now())
     os.makedirs(edir)
 
-    with open(edir + '/' + "averages.txt", 'w') as f:
+    with open(edir + '/' + "averages.txt", 'w', 1) as f:
         start_time = time()
         print_csv("test", "success rate", "average time", "average fun. evals.", "failures", file=f)
         for test in tests:
@@ -416,8 +421,12 @@ def conduct_all_experiments(defaults=defaults, names=poll_names):
             exp_dir = edir + "/" + test["name"]
             os.makedirs(exp_dir)
 
-            # Perform the experiment, test_data holds those data that fluctuate over time
-            (failures, success_rate, time_avg, nfev_avg, test_data) = conduct_experiment(test, defaults);
+            # Perform the experiment, rs is the actual OptimizeResult objects
+            (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, defaults);
+            # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
+            # line up all the data for a given iteration
+            test_data = zip(*imap(lambda r: r.opt.vs, rs)) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
+
             all_statistics.append( (success_rate, time_avg, nfev_avg, failures) )
             avgs = calculate_averages(test_data)
             complete_data = zip(names, avgs, test_data)
@@ -427,6 +436,7 @@ def conduct_all_experiments(defaults=defaults, names=poll_names):
 
             # print the test-specific data to its own directory.
             write_experiment_data(exp_dir, complete_data)
+            write_experiment_messages(exp_dir, rs)
 
         ## calculate the global statistics
         # transpose the list of statistics, and calculate the averages.
@@ -435,7 +445,7 @@ def conduct_all_experiments(defaults=defaults, names=poll_names):
         print_csv("AVERAGE", *global_statistics, file=f)
         end_time = time()
 
-    with open(edir + '/' + "time.txt") as f:
+    with open(edir + '/' + "time.txt", 'w') as f:
         print(end_time - start_time, file=f)
 
     return edir

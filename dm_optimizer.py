@@ -168,7 +168,7 @@ class dm_optimizer:
                 else:
                     self.logmsg(1, "Skipping over bad minimum in newtarget calculation.")
             if not mins:
-                raise ValueError("fails")
+                mins = [vals[0]]
             self.target = best + self.greediness * (best - min(mins))
             if self.target != oldtarget:
                 pass
@@ -335,14 +335,13 @@ class dm_optimizer:
                     self.logmsg(2, "Target y-value", self.target)
 
                 if deltay_curr < self.tolerance:
-                    raise Exception("Current distance to target is too small; target update failed.")
+                    #raise Exception("Current distance to target is too small; target update failed.")
+                    deltay_curr = self.tolerance # this is probably not wise.
 
                 # let's take the *best* minimum, i.e. the minimum closest to our current minimum
                 try:
                     ynear, xnear = self.best_minimum_x().unbox()
                 except BestMinimumException:
-                    print("Best minimum exception.")
-# TODO make a method to prepare the optimize result
                     res = sopt.OptimizeResult()
                     res.nit     = self.iteration
                     res.success = True
