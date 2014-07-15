@@ -325,25 +325,27 @@ maximization = -1
 tests = map(lambda xs: dict(zip(["name", "function", "optimization_type", "dimensions", "range", "optimum"], xs)),
         [("ackley", unwrap_bench(bench.ackley), minimization, None, (-15, 30), 0),
         ("cigar", unwrap_bench(bench.cigar), minimization, None, None, 0),
-        #(unwrap_bench(bench.plane), minimization, None, None, 0),
         ("sphere", unwrap_bench(bench.sphere), minimization, None, None, 0),
-        #(unwrap_bench(bench.rand), None, None, None, None),
         ("bohachevsky", unwrap_bench(bench.bohachevsky), minimization, None, (-100, 100), 0),
         ("griewank", unwrap_bench(bench.griewank), minimization, None, (-600, 600), 0),
         ("h1", unwrap_bench(bench.h1), maximization, 2, (-100, 100), 2),
         ("himmelblau", unwrap_bench(bench.himmelblau), minimization, 2, (-6, 6), 0),
         ("rastrigin", unwrap_bench(bench.rastrigin), minimization, None, (-5.12, 5.12), 0),
-        #(unwrap_bench(bench.rastrigin_scaled),
-        #(bench.rastrigin_skew
         ("rosenbrock", unwrap_bench(bench.rosenbrock), minimization, None, None, 0),
         ("schaffer", unwrap_bench(bench.schaffer), minimization, None, (-100, 100), 0),
         ("schwefel", unwrap_bench(bench.schwefel), minimization, None, (-500, 500), 0)])
+        ## The following functions are 'weird' in some way that makes testing too difficult.
+        #(unwrap_bench(bench.rastrigin_scaled),
+        #(bench.rastrigin_skew
+        #(unwrap_bench(bench.rand), None, None, None, None),
+        #(unwrap_bench(bench.plane), minimization, None, None, 0),
 
-def jul10callback(self):
+# we're going to stop naming things after dates, due to the new commit-enforcing policy.
+def dm_poll_callback(self):
     self.vs.append( (self.fv, self.vals[0].y, norm(self.step)) )
-jul10defaults = {"dimensions":2, "range":(-100, 100), "refresh_rate":4, "max_iterations":100, "runs":100, "success_threshold":0.001,
-                 "callback":jul10callback}
-jul10names = ["function_value", "best_minimum", "step_size"]
+poll_names = ["function_value", "best_minimum", "step_size"]
+defaults = {"dimensions":2, "range":(-100, 100), "refresh_rate":4, "max_iterations":250, "runs":250, "success_threshold":0.001,
+                 "callback":dm_poll_callback}
 
 def conduct_experiment(test, defaults):
     runs         = defaults["runs"]
@@ -396,7 +398,7 @@ def write_experiment_data(exp_dir, complete_experiment):
                 f.write('\n')
 
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
-def conduct_all_experiments(defaults=jul10defaults, names=jul10names):
+def conduct_all_experiments(defaults=defaults, names=poll_names):
     all_statistics = [] # we will collect the general statistics for each experiment here, to perform a global average over all experiments.
     global_statistics = []
 
@@ -431,6 +433,8 @@ def conduct_all_experiments(defaults=jul10defaults, names=jul10names):
         global_statistics = tuple(map(lambda stat: sum(stat) / float(len(stat)), zip(*all_statistics)))
         # record the data
         print_csv("AVERAGE", *global_statistics, file=f)
+
+    return edir
 
 
 

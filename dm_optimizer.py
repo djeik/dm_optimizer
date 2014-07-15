@@ -12,6 +12,10 @@ from itertools import imap, islice
 
 import sys
 
+class BestMinimumException(Exception):
+    def BestMinimumException(*args, **kwargs):
+        super(*args, **kwargs)
+
 @total_ordering
 class value_box:
     """ A silly class that represents points (y, x) compared on the basis of their y-components only. """
@@ -134,7 +138,7 @@ class dm_optimizer:
                         ], key=lambda v: norm(self.pmin - v.x))
 
         if len(minima) == 0:
-            raise Exception("There are no local minima far away enough from the current minimum to be considered distinct.")
+            raise BestMinimumException("There are no local minima far away enough from the current minimum to be considered distinct.")
 
         return minima[0]
 
@@ -334,7 +338,23 @@ class dm_optimizer:
                     raise Exception("Current distance to target is too small; target update failed.")
 
                 # let's take the *best* minimum, i.e. the minimum closest to our current minimum
-                ynear, xnear = self.best_minimum_x().unbox()
+                try:
+                    ynear, xnear = self.best_minimum_x().unbox()
+                except BestMinimumException:
+# TODO make a method to prepare the optimize result
+                    res = sopt.OptimizeResult()
+                    res.nit     = self.iteration
+                    res.success = True
+                    res.message = ["All local minima have converged to a point. Optimization cannot proceed."]
+                    res.status  = 3
+                    res.x       = self.pmin
+                    res.fun     = self.fv
+                    res.njev    = self.njev
+                    res.nfev    = self.nfev
+                    res.lpos    = self.lpos
+                    res.opt     = self
+                    return res
+
 
                 self.logmsg(1, "Nearest old minimum f", xnear, " = ", ynear, sep='')
 
