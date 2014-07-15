@@ -25,6 +25,8 @@ from itertools import repeat, imap, ifilter, islice, chain
 import dm_optimizer as dm
 from dm_optimizer import dm_optimizer
 
+import multiprocessing as mp
+
 # These are the functions Simon defined to test it on:
 def simon_f1(xy):
     x, y = xy
@@ -402,6 +404,29 @@ def write_experiment_messages(exp_dir, rs):
     with open(exp_dir + '/' + "messages.txt", 'w') as f:
         map(lambda r: print(*tuple(r.message), sep='||', file=f), rs)
 
+def experiment_task(edir, test):
+    #print("Conducting experiment:", test["name"])
+    # prepare the experiment directory
+    exp_dir = edir + "/" + test["name"]
+    os.makedirs(exp_dir)
+
+    # Perform the experiment, rs is the actual OptimizeResult objects
+    (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, defaults);
+    # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
+    # line up all the data for a given iteration
+    test_data = zip(*imap(lambda r: r.opt.vs, rs)) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
+
+    avgs = calculate_averages(test_data)
+    complete_data = zip(names, avgs, test_data)
+
+    # print the general test data to the common file
+    print_csv(test["name"], success_rate, time_avg, nfev_avg, failures, file=f)
+
+    # print the test-specific data to its own directory.
+    write_experiment_data(exp_dir, complete_data)
+    write_experiment_messages(exp_dir, rs)
+    return (success_rate, time_avg, nfev_avg, failures) # this will get appended to the all_statistics of the master process
+
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
 def conduct_all_experiments(defaults=defaults, names=poll_names):
     all_statistics = [] # we will collect the general statistics for each experiment here, to perform a global average over all experiments.
@@ -412,31 +437,16 @@ def conduct_all_experiments(defaults=defaults, names=poll_names):
     edir = "experiments/" + str(datetime.now())
     os.makedirs(edir)
 
+    pool = mp.Pool()
+
     with open(edir + '/' + "averages.txt", 'w', 1) as f:
         start_time = time()
         print_csv("test", "success rate", "average time", "average fun. evals.", "failures", file=f)
-        for test in tests:
-            print("Conducting experiment:", test["name"])
-            # prepare the experiment directory
-            exp_dir = edir + "/" + test["name"]
-            os.makedirs(exp_dir)
+        results = [pool.apply_async(experiment_task, edir, test) for test in tests]
+        pool.close()
+        pool.join() # now we wait for the subprocesses to finish.
 
-            # Perform the experiment, rs is the actual OptimizeResult objects
-            (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, defaults);
-            # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
-            # line up all the data for a given iteration
-            test_data = zip(*imap(lambda r: r.opt.vs, rs)) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
-
-            all_statistics.append( (success_rate, time_avg, nfev_avg, failures) )
-            avgs = calculate_averages(test_data)
-            complete_data = zip(names, avgs, test_data)
-
-            # print the general test data to the common file
-            print_csv(test["name"], success_rate, time_avg, nfev_avg, failures, file=f)
-
-            # print the test-specific data to its own directory.
-            write_experiment_data(exp_dir, complete_data)
-            write_experiment_messages(exp_dir, rs)
+        all_statistics = [result.get() for result in results]
 
         ## calculate the global statistics
         # transpose the list of statistics, and calculate the averages.
@@ -449,9 +459,3 @@ def conduct_all_experiments(defaults=defaults, names=poll_names):
         print(end_time - start_time, file=f)
 
     return edir
-
-
-
-
-
-

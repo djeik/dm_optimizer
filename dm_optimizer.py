@@ -168,7 +168,7 @@ class dm_optimizer:
                 else:
                     self.logmsg(1, "Skipping over bad minimum in newtarget calculation.")
             if not mins:
-                mins = [vals[0]]
+                mins = [self.vals[0]]
             self.target = best + self.greediness * (best - min(mins))
             if self.target != oldtarget:
                 pass
@@ -434,7 +434,7 @@ def minimize(f, x1, x2, **kwargs):
         return optimizer.minimize(x1, x2)
     except Exception as e:
         res = sopt.OptimizeResult()
-        res.message = str(e)
+        res.message = [str(e)]
         res.status  = 2
         res.success = False
         res.opt = optimizer # we'll put the broken optimizer in here in case we need it to recover some failure information

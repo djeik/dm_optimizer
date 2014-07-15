@@ -10,3 +10,5 @@ The fix that I propose for this is rather than to report a failure status when t
 Another important thing to add to the test suite would be multiprocessing. This would allow the testing to proceed about four times faster by exploiting multiple cores of the processor, one for each objective function. Race conditions should not occur because the processes would share no data, and would never access the same files.
 
 Introducing the fix proposed above -- changing the exhaustion of local minima into a success condition -- did not reduce the failure rates of the functions mentioned above. This doesn't actually make sense, since failure is measured by counting the runs whose success attribute is False.
+
+Examining the exit messages of the runs proved insightful, and showed that failures are originating from many other places. 
