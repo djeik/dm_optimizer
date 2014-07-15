@@ -405,7 +405,7 @@ def write_experiment_messages(exp_dir, rs):
         map(lambda r: print(*tuple(r.message), sep='||', file=f), rs)
 
 def experiment_task(edir, test):
-    #print("Conducting experiment:", test["name"])
+    print("Conducting experiment:", test["name"])
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
     os.makedirs(exp_dir)

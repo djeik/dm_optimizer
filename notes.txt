@@ -11,4 +11,8 @@ Another important thing to add to the test suite would be multiprocessing. This 
 
 Introducing the fix proposed above -- changing the exhaustion of local minima into a success condition -- did not reduce the failure rates of the functions mentioned above. This doesn't actually make sense, since failure is measured by counting the runs whose success attribute is False.
 
-Examining the exit messages of the runs proved insightful, and showed that failures are originating from many other places. 
+Examining the exit messages of the runs proved insightful, and showed that failures are originating from many other places. I managed to suppress some of the failures originating from an exception that used to be thrown when the deltay_curr was too small (instead, I set it to a kind of pseudo).
+
+I tried implemented mutliprocessing to increase the speed, by running 4 optimizations simultaneously. However, this requires passing functions to the child processes (namely the objective functions), and that's done with pickle, which can't deal with functions. Since I can just load the objective functions from DEAP though, it might be worthwhile to just pass the name of the function, and from that I can load it dynamically (yay for interpreted languages, for once). This will greatly increase the speed of the testing.
+
+Tomorrow I need to track down the other sources of failures by examining the exit messages of the tests, and I need to fix multiprocessing. I also need to generalize / clone ``conduct_all_experiments'' to work on simulated annealing as well, that way I can compare them. As for fair comparison, I should try to look into something like scaling the time taken by the success rate, or something.
