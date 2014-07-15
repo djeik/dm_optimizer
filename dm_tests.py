@@ -397,25 +397,42 @@ def write_experiment_data(exp_dir, complete_experiment):
 
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
 def conduct_all_experiments(defaults=jul10defaults, names=jul10names):
+    all_statistics = [] # we will collect the general statistics for each experiment here, to perform a global average over all experiments.
+    global_statistics = []
+
+    if not os.path.exists("experiments"):
+        os.makedirs("experiments")
     edir = "experiments/" + str(datetime.now())
     os.makedirs(edir)
 
-    start_time = time()
-    for test in tests:
-        print("Conducting experiment:", test["name"])
-        exp_dir = edir + "/" + test["name"]
-        os.makedirs(exp_dir)
-        # test_data holds those data that fluctuate over time
-        (failures, success_rate, time_avg, nfev_avg, test_data) = conduct_experiment(test, defaults);
-        with open(exp_dir + '/' + "averages.txt", 'w') as f:
-            print_csv("success rate", success_rate, file=f)
-            print_csv("average time", time_avg, file=f)
-            print_csv("average fun. evals.", nfev_avg, file=f)
-            print_csv("failures", failures, file=f)
+    with open(edir + '/' + "averages.txt", 'w') as f:
+        start_time = time()
+        print_csv("test", "success rate", "average time", "average fun. evals.", "failures", file=f)
+        for test in tests:
+            print("Conducting experiment:", test["name"])
+            # prepare the experiment directory
+            exp_dir = edir + "/" + test["name"]
+            os.makedirs(exp_dir)
 
-        avgs = calculate_averages(test_data)
-        complete_data = zip(names, avgs, test_data)
-        write_experiment_data(exp_dir, complete_data)
+            # Perform the experiment, test_data holds those data that fluctuate over time
+            (failures, success_rate, time_avg, nfev_avg, test_data) = conduct_experiment(test, defaults);
+            all_statistics.append( (success_rate, time_avg, nfev_avg, failures) )
+            avgs = calculate_averages(test_data)
+            complete_data = zip(names, avgs, test_data)
+
+            # print the general test data to the common file
+            print_csv(test["name"], success_rate, time_avg, nfev_avg, failures, file=f)
+
+            # print the test-specific data to its own directory.
+            write_experiment_data(exp_dir, complete_data)
+
+        ## calculate the global statistics
+        # transpose the list of statistics, and calculate the averages.
+        global_statistics = tuple(map(lambda stat: sum(stat) / float(len(stat)), zip(*all_statistics)))
+        # record the data
+        print_csv("AVERAGE", *global_statistics, file=f)
+
+
 
 
 

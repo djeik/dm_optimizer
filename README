@@ -1,3 +1,4 @@
-The stats tuple is in the format (success rate, average time per run, average
-number of function evaluations per run). Therefore, a file such as
-'*-*-*-stats-vs-X.csv' will generally be formatted as 'X,<stats-tuple>'.
+The preferred way to test the optimizer is to run the conduct_all_experiments function in dm_tests.py. This function will test the optimizer on 11 objective functions, record all the relevant data to a subfolder of ``experiments'' named with the current date and time. A global summary of the experiment is given in the file ``averages.txt''. For each objective function, the optimization is run 100 times, and ``versus time'' data is collected on each run. The format of the versus time data is not immediately obvious:
+iteration number, average value, #1, #2, ..., #n
+where n is the total number of individual runs per test.
+Each versus time dataset is stored in its own file, and each test has its own folder as well.

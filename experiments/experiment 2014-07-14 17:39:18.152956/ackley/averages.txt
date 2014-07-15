@@ -1,4 +1,0 @@
-success rate,1.0
-average time,0.205884389877
-average fun. evals.,10992.5
-failures,0
