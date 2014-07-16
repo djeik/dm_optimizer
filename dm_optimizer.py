@@ -168,7 +168,8 @@ class dm_optimizer:
                 else:
                     self.logmsg(1, "Skipping over bad minimum in newtarget calculation.")
             if not mins:
-                mins = [self.vals[0].y]
+                raise BestMinimumException()
+                #mins = [self.vals[0].y]
             self.target = best + self.greediness * (best - min(mins))
             if self.target != oldtarget:
                 pass
@@ -332,7 +333,22 @@ class dm_optimizer:
                 #if deltay_curr <= self.tolerance**2: # we've fallen below the target, so we create a new target
                 if deltay_curr < 0: # we've fallen below the target, so we create a new target
                     self.logmsg(2, "Beat target!")
-                    self.new_target(self.fv) # to get the next target, all we need is the current function value and the list of minima so far
+                    try:
+                        self.new_target(self.fv) # to get the next target, all we need is the current function value and the list of minima so far
+                    except BestMinimumException:
+                        res = sopt.OptimizeResult()
+                        res.nit     = self.iteration
+                        res.success = True
+                        res.message = ["All local minima have converged to a point. Optimization cannot proceed."]
+                        res.status  = 3
+                        res.x       = self.pmin
+                        res.fun     = self.fv
+                        res.njev    = self.njev
+                        res.nfev    = self.nfev
+                        res.lpos    = self.lpos
+                        res.opt     = self
+                        return res
+
                     deltay_curr = self.fv - self.target # recalculate delta for the new target
                     self.logmsg(2, "New delta:", deltay_curr)
                 else:
