@@ -63,11 +63,11 @@ def ipad_lists(padding, matrix):
 def pad_lists(*args):
     return list(ipad_lists(*args))
 
-def random_dm(f, d, scale, dm_args={}):
-    return dm.minimize(f, random_guess(d, scale), random_guess(d, scale), **dm_args)
+def randomr_dm(f, d, range, dm_args={}):
+    return dm.minimize(f, randomr_guess(d, range), randomr_guess(d, range), **dm_args)
 
-def random_sa(f, d, scale, sa_args={}):
-    return basinhopping(f, random_guess(d, scale), **sa_args)
+def randomr_sa(f, d, range, sa_args={}):
+    return basinhopping(f, randomr_guess(d, range), **sa_args)
 
 def read_2d_csv(filename):
     dats = []
@@ -146,32 +146,36 @@ tests = map(lambda xs: dict(zip(
 # we're going to stop naming things after dates, due to the new commit-enforcing policy.
 def dm_poll_callback(self):
     self.vs.append( (self.fv, self.vals[0].y, norm(self.step)) )
-poll_names = ["function_value", "best_minimum", "step_size"]
-defaults = {"dimensions":2, "range":(-100, 100), "refresh_rate":20, "max_iterations":250, "runs":250, "success_threshold":0.001,
-                 "callback":dm_poll_callback}
+poll_names = ["function_value", "best_minimum", "step_size"] # the names of the things extracted from the optimizer internal state
 
-def conduct_experiment(test, defaults):
-    runs         = defaults["runs"]
-    dimensions   = test["dimensions"] or defaults["dimensions"]
-    range        = test["range"]      or defaults["range"]
-    refresh_rate = defaults["refresh_rate"]
+sampler_defaults = {"dimensions":5, "range":(-100, 100)}
+experiment_defaults = {"runs":250, "success_threshold":0.001}
+dm_defaults = {"refresh_rate":4, "max_iterations":250, "callback":dm_poll_callback}
+sa_defaults = {"niter":100}
+
+optimizers = {"dm":{"tag":"dm", "optimizer":randomr_dm, "config":dm_defaults},
+              "sa":{"tag":"sa", "optimizer":randomr_sa, "config":sa_defaults}}
+
+def conduct_experiment(test, optimizer):
+    runs         = experiment_defaults["runs"]
+    dimensions   = test["dimensions"] or sampler_defaults["dimensions"]
+    range        = test["range"]      or sampler_defaults["range"]
+
+    # construct the objective function from the string passed into the subprocess
+    f_ = eval(test["function"]) # extract the function from the string
+    f  = lambda x: test["optimization_type"] * f_(x) # handle maximization
 
     rs = [] # collect the OptimizeResult objects in here.
     start_time = time()
     for i in xrange(runs):
-        #import pdb; pdb.set_trace()
-        f_ = eval(test["function"]) # extract the function from the string
-        f  = lambda x: test["optimization_type"] * f_(x) # handle maximization
-        rs.append(dm.minimize(f, randomr_guess(dimensions, range), # let's see if this eval hack works
-            randomr_guess(dimensions, range), max_iterations=defaults["max_iterations"],
-            refresh_rate=defaults["refresh_rate"], callback=defaults["callback"]))
+        rs.append(optimizer["optimizer"](f, dimensions, range, optimizer["config"]))
     end_time   = time()
 
     time_total    = end_time - start_time
     time_avg      = time_total / float(runs)
     nfev_total    = sum(imap(lambda r: r.opt.nfev, rs))
     nfev_avg      = nfev_total / float(runs)
-    success_total = len(filter(lambda r: r.success and abs(r.fun - test["optimum"]) < defaults["success_threshold"], rs))
+    success_total = len(filter(lambda r: r.success and abs(r.fun - test["optimum"]) < experiment_defaults["success_threshold"], rs))
     success_rate  = success_total / float(runs)
     failures      = len(filter(lambda r: not r.success, rs))
 
@@ -190,7 +194,7 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
     return map(avg_vs_t, statistics)
 
 def write_experiment_data(exp_dir, complete_experiment):
-    """ Expects a tuple in the form (name, averages, all runs), and writes out all the data for this experiment into directory. """
+    """ Expects a tuple in the form (name, averages, all runs), and writes out all the data for this experiment into the given directory. """
     for (name, average_vs_t, data) in complete_experiment:
         with open(exp_dir + "/" + name + ".txt", 'w') as f:
             for (i, run_i) in enumerate(zip(*pad_lists(None, data))):
@@ -205,7 +209,7 @@ def write_experiment_messages(exp_dir, rs):
         map(lambda r: print(*tuple(r.message), sep='||', file=f), rs)
 
 def experiment_task(args):
-    edir, test = args
+    edir, test, optimizer, names = args
     print("Begin experiment:", test["name"])
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
@@ -213,36 +217,39 @@ def experiment_task(args):
         os.makedirs(exp_dir)
 
     # Perform the experiment, rs is the actual OptimizeResult objects
-    (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, defaults);
-    # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
-    # line up all the data for a given iteration
-    padded_lists = pad_lists([], map(lambda r: copy(r.opt.vs), rs))
-    test_data = zip(*padded_lists) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
+    (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, optimizer);
 
-    avgs = calculate_averages(test_data)
-    complete_data = zip(poll_names, avgs, test_data)
+    if optimizer["tag"] == "dm":
+        # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
+        # line up all the data for a given iteration
+        padded_lists = pad_lists([], map(lambda r: copy(r.opt.vs), rs))
+        test_data = zip(*padded_lists) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
 
-    #import pdb; pdb.set_trace()
-    # print the test-specific data to its own directory.
-    write_experiment_data(exp_dir, complete_data)
+        avgs = calculate_averages(test_data)
+        complete_data = zip(names, avgs, test_data)
+
+        #import pdb; pdb.set_trace()
+        # print the test-specific data to its own directory.
+        write_experiment_data(exp_dir, complete_data)
+
     write_experiment_messages(exp_dir, rs)
     print("End experiment:", test["name"])
     return (test["name"], (success_rate, time_avg, nfev_avg, failures)) # this will get appended to the all_statistics of the master process
 
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
-def conduct_all_experiments(defaults=defaults, names=poll_names):
+def conduct_all_experiments(optimizer, experiment_defaults=experiment_defaults, names=poll_names):
     all_statistics = [] # we will collect the general statistics for each experiment here, to perform a global average over all experiments.
     global_statistics = []
 
     if not os.path.exists("experiments"):
         os.makedirs("experiments")
-    edir = "experiments/" + str(datetime.now())
+    edir = "experiments/" + optimizer["tag"] + " " + str(datetime.now())
     os.makedirs(edir)
 
     pool = mp.Pool()
 
     start_time = time()
-    results = pool.map(experiment_task, izip(repeat(edir), tests))
+    results = pool.map(experiment_task, izip(repeat(edir), tests, repeat(optimizer), repeat(names)))
     #results = [pool.apply_async(experiment_task, edir, test) for test in tests]
     #pool.close()
     #pool.join() # now we wait for the subprocesses to finish.

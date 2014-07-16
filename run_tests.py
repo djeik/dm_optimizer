@@ -10,10 +10,18 @@ from sys import exit
 import sys
 from os import path
 
+from itertools import islice
+
 if __name__ == "__main__":
     force = False
+    optimizer = None
 
     try:
+        for (i, arg) in enumerate(islice(args, 1, None)):
+            if any(map(lambda x: arg == x, ["-f", "--force"])):
+                force = True
+            else:
+                optimizer = arg
         if args[1] == "-f" or args[1] == "--force":
             force = True
     except: # index exception only, i.e. the arg is not present.
@@ -21,6 +29,15 @@ if __name__ == "__main__":
 
     if not (path.exists("dm_optimizer.py") and path.exists("dm_tests.py")):
         print("fatal: optimizer or optimizer test suite does not exist.", file=sys.stderr)
+        exit(1)
+
+    if not optimizer:
+        print("Please specify an optimizer code to use:")
+        map(lambda k: print("\t", k, sep=''), dmt.optimizers)
+        exit(1)
+
+    if not optimizer in dmt.optimizers:
+        print("The specified optimizer is invalid.")
         exit(1)
 
     git_status = subprocess.Popen(["git", "status", "--short", "dm_optimizer.py", "dm_tests.py"], stdout=subprocess.PIPE)
@@ -36,7 +53,7 @@ if __name__ == "__main__":
         exit(1)
 
     #try:
-    edir = dmt.conduct_all_experiments() # returns the experiment directory's path
+    edir = dmt.conduct_all_experiments(dmt.optimizers[optimizer]) # returns the experiment directory's path
     #except Exception as e:
     #    print("fatal: optimizer test suite failed:\n\t", e, sep='', file=sys.stderr)
     #    exit(1)
