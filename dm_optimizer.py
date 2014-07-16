@@ -336,6 +336,7 @@ class dm_optimizer:
                     try:
                         self.new_target(self.fv) # to get the next target, all we need is the current function value and the list of minima so far
                     except BestMinimumException:
+                        # this is a failure sink
                         res = sopt.OptimizeResult()
                         res.nit     = self.iteration
                         res.success = True
@@ -363,6 +364,7 @@ class dm_optimizer:
                 try:
                     ynear, xnear = self.best_minimum_x().unbox()
                 except BestMinimumException:
+                    # this is a failure sink
                     res = sopt.OptimizeResult()
                     res.nit     = self.iteration
                     res.success = True
