@@ -298,6 +298,9 @@ class dm_optimizer:
         self.nhev       = 0
         self.iteration  = 0
 
+        # and the some other things are given zero initial values
+        self.step       = []
+
         # Get the first minimum
         x0min = self.local_min(x0)
         f0 = self.evalf(x0min)
