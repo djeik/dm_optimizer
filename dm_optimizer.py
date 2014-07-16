@@ -168,7 +168,7 @@ class dm_optimizer:
                 else:
                     self.logmsg(1, "Skipping over bad minimum in newtarget calculation.")
             if not mins:
-                mins = [self.vals[0]]
+                mins = [self.vals[0].y]
             self.target = best + self.greediness * (best - min(mins))
             if self.target != oldtarget:
                 pass
