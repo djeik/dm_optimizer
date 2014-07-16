@@ -31,15 +31,15 @@ if __name__ == "__main__":
         exit(1)
 
     clean = len(out) == 0
-    if not clean or force:
+    if (not clean) and (not force):
         print("The repository is not clean! Running this experiment does not guarantee reproducibility. Please commit your changes to dm_optimizer.py or dm_tests.py, or force the test with the -f switch.")
         exit(1)
 
-    try:
-        edir = dmt.conduct_all_experiments() # returns the experiment directory's path
-    except Exception as e:
-        print("fatal: optimizer test suite failed.", file=sys.stderr)
-        exit(1)
+    #try:
+    edir = dmt.conduct_all_experiments() # returns the experiment directory's path
+    #except Exception as e:
+    #    print("fatal: optimizer test suite failed:\n\t", e, sep='', file=sys.stderr)
+    #    exit(1)
 
     git_rev_parse = subprocess.Popen(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE)
     out, err = git_rev_parse.communicate()

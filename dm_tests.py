@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-from itertools import repeat, imap, ifilter, islice, chain
+from itertools import repeat, imap, ifilter, islice, chain, izip
 
 import dm_optimizer as dm
 from dm_optimizer import dm_optimizer
@@ -328,17 +328,17 @@ minimization = 1
 maximization = -1
 
 tests = map(lambda xs: dict(zip(["name", "function", "optimization_type", "dimensions", "range", "optimum"], xs)),
-        [("ackley", unwrap_bench(bench.ackley), minimization, None, (-15, 30), 0),
-        ("cigar", unwrap_bench(bench.cigar), minimization, None, None, 0),
-        ("sphere", unwrap_bench(bench.sphere), minimization, None, None, 0),
-        ("bohachevsky", unwrap_bench(bench.bohachevsky), minimization, None, (-100, 100), 0),
-        ("griewank", unwrap_bench(bench.griewank), minimization, None, (-600, 600), 0),
-        ("h1", unwrap_bench(bench.h1), maximization, 2, (-100, 100), 2),
-        ("himmelblau", unwrap_bench(bench.himmelblau), minimization, 2, (-6, 6), 0),
-        ("rastrigin", unwrap_bench(bench.rastrigin), minimization, None, (-5.12, 5.12), 0),
-        ("rosenbrock", unwrap_bench(bench.rosenbrock), minimization, None, None, 0),
-        ("schaffer", unwrap_bench(bench.schaffer), minimization, None, (-100, 100), 0),
-        ("schwefel", unwrap_bench(bench.schwefel), minimization, None, (-500, 500), 0)])
+        [("ackley", "unwrap_bench(bench.ackley)", minimization, None, (-15, 30), 0),
+        ("cigar", "unwrap_bench(bench.cigar)", minimization, None, None, 0),
+        ("sphere", "unwrap_bench(bench.sphere)", minimization, None, None, 0),
+        ("bohachevsky", "unwrap_bench(bench.bohachevsky)", minimization, None, (-100, 100), 0),
+        ("griewank", "unwrap_bench(bench.griewank)", minimization, None, (-600, 600), 0),
+        ("h1", "unwrap_bench(bench.h1)", maximization, 2, (-100, 100), 2),
+        ("himmelblau", "unwrap_bench(bench.himmelblau)", minimization, 2, (-6, 6), 0),
+        ("rastrigin", "unwrap_bench(bench.rastrigin)", minimization, None, (-5.12, 5.12), 0),
+        ("rosenbrock", "unwrap_bench(bench.rosenbrock)", minimization, None, None, 0),
+        ("schaffer", "unwrap_bench(bench.schaffer)", minimization, None, (-100, 100), 0),
+        ("schwefel", "unwrap_bench(bench.schwefel)", minimization, None, (-500, 500), 0)])
         ## The following functions are 'weird' in some way that makes testing too difficult.
         #(unwrap_bench(bench.rastrigin_scaled),
         #(bench.rastrigin_skew
@@ -362,7 +362,7 @@ def conduct_experiment(test, defaults):
     start_time = time()
     for i in xrange(runs):
         #import pdb; pdb.set_trace()
-        rs.append(dm.minimize(test["function"], randomr_guess(dimensions, range),
+        rs.append(dm.minimize(eval(test["function"]), randomr_guess(dimensions, range), # let's see if this eval hack works
             randomr_guess(dimensions, range), max_iterations=defaults["max_iterations"],
             refresh_rate=defaults["refresh_rate"], callback=defaults["callback"]))
     end_time   = time()
@@ -404,8 +404,9 @@ def write_experiment_messages(exp_dir, rs):
     with open(exp_dir + '/' + "messages.txt", 'w') as f:
         map(lambda r: print(*tuple(r.message), sep='||', file=f), rs)
 
-def experiment_task(edir, test):
-    print("Conducting experiment:", test["name"])
+def experiment_task(args):
+    edir, test = args
+    print("Begin experiment:", test["name"])
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
     os.makedirs(exp_dir)
@@ -417,15 +418,13 @@ def experiment_task(edir, test):
     test_data = zip(*imap(lambda r: r.opt.vs, rs)) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
 
     avgs = calculate_averages(test_data)
-    complete_data = zip(names, avgs, test_data)
-
-    # print the general test data to the common file
-    print_csv(test["name"], success_rate, time_avg, nfev_avg, failures, file=f)
+    complete_data = zip(poll_names, avgs, test_data)
 
     # print the test-specific data to its own directory.
     write_experiment_data(exp_dir, complete_data)
     write_experiment_messages(exp_dir, rs)
-    return (success_rate, time_avg, nfev_avg, failures) # this will get appended to the all_statistics of the master process
+    print("End experiment:", test["name"])
+    return (test["name"], (success_rate, time_avg, nfev_avg, failures)) # this will get appended to the all_statistics of the master process
 
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
 def conduct_all_experiments(defaults=defaults, names=poll_names):
@@ -439,14 +438,20 @@ def conduct_all_experiments(defaults=defaults, names=poll_names):
 
     pool = mp.Pool()
 
-    with open(edir + '/' + "averages.txt", 'w', 1) as f:
-        start_time = time()
-        print_csv("test", "success rate", "average time", "average fun. evals.", "failures", file=f)
-        results = [pool.apply_async(experiment_task, edir, test) for test in tests]
-        pool.close()
-        pool.join() # now we wait for the subprocesses to finish.
+    start_time = time()
+    results = pool.map(experiment_task, izip(repeat(edir), tests))
+    #results = [pool.apply_async(experiment_task, edir, test) for test in tests]
+    #pool.close()
+    #pool.join() # now we wait for the subprocesses to finish.
 
-        all_statistics = [result.get() for result in results]
+    # collect the results of the subprocesses
+    all_statistics  = [result[1]    for result in results]
+
+    with open(edir + '/' + "averages.txt", 'w', 1) as f:
+        print_csv("test", "success rate", "average time", "average fun. evals.", "failures", file=f)
+        # print the general test data to the common file
+        map(lambda (name, (success_rate, time_avg, nfev_avg, failures)): print_csv(name, success_rate, time_avg, nfev_avg, failures, file=f),
+                results)
 
         ## calculate the global statistics
         # transpose the list of statistics, and calculate the averages.
