@@ -50,6 +50,19 @@ def randomr_guess(dim, r=(-1,1)):
 def intersperse(delimiter, seq):
         return islice(chain.from_iterable(izip(repeat(delimiter), seq)), 1, None)
 
+def ipad_lists(padding, matrix):
+    """ Pad the component lists of a list of lists to make it into a matrix. The operation is performed in-place, but the matrix is also returned,
+        to allow chaining.
+        """
+    maxlen = reduce(max, imap(len, matrix))
+    for vector_ in matrix:
+        vector = list(vector_) # copy the list
+        vector.extend(repeat(padding, maxlen - len(vector)))
+        yield vector
+
+def pad_lists(*args):
+    return list(ipad_lists(*args))
+
 def test(f, d=2, scale=64, show_plot=True):
     """ Run the dm optimizer on a given function in a given number of dimensions (assuming the given function supports it)
         and possibly show a plot, if the function is in three dimensions.
@@ -409,17 +422,19 @@ def experiment_task(args):
     print("Begin experiment:", test["name"])
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
-    os.makedirs(exp_dir)
+    if not os.path.exists(exp_dir):
+        os.makedirs(exp_dir)
 
     # Perform the experiment, rs is the actual OptimizeResult objects
     (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, defaults);
     # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
     # line up all the data for a given iteration
-    test_data = zip(*imap(lambda r: r.opt.vs, rs)) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
+    test_data = zip(*pad_lists(None, imap(lambda r: r.opt.vs, rs))) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
 
     avgs = calculate_averages(test_data)
     complete_data = zip(poll_names, avgs, test_data)
 
+    #import pdb; pdb.set_trace()
     # print the test-specific data to its own directory.
     write_experiment_data(exp_dir, complete_data)
     write_experiment_messages(exp_dir, rs)

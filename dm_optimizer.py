@@ -309,6 +309,8 @@ class dm_optimizer:
             self.target = self.first_target_ratio * f0
 
         nx1 = x1
+        self.fv = f0
+        self.pmin = x0min
         self.lpos = [(self.evalf(nx1), nx1)]
 
         self.logmsg(2, "Entering loop.")
@@ -381,7 +383,6 @@ class dm_optimizer:
 
                 # every `refresh_rate` iterations, we refresh the target value, to avoid stale convergeance
                 if (not self.fixed_target) and self.iteration % self.refresh_rate == 0:
-
                     m = self.chopfactor
                     del self.vals[m:-m]
                     oldtarget = self.target
@@ -392,6 +393,7 @@ class dm_optimizer:
 
                 if not self.callback is None:
                     self.callback(self)
+
         except Exception as e:
             self.logmsg(-1, "An error occurred while optimizing:", e)
             raise e
