@@ -147,7 +147,7 @@ tests = map(lambda xs: dict(zip(
 def dm_poll_callback(self):
     self.vs.append( (self.fv, self.vals[0].y, norm(self.step)) )
 poll_names = ["function_value", "best_minimum", "step_size"]
-defaults = {"dimensions":2, "range":(-100, 100), "refresh_rate":8, "max_iterations":250, "runs":250, "success_threshold":0.001,
+defaults = {"dimensions":2, "range":(-100, 100), "refresh_rate":20, "max_iterations":250, "runs":250, "success_threshold":0.001,
                  "callback":dm_poll_callback}
 
 def conduct_experiment(test, defaults):
@@ -160,7 +160,9 @@ def conduct_experiment(test, defaults):
     start_time = time()
     for i in xrange(runs):
         #import pdb; pdb.set_trace()
-        rs.append(dm.minimize(eval(test["function"]), randomr_guess(dimensions, range), # let's see if this eval hack works
+        f_ = eval(test["function"]) # extract the function from the string
+        f  = lambda x: test["optimization_type"] * f_(x) # handle maximization
+        rs.append(dm.minimize(f, randomr_guess(dimensions, range), # let's see if this eval hack works
             randomr_guess(dimensions, range), max_iterations=defaults["max_iterations"],
             refresh_rate=defaults["refresh_rate"], callback=defaults["callback"]))
     end_time   = time()
