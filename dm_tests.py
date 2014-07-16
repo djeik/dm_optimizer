@@ -384,7 +384,7 @@ def conduct_experiment(test, defaults):
     time_avg      = time_total / float(runs)
     nfev_total    = sum(imap(lambda r: r.opt.nfev, rs))
     nfev_avg      = nfev_total / float(runs)
-    success_total = len(filter(lambda r: r.success and abs(r.lpos[-1][0] - test["optimum"]) < defaults["success_threshold"], rs))
+    success_total = len(filter(lambda r: r.success and abs(r.fun - test["optimum"]) < defaults["success_threshold"], rs))
     success_rate  = success_total / float(runs)
     failures      = len(filter(lambda r: not r.success, rs))
 
@@ -397,7 +397,7 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
         """
     def avg_vs_t(s):
 # take in the list of runs and their courses, and line them up
-        s_ = zip(*s) # the first element of this thing is the list of values of the variable at the first iteration
+        s_ = zip(*pad_lists(0, s)) # the first element of this thing is the list of values of the variable at the first iteration
         # for each list in s_, we compute the average, making a list of averages. That is the progression of the average value over time.
         return map(lambda x: sum(x) / float(len(x)), s_)
     return map(avg_vs_t, statistics)
@@ -406,7 +406,7 @@ def write_experiment_data(exp_dir, complete_experiment):
     """ Expects a tuple in the form (name, averages, all runs), and writes out all the data for this experiment into directory. """
     for (name, average_vs_t, data) in complete_experiment:
         with open(exp_dir + "/" + name + ".txt", 'w') as f:
-            for (i, run_i) in enumerate(zip(*data)):
+            for (i, run_i) in enumerate(zip(*pad_lists(None, data))):
                 #f.write(str(i) + ',') # writing the iteration number is not useful, since they're in order. Therefore, line # = iteration #.
                 f.write(str(average_vs_t[i]))
                 for value in run_i:
@@ -429,7 +429,8 @@ def experiment_task(args):
     (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, defaults);
     # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
     # line up all the data for a given iteration
-    test_data = zip(*pad_lists(None, imap(lambda r: r.opt.vs, rs))) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
+    padded_lists = pad_lists([], map(lambda r: copy(r.opt.vs), rs))
+    test_data = zip(*padded_lists) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
 
     avgs = calculate_averages(test_data)
     complete_data = zip(poll_names, avgs, test_data)
