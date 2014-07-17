@@ -67,7 +67,9 @@ def randomr_dm(f, d, range, dm_args={}):
     return dm.minimize(f, randomr_guess(d, range), randomr_guess(d, range), **dm_args)
 
 def randomr_sa(f, d, range, sa_args={}):
-    return basinhopping(f, randomr_guess(d, range), **sa_args)
+    r = basinhopping(f, randomr_guess(d, range), **sa_args)
+    r.success = True # TODO this needs to be something that sucks less.
+    return r
 
 def read_2d_csv(filename):
     dats = []
@@ -173,7 +175,7 @@ def conduct_experiment(test, optimizer):
 
     time_total    = end_time - start_time
     time_avg      = time_total / float(runs)
-    nfev_total    = sum(imap(lambda r: r.opt.nfev, rs))
+    nfev_total    = sum(imap(lambda r: r.nfev, rs))
     nfev_avg      = nfev_total / float(runs)
     success_total = len(filter(lambda r: r.success and abs(r.fun - test["optimum"]) < experiment_defaults["success_threshold"], rs))
     success_rate  = success_total / float(runs)
@@ -219,7 +221,7 @@ def experiment_task(args):
     # Perform the experiment, rs is the actual OptimizeResult objects
     (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, optimizer);
 
-    if optimizer["tag"] == "dm":
+    if optimizer["tag"] == "dm": # if the given optimizer is dm, we know how to inspect its internals and fish out useful information.
         # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
         # line up all the data for a given iteration
         padded_lists = pad_lists([], map(lambda r: copy(r.opt.vs), rs))
@@ -274,3 +276,6 @@ def conduct_all_experiments(optimizer, experiment_defaults=experiment_defaults, 
         print(end_time - start_time, file=f)
 
     return edir
+
+def run_all(optimizer_name):
+    return conduct_all_experiments(optimizers[optimizer_name])

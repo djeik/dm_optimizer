@@ -460,6 +460,8 @@ def minimize(f, x1, x2, **kwargs):
         res.message = [str(e)]
         res.status  = 2
         res.success = False
+        res.nfev    = optimizer.nfev
+        res.njev    = optimizer.njev
         res.opt = optimizer # we'll put the broken optimizer in here in case we need it to recover some failure information
         return res
 
