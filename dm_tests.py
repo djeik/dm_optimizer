@@ -277,5 +277,5 @@ def conduct_all_experiments(optimizer, experiment_defaults=experiment_defaults, 
 
     return edir
 
-def run_all(optimizer_name):
+def run_test(optimizer_name):
     return conduct_all_experiments(optimizers[optimizer_name])
