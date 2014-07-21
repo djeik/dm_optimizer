@@ -28,3 +28,7 @@ Performance for a refresh rate of 8 decreases overall to 55.7%. It seems that Ac
 07-17
 =====
 Since we want to extend this version control scheme that I have crafted to guarantee reproducibility, I need to generalize my run_scripts.py. First, I'll add a separate module that it loads that contains the list of files to watch, ``reproducible.py''. Then, I'll rename run_tests.py to run_reproducible.py. Simply, load a module specified on the command line, and execute that module's conduct_all_experiments or run function. That function must return a directory where run_reproducible can store the hash of the commit hash.
+
+At the end of the day, everything seems in place. run_reproducible has its own github repository now https://github.com/djeik/reproducible. I didn't get much work done on the optimizing the optimizer proper (heh). On the other hand, some fixes I seem to have introduced a while back have increased the runtime (by a LOT). This is probably due to generalizing the code to allow for SA. This involves a lot of dictionaries and lambdas, which AIUI reaaaaaaally slow. Thanks to my amazing accounting powers and experimental data, I can lookup exactly where this happened and figure out how to fix it. That, however, is for tomorrow.
+
+Holy shit, I wasn't kidding when I said really slow. IT'S INSANELY SLOW. Around 23 minutes for DM!!! It's certainly the dicts and lambdas, but still. That's madness. It was taking around 250 seconds before. This is a ~5x increase! Tomorrow will be a day of much profiling.
