@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 import sys
-import sys.argv as args
+from sys import argv as args
 from sys import exit
 
 import dm_tests as dmt
@@ -18,7 +18,8 @@ if __name__ == "__main__":
         exit(1)
 
     try:
-        dmt.run_test(args[1])
+        # run_test returns the string that is the path
+        print(dmt.run_test(args[1]))
     except Exception as e:
         map(errprint, ["fatal: the test failed.",
                        "Inner error message:",
