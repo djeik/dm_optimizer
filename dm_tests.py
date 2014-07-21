@@ -165,12 +165,15 @@ def conduct_experiment(test, optimizer):
 
     # construct the objective function from the string passed into the subprocess
     f_ = eval(test["function"]) # extract the function from the string
-    f  = lambda x: test["optimization_type"] * f_(x) # handle maximization
+    optimization_type = test["optimization_type"] # a speedup
+    f  = lambda x: optimization_type * f_(x) # handle maximization
 
+    internal_optimizer = optimizer["optimizer"]
+    optimizer_config   = optimizer["config"]
     rs = [] # collect the OptimizeResult objects in here.
     start_time = time()
     for i in xrange(runs):
-        rs.append(optimizer["optimizer"](f, dimensions, range, optimizer["config"]))
+        rs.append(internal_optimizer(f, dimensions, range, optimizer_config))
     end_time   = time()
 
     time_total    = end_time - start_time
