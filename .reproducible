@@ -1,3 +1,4 @@
 dm_optimizer.py
 dm_tests.py
-run_dm_and_sa.sh
+test_both.sh
+.reproducible
