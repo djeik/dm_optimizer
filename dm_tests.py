@@ -27,6 +27,8 @@ from dm_optimizer import dm_optimizer
 
 import multiprocessing as mp
 
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0) # unbuffered output
+
 # These are the functions Simon defined to test it on:
 def simon_f1(xy):
     x, y = xy
