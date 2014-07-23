@@ -23,18 +23,20 @@ def show_usage():
                   "\tsa -- Simulated Annealing."])
 
 if __name__ == "__main__":
-    if len(args) < 3:
+    if len(args) <3:
         errprint("fatal: incorrect command line.")
         show_usage()
         exit(1)
 
-    try:
+    print(args[1])
+
+    #try:
         # run_test returns the string that is the path
-        dmt.run_test(args[1], args[2])
-    except Exception as e:
-        map(errprint, ["fatal: the test failed.",
-                       "Inner error message:",
-                       ("\t", e)])
-        exit(1)
-    else:
-        exit(0)
+    dmt.run_test(args[1], args[2])
+    #except Exception as e:
+    #    map(errprint, ["fatal: the test failed.",
+    #                   "Inner error message:",
+    #                   ("\t", e)])
+    #    exit(1)
+    #else:
+    #    exit(0)

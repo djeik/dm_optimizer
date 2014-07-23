@@ -283,3 +283,34 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
 
 def run_test(edir, optimizer_name):
     return conduct_all_experiments(edir, optimizers[optimizer_name])
+
+def parse_typical_poll_file(path):
+    """ A poll file is one generated from write_experiment_data. The names of all the polls is in poll_names. """
+    with open(path) as f:
+        csvtups = csv_to_tuples([line for line in f])
+    average = []
+    individuals = []
+    for t in csvtups:
+        average.append(t[0])
+        individuals.append(islice(t, 1))
+    return (average, individuals)
+
+def generate_all_dm_plots(edir):
+    dmdir = path.join(edir, "../dm")
+    function_dirs = filter(path.isdir, os.listdir(dmdir)) # function_dirs will be relative to dmdir
+
+    for function in function_dirs:
+        plot_dir = path.join(edir, function)
+        os.makedirs(plot_dir)
+        for poll in poll_names:
+            data_path = path.join(dmdir, function, poll + ".txt")
+            poll_data = parse_typical_poll_file(data_path)
+            average, individuals = poll_data
+            fig = plt.figure()
+            ax = fig.add_axes()
+            ax.plot(xrange(1, len(average) + 1), average)
+            ax.plot(xrange(1, len(individuals) + 1), *zip(*individuals))
+            fig.savefig(path.join(plot_dir, poll + ".pdf"))
+
+
+

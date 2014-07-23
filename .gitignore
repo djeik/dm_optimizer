@@ -1,3 +1,4 @@
 *.pyc
 experiments/
 run_reproducible.py
+results/
