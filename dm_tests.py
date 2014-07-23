@@ -295,7 +295,7 @@ def parse_typical_poll_file(path):
     individuals = []
     for t in csvtups:
         average.append(t[0])
-        individuals.append(islice(t, 1))
+        individuals.append(t[1:])
     return (average, individuals)
 
 def generate_all_dm_plots(edir):
@@ -315,9 +315,10 @@ def generate_all_dm_plots(edir):
             fig = plt.figure()
             fig.suptitle(" ".join([poll.replace("_", " "), "vs. time"]))
             ax = fig.add_subplot(1,1,1)
-            ax.plot(xrange(1, len(average) + 1), average)
             ax.plot(xrange(1, len(individuals) + 1), *zip(*individuals))
+            ax.plot(xrange(1, len(average) + 1), average)
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
+            fig.clear()
 
 
 
