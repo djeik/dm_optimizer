@@ -297,13 +297,13 @@ def parse_typical_poll_file(path):
 
 def generate_all_dm_plots(edir):
     dmdir = path.join(edir, "../dm")
-    function_dirs = filter(path.isdir, os.listdir(dmdir)) # function_dirs will be relative to dmdir
+    function_dirs = filter(lambda p: path.isdir(path.join(dmdir, p)), os.listdir(dmdir)) # function_dirs will be relative to dmdir
 
     if not function_dirs:
         raise ValueError("fatal: the previous step did not produce any data to plot.")
 
     for function in function_dirs:
-        plot_dir = path.join(edir, function)
+        plot_dir = path.join(edir, function) # where to save the plot
         os.makedirs(plot_dir)
         for poll in poll_names:
             data_path = path.join(dmdir, function, poll + ".txt")
