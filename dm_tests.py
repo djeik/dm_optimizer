@@ -6,7 +6,10 @@ matplotlib.use("TkAgg")
 from datetime import datetime
 import sys
 import random
+
 import os
+from os import path
+
 from time import time
 from math import sin
 from copy import copy
@@ -244,14 +247,9 @@ def experiment_task(args):
     return (test["name"], (success_rate, time_avg, nfev_avg, failures)) # this will get appended to the all_statistics of the master process
 
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
-def conduct_all_experiments(optimizer, experiment_defaults=experiment_defaults, names=poll_names):
+def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defaults, names=poll_names):
     all_statistics = [] # we will collect the general statistics for each experiment here, to perform a global average over all experiments.
     global_statistics = []
-
-    if not os.path.exists("experiments"):
-        os.makedirs("experiments")
-    edir = "experiments/" + optimizer["tag"] + " " + str(datetime.now())
-    os.makedirs(edir)
 
     pool = mp.Pool()
 
@@ -262,9 +260,9 @@ def conduct_all_experiments(optimizer, experiment_defaults=experiment_defaults, 
     #pool.join() # now we wait for the subprocesses to finish.
 
     # collect the results of the subprocesses
-    all_statistics  = [result[1]    for result in results]
+    all_statistics  = [result[1] for result in results]
 
-    with open(edir + '/' + "averages.txt", 'w', 1) as f:
+    with open(path.join(edir, "averages.txt"), 'w', 1) as f:
         print_csv("test", "success rate", "average time", "average fun. evals.", "failures", file=f)
         # print the general test data to the common file
         map(lambda (name, (success_rate, time_avg, nfev_avg, failures)): print_csv(name, success_rate, time_avg, nfev_avg, failures, file=f),
@@ -277,10 +275,11 @@ def conduct_all_experiments(optimizer, experiment_defaults=experiment_defaults, 
         print_csv("AVERAGE", *global_statistics, file=f)
         end_time = time()
 
-    with open(edir + '/' + "time.txt", 'w') as f:
+    with open(path.join(edir, "time.txt"), 'w') as f:
         print(end_time - start_time, file=f)
 
-    return edir
+    with open(path.join(edir, "optimizer.txt"), 'w') as f:
+        print(optimizer["tag"], file=f)
 
-def run_test(optimizer_name):
-    return conduct_all_experiments(optimizers[optimizer_name])
+def run_test(edir, optimizer_name):
+    return conduct_all_experiments(edir, optimizers[optimizer_name])
