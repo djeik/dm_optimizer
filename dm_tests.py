@@ -313,7 +313,8 @@ def generate_all_dm_plots(edir):
             poll_data = parse_typical_poll_file(data_path)
             average, individuals = poll_data
             fig = plt.figure()
-            ax = fig.add_axes()
+            fig.suptitle(" ".join([poll.replace("_", " "), "vs. time"]))
+            ax = fig.add_subplot(1,1,1)
             ax.plot(xrange(1, len(average) + 1), average)
             ax.plot(xrange(1, len(individuals) + 1), *zip(*individuals))
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
