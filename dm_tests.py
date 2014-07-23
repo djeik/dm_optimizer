@@ -299,6 +299,9 @@ def generate_all_dm_plots(edir):
     dmdir = path.join(edir, "../dm")
     function_dirs = filter(path.isdir, os.listdir(dmdir)) # function_dirs will be relative to dmdir
 
+    if not function_dirs:
+        raise ValueError("fatal: the previous step did not produce any data to plot.")
+
     for function in function_dirs:
         plot_dir = path.join(edir, function)
         os.makedirs(plot_dir)
