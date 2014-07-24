@@ -319,7 +319,7 @@ def parse_typical_poll_file(path):
     for t in csvtups:
         average.append(sanitize(t[0]))
         indivs_at_i = map(sanitize, t[1:])
-        individuals.append()
+        individuals.append(indivs_at_i)
         i += 1
     return (average, individuals)
 

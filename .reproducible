@@ -3,3 +3,4 @@ dm_tests.py
 test_both.sh
 .reproducible
 run_test.py
+.pipeline

@@ -1,2 +1,3 @@
 ./run_dm.sh dm
 ./make_plots_dm.py dm_plots
+./run_sa.sh sa
