@@ -32,3 +32,22 @@ Since we want to extend this version control scheme that I have crafted to guara
 At the end of the day, everything seems in place. run_reproducible has its own github repository now https://github.com/djeik/reproducible. I didn't get much work done on the optimizing the optimizer proper (heh). On the other hand, some fixes I seem to have introduced a while back have increased the runtime (by a LOT). This is probably due to generalizing the code to allow for SA. This involves a lot of dictionaries and lambdas, which AIUI reaaaaaaally slow. Thanks to my amazing accounting powers and experimental data, I can lookup exactly where this happened and figure out how to fix it. That, however, is for tomorrow.
 
 Holy shit, I wasn't kidding when I said really slow. IT'S INSANELY SLOW. Around 23 minutes for DM!!! It's certainly the dicts and lambdas, but still. That's madness. It was taking around 250 seconds before. This is a ~5x increase! Tomorrow will be a day of much profiling.
+
+07-18
+=====
+No real work on the optimizer today, but discussed with Simon different approaches for improving it:
+* Look into cooling schedules: it's something we'd like to avoid, but if it turns out to really make DM shine, then it might be worthwhile.
+* Use more than one target value: by maintaining several target values, we can try to make several steps and check each one locally. By examining each one and using a configurable decision procedure, we can get a more holistic view of the search space and try to make smarter jumps.
+* Look into those unrecoverable scenarios, and try to make them recoverable. This might only be fixable by playing with cooling schedules, and our procedure for dropping past minima.
+
+07-23
+=====
+No real work on the optimizer today, but more discussion of future directions with Simon.
+* use SA as a benchmark to determine what's the best dimension for testing each objective function
+* try playing with the number of iterations in SA: do higher counts necessarily improve it? (For DM, playing with the counts is basically unnecessary past some threshold around 250, it seems.)
+* try fancy "sniffing before digging" methods, like line searches and checking what happens if we step in many different directions, based on more than one past local minimum.
+Really weird bug... seems like only three iterations are recorded out of the 250 ! Is seems that this bug was introduced when I switched to the generalized system in which I can test DM and SA uniformly...
+
+07-24
+=====
+Tracked down that weird bug. It meant writing out a lot of for loops and bashing my head on the wall, but it seems to work now. There's something weird going on: the optimizer fails pretty frequently, but the averages are calculated only on the number of runs that produced some output.... so we get 100% success on the sphere function, but in reality, only 86/250 runs actually did something ! I think I need to relax those conditions on the starting positions, or do something in any case so that every run at least does something. That's one of the features of our method: it is capable of continuing to search essentially forever.

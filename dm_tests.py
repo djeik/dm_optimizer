@@ -23,12 +23,16 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
-from itertools import repeat, imap, ifilter, islice, chain, izip
+from itertools import repeat, imap, ifilter, islice, chain, izip, takewhile
 
 import dm_optimizer as dm
 from dm_optimizer import dm_optimizer
 
 import multiprocessing as mp
+
+# Construct a function that takes arbitrarily many arguments, but ignores them, always returning the same value.
+const = lambda x: lambda *y: x
+transpose = lambda x: zip(*x)
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0) # unbuffered output
 
@@ -192,6 +196,8 @@ def conduct_experiment(test, optimizer):
     success_rate  = success_total / float(runs)
     failures      = len(filter(lambda r: not r.success, rs))
 
+    print("Number of results collected:", len(rs))
+
     return (failures, success_rate, time_avg, nfev_avg, rs)
 
 def calculate_averages(statistics): # [[[a]]] -> [[a]]
@@ -200,7 +206,7 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
         w.r.t. time.
         """
     def avg_vs_t(s):
-# take in the list of runs and their courses, and line them up
+    # take in the list of runs and their courses, and line them up
         s_ = zip(*pad_lists(0, s)) # the first element of this thing is the list of values of the variable at the first iteration
         # for each list in s_, we compute the average, making a list of averages. That is the progression of the average value over time.
         return map(lambda x: sum(x) / float(len(x)), s_)
@@ -229,21 +235,31 @@ def experiment_task(args):
     if not os.path.exists(exp_dir):
         os.makedirs(exp_dir)
 
+    start_time = time()
     # Perform the experiment, rs is the actual OptimizeResult objects
     (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, optimizer);
+    end_time = time()
+    print(test["name"] + ":", "spent", end_time - start_time, "seconds performing experiment.")
 
     if optimizer["tag"] == "dm": # if the given optimizer is dm, we know how to inspect its internals and fish out useful information.
+        start_time = time()
         # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
         # line up all the data for a given iteration
-        padded_lists = pad_lists([], map(lambda r: copy(r.opt.vs), rs))
-        test_data = zip(*padded_lists) # [([a],[a],[a])] -> ([[a]], [[b]], [[c]])
+        vs = map(lambda r: copy(r.opt.vs), rs)
+        #vs_trans = map(transpose, vs) # vs_trans :: list of 3-tuples of lists, so [([y], [best min], [stepsize])]
+        mkll = lambda: map(lambda x: list(), xrange(len(vs))) # to make a list of lists
+        data_vs_iter = [mkll() for _ in xrange(len(poll_names))] # make a a list of lists for each data-type that is being polled
+        for (i, run) in enumerate(vs):
+            for (j, iteration_data) in enumerate(run):
+                [data_vs_iter[k][j].append(d) for (k, d) in enumerate(iteration_data)]
 
-        avgs = calculate_averages(test_data)
-        complete_data = zip(names, avgs, test_data)
+        avgs = calculate_averages(data_vs_iter)
+        complete_data = zip(names, avgs, data_vs_iter)
 
-        #import pdb; pdb.set_trace()
         # print the test-specific data to its own directory.
         write_experiment_data(exp_dir, complete_data)
+        end_time = time()
+        print(test["name"] + ":", "spent", end_time - start_time, "seconds writing.")
 
     write_experiment_messages(exp_dir, rs)
     print("End experiment:", test["name"])
@@ -289,13 +305,22 @@ def run_test(edir, optimizer_name):
 
 def parse_typical_poll_file(path):
     """ A poll file is one generated from write_experiment_data. The names of all the polls is in poll_names. """
+    def sanitize(string):
+        try:
+            return float(string)
+        except ValueError:
+            return None
+
     with open(path) as f:
         csvtups = csv_to_tuples([line for line in f])
     average = []
     individuals = []
+    i = 0
     for t in csvtups:
-        average.append(t[0])
-        individuals.append(t[1:])
+        average.append(sanitize(t[0]))
+        indivs_at_i = map(sanitize, t[1:])
+        individuals.append()
+        i += 1
     return (average, individuals)
 
 def generate_all_dm_plots(edir):
@@ -309,13 +334,17 @@ def generate_all_dm_plots(edir):
         plot_dir = path.join(edir, function) # where to save the plot
         os.makedirs(plot_dir)
         for poll in poll_names:
+            poll_pp = poll.replace("_", " ")
             data_path = path.join(dmdir, function, poll + ".txt")
             poll_data = parse_typical_poll_file(data_path)
             average, individuals = poll_data
             fig = plt.figure()
-            fig.suptitle(" ".join([poll.replace("_", " "), "vs. time"]))
+            fig.suptitle(" ".join([poll_pp, "vs. time"]))
             ax = fig.add_subplot(1,1,1)
-            ax.plot(xrange(1, len(individuals) + 1), *zip(*individuals))
+            print(len(individuals), ":", *[len(i) for i in individuals])
+            for individual_run in zip(*individuals):
+                ys = list(takewhile(lambda v: v != None, individual_run))
+                ax.plot(xrange(1, len(ys) + 1), ys)
             ax.plot(xrange(1, len(average) + 1), average)
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
             fig.clear()
