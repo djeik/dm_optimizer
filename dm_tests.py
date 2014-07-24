@@ -30,6 +30,9 @@ from dm_optimizer import dm_optimizer
 
 import multiprocessing as mp
 
+mkfprint = lambda f: lambda *args, **kwargs: print(*args, file=f, **kwargs)
+errprint = mkfprint(sys.stderr)
+
 # Construct a function that takes arbitrarily many arguments, but ignores them, always returning the same value.
 const = lambda x: lambda *y: x
 transpose = lambda x: zip(*x)
