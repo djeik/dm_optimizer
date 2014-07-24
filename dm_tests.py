@@ -196,8 +196,6 @@ def conduct_experiment(test, optimizer):
     success_rate  = success_total / float(runs)
     failures      = len(filter(lambda r: not r.success, rs))
 
-    print("Number of results collected:", len(rs))
-
     return (failures, success_rate, time_avg, nfev_avg, rs)
 
 def calculate_averages(statistics): # [[[a]]] -> [[a]]
@@ -229,7 +227,7 @@ def write_experiment_messages(exp_dir, rs):
 
 def experiment_task(args):
     edir, test, optimizer, names = args
-    print("Begin experiment:", test["name"])
+    errprint("Begin experiment:", test["name"])
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
     if not os.path.exists(exp_dir):
@@ -239,7 +237,7 @@ def experiment_task(args):
     # Perform the experiment, rs is the actual OptimizeResult objects
     (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, optimizer);
     end_time = time()
-    print(test["name"] + ":", "spent", end_time - start_time, "seconds performing experiment.")
+    errprint(test["name"] + ":", "spent", end_time - start_time, "seconds performing experiment.")
 
     if optimizer["tag"] == "dm": # if the given optimizer is dm, we know how to inspect its internals and fish out useful information.
         start_time = time()
@@ -259,10 +257,10 @@ def experiment_task(args):
         # print the test-specific data to its own directory.
         write_experiment_data(exp_dir, complete_data)
         end_time = time()
-        print(test["name"] + ":", "spent", end_time - start_time, "seconds writing.")
+        errprint(test["name"] + ":", "spent", end_time - start_time, "seconds writing.")
 
     write_experiment_messages(exp_dir, rs)
-    print("End experiment:", test["name"])
+    errprint("End experiment:", test["name"])
     return (test["name"], (success_rate, time_avg, nfev_avg, failures)) # this will get appended to the all_statistics of the master process
 
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
@@ -341,7 +339,6 @@ def generate_all_dm_plots(edir):
             fig = plt.figure()
             fig.suptitle(" ".join([poll_pp, "vs. time"]))
             ax = fig.add_subplot(1,1,1)
-            print(len(individuals), ":", *[len(i) for i in individuals])
             for individual_run in zip(*individuals):
                 ys = list(takewhile(lambda v: v != None, individual_run))
                 ax.plot(xrange(1, len(ys) + 1), ys)
