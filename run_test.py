@@ -23,7 +23,7 @@ def show_usage():
                   "\tsa -- Simulated Annealing."])
 
 if __name__ == "__main__":
-    if len(args) <3:
+    if len(args) < 3:
         errprint("fatal: incorrect command line.")
         show_usage()
         exit(1)

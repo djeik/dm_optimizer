@@ -1,7 +1,8 @@
 dm_optimizer.py
 dm_tests.py
-.reproducible
+dm_tests_config.py
 run_test.py
 run_dm.sh
 run_sa.sh
+.reproducible
 .pipeline

@@ -28,14 +28,10 @@ from itertools import repeat, imap, ifilter, islice, chain, izip, takewhile
 import dm_optimizer as dm
 from dm_optimizer import dm_optimizer
 
+from dm_tests_config import *
+from dm_utils        import *
+
 import multiprocessing as mp
-
-mkfprint = lambda f: lambda *args, **kwargs: print(*args, file=f, **kwargs)
-errprint = mkfprint(sys.stderr)
-
-# Construct a function that takes arbitrarily many arguments, but ignores them, always returning the same value.
-const = lambda x: lambda *y: x
-transpose = lambda x: zip(*x)
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0) # unbuffered output
 
@@ -47,69 +43,6 @@ def simon_f1(xy):
 def simon_f2(xs):
     xy = xs - np.array([100, 100])
     return simon_f1(xy)
-
-# deap's benchmarking functions return the values as 1-tuples
-# so we need to unpack element 0 which is the actual function-value.
-def unwrap_bench(f):
-    return lambda x: f(x)[0]
-
-def random_guess(dim, scale = 1):
-    return np.array([scale * (random.uniform(0,1) - 1/2.0) for _ in xrange(dim)])
-
-def randomr_guess(dim, r=(-1,1)):
-    return np.array([random.uniform(*rr) for rr in repeat(r, dim)])
-
-def intersperse(delimiter, seq):
-        return islice(chain.from_iterable(izip(repeat(delimiter), seq)), 1, None)
-
-def ipad_lists(padding, matrix):
-    """ Pad the component lists of a list of lists to make it into a matrix. The operation is performed in-place, but the matrix is also returned,
-        to allow chaining.
-        """
-    maxlen = reduce(max, imap(len, matrix))
-    for vector_ in matrix:
-        vector = list(vector_) # copy the list
-        vector.extend(repeat(padding, maxlen - len(vector)))
-        yield vector
-
-def pad_lists(*args):
-    return list(ipad_lists(*args))
-
-def randomr_dm(f, d, range, dm_args={}):
-    return dm.minimize(f, randomr_guess(d, range), randomr_guess(d, range), **dm_args)
-
-def randomr_sa(f, d, range, sa_args={}):
-    r = basinhopping(f, randomr_guess(d, range), **sa_args)
-    r.success = True # TODO this needs to be something that sucks less.
-    return r
-
-def read_2d_csv(filename):
-    dats = []
-    with open(filename) as f:
-        for line in f:
-            dats.append(tuple(map(float, line.split(','))))
-    return zip(*dats)
-
-def write_2d_csv(fname, dats):
-    with open(fname, 'w') as f:
-        for (iter_count, success_rate) in dats:
-            print(iter_count, success_rate, sep=',', file=f)
-
-def tuples_to_csv(dats):
-    return '\n'.join([','.join(map(str, x)) for x in dats])
-
-def csv_to_tuples(csv):
-    """ Expect a list of records, where each record consist of fields that are comma-separated.
-        Return a list of lists. No handling of escaping the commas is done.
-        """
-    return [tuple(x.split(',')) for x in csv]
-
-def print_csv(*args, **kwargs):
-    print(*args, sep=',', **kwargs)
-
-def write_str(fname, string):
-    with open(fname, 'w') as f:
-        f.write(string)
 
 def multiplot(dats, names=[], nrows=None, ncols=1):
     """ Make multiple plots in the case where each x value has several y values associated with it.
@@ -137,42 +70,6 @@ def multiplot(dats, names=[], nrows=None, ncols=1):
             plt.title(names[i-1])
         plt.plot(*zip(*map(lambda dat: (dat[0], dat[i]), dats)))
 
-minimization = 1
-maximization = -1
-
-tests = map(lambda xs: dict(zip(
-        ["name",        "function",                        "optimization_type", "dimensions", "range",      "optimum"], xs)),
-        [("ackley",     "unwrap_bench(bench.ackley)",      minimization,        None,         (-15, 30),     0),
-        ("cigar",       "unwrap_bench(bench.cigar)",       minimization,        None,         None,          0),
-        ("sphere",      "unwrap_bench(bench.sphere)",      minimization,        None,         None,          0),
-        ("bohachevsky", "unwrap_bench(bench.bohachevsky)", minimization,        None,         (-100, 100),   0),
-        ("griewank",    "unwrap_bench(bench.griewank)",    minimization,        None,         (-600, 600),   0),
-        ("h1",          "unwrap_bench(bench.h1)",          maximization,        2,            (-100, 100),   2),
-        ("himmelblau",  "unwrap_bench(bench.himmelblau)",  minimization,        2,            (-6, 6),       0),
-        ("rastrigin",   "unwrap_bench(bench.rastrigin)",   minimization,        None,         (-5.12, 5.12), 0),
-        ("rosenbrock",  "unwrap_bench(bench.rosenbrock)",  minimization,        None,         None,          0),
-        ("schaffer",    "unwrap_bench(bench.schaffer)",    minimization,        None,         (-100, 100),   0),
-        ("schwefel",    "unwrap_bench(bench.schwefel)",    minimization,        None,         (-500, 500),   0),
-        ("simon_f2",    "simon_f2",                        minimization,        2,            (-100, 100),   0)])
-        ## The following functions are 'weird' in some way that makes testing too difficult.
-        #(unwrap_bench(bench.rastrigin_scaled),
-        #(bench.rastrigin_skew
-        #(unwrap_bench(bench.rand), None, None, None, None),
-        #(unwrap_bench(bench.plane), minimization, None, None, 0),
-
-# we're going to stop naming things after dates, due to the new commit-enforcing policy.
-def dm_poll_callback(self):
-    self.vs.append( (self.fv, self.vals[0].y, norm(self.step)) )
-poll_names = ["function_value", "best_minimum", "step_size"] # the names of the things extracted from the optimizer internal state
-
-sampler_defaults = {"dimensions":5, "range":(-100, 100)}
-experiment_defaults = {"runs":250, "success_threshold":0.001}
-dm_defaults = {"refresh_rate":4, "max_iterations":250, "callback":dm_poll_callback}
-sa_defaults = {"niter":100}
-
-optimizers = {"dm":{"tag":"dm", "optimizer":randomr_dm, "config":dm_defaults},
-              "sa":{"tag":"sa", "optimizer":randomr_sa, "config":sa_defaults}}
-
 def conduct_experiment(test, optimizer):
     runs         = experiment_defaults["runs"]
     dimensions   = test["dimensions"] or sampler_defaults["dimensions"]
@@ -195,7 +92,9 @@ def conduct_experiment(test, optimizer):
     time_avg      = time_total / float(runs)
     nfev_total    = sum(imap(lambda r: r.nfev, rs))
     nfev_avg      = nfev_total / float(runs)
-    success_total = len(filter(lambda r: r.success and abs(r.fun - test["optimum"]) < experiment_defaults["success_threshold"], rs))
+    success_total = len(filter(lambda r: r.success
+                                         and abs(optimization_type * r.fun - test["optimum"]) < experiment_defaults["success_threshold"],
+                               rs))
     success_rate  = success_total / float(runs)
     failures      = len(filter(lambda r: not r.success, rs))
 
