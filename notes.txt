@@ -52,3 +52,7 @@ Really weird bug... seems like only three iterations are recorded out of the 250
 =====
 Tracked down that weird bug. It meant writing out a lot of for loops and bashing my head on the wall, but it seems to work now. 
 There's something weird going on: the optimizer fails pretty frequently, but the averages are calculated only on the number of runs that produced some output.... so we get 100% success on the sphere function, but in reality, only 86/250 runs actually did something ! I think I need to relax those conditions on the starting positions, or do something in any case so that every run at least does something. That's one of the hypothetical features of our method: it is capable of continuing to search essentially forever, but as it is currently, it just dies (pretty often!)
+
+07-25
+=====
+Wrote find_test_dimension.py to look for the best dimension for testing an objective function in. The idea is to use SA as a benchmark: run SA on the objective function but keep boosting the dimension number until SA's success rate is below 20%; the dimension at which this occurs is the best dimension to test the function at. This will be especially useful for those functions that we seem to get 100% success rate on; perhaps at some higher dimension, they do really badly, so it would be worthwhile to figure out when that occurs, if it does.

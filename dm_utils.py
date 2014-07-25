@@ -26,6 +26,8 @@ def ipad_lists(padding, matrix):
         vector.extend(repeat(padding, maxlen - len(vector)))
         yield vector
 
+imap_p = lambda p, t, f, xs: imap(lambda x: t(x) if p(x) else f(x), xs)
+
 def pad_lists(*args):
     return list(ipad_lists(*args))
 

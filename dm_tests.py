@@ -33,7 +33,7 @@ from dm_utils        import *
 
 import multiprocessing as mp
 
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0) # unbuffered output
+sys.stdout = os.fdopen(sys.__stdout__.fileno(), 'w', 1) # line buffered output
 
 # These are the functions Simon defined to test it on:
 def simon_f1(xy):
@@ -70,6 +70,19 @@ def multiplot(dats, names=[], nrows=None, ncols=1):
             plt.title(names[i-1])
         plt.plot(*zip(*map(lambda dat: (dat[0], dat[i]), dats)))
 
+def calculate_stats(test, rs, time_total):
+    optimization_type = test["optimization_type"]
+    time_avg      = time_total / float(len(rs))
+    nfev_total    = sum(imap(lambda r: r.nfev, rs))
+    nfev_avg      = nfev_total / float(len(rs))
+    success_total = len(filter(lambda r: r.success
+                                         and abs(optimization_type * r.fun - test["optimum"]) < experiment_defaults["success_threshold"],
+                               rs))
+    success_rate  = success_total / float(len(rs))
+    failures      = len(filter(lambda r: not r.success, rs))
+
+    return (failures, success_rate, time_avg, nfev_avg)
+
 def conduct_experiment(test, optimizer):
     runs         = experiment_defaults["runs"]
     dimensions   = test["dimensions"] or sampler_defaults["dimensions"]
@@ -89,16 +102,8 @@ def conduct_experiment(test, optimizer):
     end_time   = time()
 
     time_total    = end_time - start_time
-    time_avg      = time_total / float(runs)
-    nfev_total    = sum(imap(lambda r: r.nfev, rs))
-    nfev_avg      = nfev_total / float(runs)
-    success_total = len(filter(lambda r: r.success
-                                         and abs(optimization_type * r.fun - test["optimum"]) < experiment_defaults["success_threshold"],
-                               rs))
-    success_rate  = success_total / float(runs)
-    failures      = len(filter(lambda r: not r.success, rs))
 
-    return (failures, success_rate, time_avg, nfev_avg, rs)
+    return calculate_stats(test, rs, time_total) + (rs,)
 
 def calculate_averages(statistics): # [[[a]]] -> [[a]]
     """ Take a [[[a]]], where [a] is the period sampling of a datum each iteration, [[a]] is such a sampling done on many individual runs,
