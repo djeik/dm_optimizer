@@ -324,6 +324,8 @@ def parse_typical_poll_file(path):
         i += 1
     return (average, individuals)
 
+plots_config = {"individual_color":"0.6", "average_color":"blue"}
+
 def generate_all_dm_plots(edir):
     dmdir = path.join(edir, "../dm")
     function_dirs = filter(lambda p: path.isdir(path.join(dmdir, p)), os.listdir(dmdir)) # function_dirs will be relative to dmdir
@@ -344,8 +346,8 @@ def generate_all_dm_plots(edir):
             ax = fig.add_subplot(1,1,1)
             for individual_run in zip(*individuals):
                 ys = list(takewhile(lambda v: v != None, individual_run))
-                ax.plot(xrange(1, len(ys) + 1), ys)
-            ax.plot(xrange(1, len(average) + 1), average)
+                ax.plot(xrange(1, len(ys) + 1), ys, color=plots_config["individual_color"])
+            ax.plot(xrange(1, len(average) + 1), average, color=plots_config["average_color"])
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
             fig.clear()
 
