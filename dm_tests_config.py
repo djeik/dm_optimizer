@@ -11,18 +11,18 @@ maximization = -1
 
 tests = map(lambda xs: dict(zip(
         ["name",        "function",                        "optimization_type", "dimensions", "range",      "optimum"], xs)),
-        [("ackley",     "unwrap_bench(bench.ackley)",      minimization,        None,         (-15, 30),     0),
-        ("bohachevsky", "unwrap_bench(bench.bohachevsky)", minimization,        None,         (-100, 100),   0),
-        ("cigar",       "unwrap_bench(bench.cigar)",       minimization,        None,         None,          0),
-        ("griewank",    "unwrap_bench(bench.griewank)",    minimization,        None,         (-600, 600),   0),
-        ("h1",          "unwrap_bench(bench.h1)",          maximization,        2,            (-100, 100),   2),
-        ("himmelblau",  "unwrap_bench(bench.himmelblau)",  minimization,        2,            (-6, 6),       0),
-        ("rastrigin",   "unwrap_bench(bench.rastrigin)",   minimization,        None,         (-5.12, 5.12), 0),
-        ("rosenbrock",  "unwrap_bench(bench.rosenbrock)",  minimization,        None,         None,          0),
-        ("schaffer",    "unwrap_bench(bench.schaffer)",    minimization,        None,         (-100, 100),   0),
-        ("schwefel",    "unwrap_bench(bench.schwefel)",    minimization,        None,         (-500, 500),   0),
-        ("simon_f2",    "simon_f2",                        minimization,        2,            (-100, 100),   0),
-        ("sphere",      "unwrap_bench(bench.sphere)",      minimization,        None,         None,          0)])
+        [("ackley",     "unwrap_bench(bench.ackley)",      minimization,        9,            (-15, 30),     0), # best
+        ("bohachevsky", "unwrap_bench(bench.bohachevsky)", minimization,        11,           (-100, 100),   0), # best
+        ("cigar",       "unwrap_bench(bench.cigar)",       minimization,        50,           None,          0), # large
+        ("griewank",    "unwrap_bench(bench.griewank)",    minimization,        1,            (-600, 600),   0), # best
+        ("h1",          "unwrap_bench(bench.h1)",          maximization,        2,            (-100, 100),   2), # required
+        ("himmelblau",  "unwrap_bench(bench.himmelblau)",  minimization,        2,            (-6, 6),       0), # required
+        ("rastrigin",   "unwrap_bench(bench.rastrigin)",   minimization,        6,            (-5.12, 5.12), 0), # best
+        ("rosenbrock",  "unwrap_bench(bench.rosenbrock)",  minimization,        10,           None,          0), # large, but slow
+        ("schaffer",    "unwrap_bench(bench.schaffer)",    minimization,        2,            (-100, 100),   0), # best
+        ("schwefel",    "unwrap_bench(bench.schwefel)",    minimization,        2,            (-500, 500),   0), # best
+        ("simon_f2",    "simon_f2",                        minimization,        2,            (-100, 100),   0), # required
+        ("sphere",      "unwrap_bench(bench.sphere)",      minimization,        50,           None,          0)]) # large
         ## The following functions are 'weird' in some way that makes testing too difficult.
         #(unwrap_bench(bench.rastrigin_scaled),
         #(bench.rastrigin_skew

@@ -1,0 +1,9 @@
+griewank,1
+rastrigin,6
+ackley,9
+schaffer,2
+schwefel,2
+bohachevsky,11
+sphere,large
+rosenbrock,large
+cigar,large
