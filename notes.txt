@@ -76,3 +76,5 @@ Another one later that is also slow: a53e3102d73e7e21717099283ebdbc6fe9fb1ccd
 
 Starting with this output, everything is SO SLOW.
 This seems to be where I introduced the generalization to allow for SA.
+
+From some rudimentary sniffing around, it looks like the code that handles maximization is what's causing the slowdown, as it seems that it was after its introduction that performance began to suffer (2-second average runtimes for some functions!)
