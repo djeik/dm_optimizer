@@ -74,9 +74,16 @@ Still fast:
 dm 2014-07-16 17:13:13.790325     --  5fb758e0f7d85fdf1bfc1c5a3e854449399d025e (NOT CLEAN, fuck...)
 Another one later that is also slow: a53e3102d73e7e21717099283ebdbc6fe9fb1ccd
 
+Note: I've started a branch at the last fast commit called 'last-fast'.
+
 Starting with this output, everything is SO SLOW.
 This seems to be where I introduced the generalization to allow for SA.
+Yes, from the commit whose message is "add SA and generalize testing code" everything becomes very very slow. The average number of function evaluations jumps to 45000, whereas before it was 15000. Furthermore, the success rate of the rastrigin function drops from ~60% to zero! 
 
 From some rudimentary sniffing around, it looks like the code that handles maximization is what's causing the slowdown, as it seems that it was after its introduction that performance began to suffer (2-second average runtimes for some functions!)
 
 Okay no. It's not that. The maximization does introduce an extra layer of function calls, but it's not what's causing the slowdown. It seems that the average number of function evaluations has increased between the "fast" runs and "slow" runs, so really, what's happening is that the slow runs are evaluating the objective function far more frequently, which is what's resulting in the slowdown. In fact, from some back-of-the-envelope math, it seems that the rosenbrock function (which can take up to 10 seconds to do one run!) is being evaluated 11 BILLION times in total ! Simply *evaluating a function* (ANY FUNCTION!) that many times takes roughly 800 seconds. (Hooray, python...) My conclusion is thus that it's not the *testing* code that is at fault, but rather the actual optimizer... I must have changed something that is causing the objective function to be evaluated more frequently. 
+
+It doesn't make sense that the number of function evaluations should increase so much though... Nothing changed in dm_optimizer.py save for some two lines relating to bookkeeping, so the extra evals are coming from changes in the testing suite, which DOESN'T MAKE SENSE >.<
+
+Could it be the refresh rate? The refresh rate is controlled by the testing suite, in the configuration. That might also explain the drop in performance in the rastrigin function, among others. I am not quite sure how that explains the function evaluations, however...
