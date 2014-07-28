@@ -59,3 +59,20 @@ Wrote find_test_dimension.py to look for the best dimension for testing an objec
 Yeah no, it turns out that there are three functions that SA can solve in arbitrarily high dimensions. Perhaps they aren't worth testing? I suspect that's because finding their global minimum is the only local minimum or something like that.
 
 Think about the "minimum density" d(x), i.e. the average distance to a minimum at a given point x. First, is it useful? Perhaps it can be used to drive "exploration" but pushing away from places where many local minima have been discovered? Perhaps it can be used to determine the maximum step length? The obvious disadvantage of that, I suspect, is that the average step length will increase over time, whereas we would prefer that it vary in both directions. Perhaps, we can check the centroids of groups of three local minima? If we do a local search at the center and fall on one of the minima we already know, maybe we can use this to mark off the interior of that region as not useful.
+
+07-28
+=====
+Hunting down the slowness....
+
+Still fast:
+ * 2014-07-16 13:34:09.105242
+ * 2014-07-16 14:58:04.701067
+ * 2014-07-16 15:29:08.668288
+ * 2014-07-16 15:50:02.031571 (no failures) -- 5fb758e0f7d85fdf1bfc1c5a3e854449399d025e (CLEAN)
+ ^ that's the last one where things are fast. It turns out that we even have good success on functions that we currently don't !
+
+dm 2014-07-16 17:13:13.790325     --  5fb758e0f7d85fdf1bfc1c5a3e854449399d025e (NOT CLEAN, fuck...)
+Another one later that is also slow: a53e3102d73e7e21717099283ebdbc6fe9fb1ccd
+
+Starting with this output, everything is SO SLOW.
+This seems to be where I introduced the generalization to allow for SA.
