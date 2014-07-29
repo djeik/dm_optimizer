@@ -37,7 +37,7 @@ class dm_optimizer:
         Attributes:
             max_iterations      -- the maximum number of iterations to perform before aborting minimization.
             tolerance           -- the threshold above which we consider two points to be distinct.
-            verbosity           -- controls debug output; higher numbers = more messages.
+            verbosity           -- controls debug output; higher numbers = more messages. Special string 'any' will cause everything to be logged.
             first_target_ratio  -- determines how low the first target should be.
             greediness          -- how quickly should the target value be lowered.
             fun                 -- the objective function.
@@ -49,6 +49,7 @@ class dm_optimizer:
             lpos                -- the path the optimizer has followed along the objective function.
             callback            -- a function called as a method at the end of every iteration. Passed to it is a reference to the optimizer.
             minimizer_kwargs    -- keyword arguments passed to the local minimizer.
+            logfile             -- (a file handle) where debug messages should be logged. (Default: sys.stderr)
 
         Notes:
             vals is stored as a sorted list, since we frequently just need to get the n smallest values.
@@ -85,7 +86,7 @@ class dm_optimizer:
 
     def logmsg(self, priority, *args, **kwargs):
         """ Forward all arguments to print if the given priority is less than or equal to the verbosity of the optimizer. The file keyword argument
-            of print is set to sys.stderr.
+            of print is set to the logfile.
 
             Arguments:
                 priority -- if this value is less than `verbosity`, all other arguments are forwarded to print.
@@ -93,8 +94,8 @@ class dm_optimizer:
             Returns:
                 Nothing.
             """
-        if priority == self.verbosity:
-            print(*args, file=self.logfile, **kwargs)
+        if (isinstance(self.verbosity, str) and self.verbosity == "any") or priority == self.verbosity:
+            print("%" + str(priority) + "%", *args, file=self.logfile, **kwargs)
 
     def fun(self, x):
         """ Evaluate the objective function at the given point and increment the running count of function calls. """

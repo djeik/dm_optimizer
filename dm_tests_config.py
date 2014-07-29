@@ -33,7 +33,7 @@ poll_names = ["function_value", "best_minimum", "step_size"] # the names of the 
 
 sampler_defaults = {"dimensions":5, "range":(-100, 100)}
 experiment_defaults = {"runs":250, "success_threshold":0.001}
-dm_defaults = {"refresh_rate":5, "max_iterations":150, "callback":dm_poll_callback}
+dm_defaults = {"refresh_rate":5, "max_iterations":150, "callback":dm_poll_callback, "verbosity":"any"}
 sa_defaults = {"niter":100}
 
 optimizers = {"dm":{"tag":"dm", "optimizer":randomr_dm, "config":dm_defaults},
