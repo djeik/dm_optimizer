@@ -13,7 +13,7 @@ tests = map(lambda xs: dict(zip(
         ["name",        "function",                        "optimization_type", "dimensions", "range",      "optimum"], xs)),
         [("ackley",     "unwrap_bench(bench.ackley)",      minimization,        9,            (-15, 30),     0), # best
         ("bohachevsky", "unwrap_bench(bench.bohachevsky)", minimization,        11,           (-100, 100),   0), # best
-        ("cigar",       "unwrap_bench(bench.cigar)",       minimization,        50,           None,          0), # large
+        ("cigar",       "unwrap_bench(bench.cigar)",       minimization,        10,           None,          0), # large
         ("griewank",    "unwrap_bench(bench.griewank)",    minimization,        1,            (-600, 600),   0), # best
         ("h1",          "unwrap_bench(bench.h1)",          maximization,        2,            (-100, 100),   2), # required
         ("himmelblau",  "unwrap_bench(bench.himmelblau)",  minimization,        2,            (-6, 6),       0), # required
@@ -22,7 +22,7 @@ tests = map(lambda xs: dict(zip(
         ("schaffer",    "unwrap_bench(bench.schaffer)",    minimization,        2,            (-100, 100),   0), # best
         ("schwefel",    "unwrap_bench(bench.schwefel)",    minimization,        2,            (-500, 500),   0), # best
         ("simon_f2",    "simon_f2",                        minimization,        2,            (-100, 100),   0), # required
-        ("sphere",      "unwrap_bench(bench.sphere)",      minimization,        50,           None,          0)]) # large
+        ("sphere",      "unwrap_bench(bench.sphere)",      minimization,        10,           None,          0)]) # large
         ## The following functions are 'weird' in some way that makes testing too difficult.
         #(unwrap_bench(bench.rastrigin_scaled),
         #(bench.rastrigin_skew
