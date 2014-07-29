@@ -398,19 +398,13 @@ class dm_optimizer:
                     self.logmsg(1, "Found fixed point: f", self.pmin, " = ", ynear, sep='')
                     self.logmsg(1, "Step was:", self.step)
                     newtarget1 = self.refresh_target()
-                    newtarget2 = self.very_greedy_refresh_target()
-                    self.target = newtarget2
-                    self.logmsg(7, "Difference in targets (fixed-point): ", newtarget1 - newtarget2)
+                    self.target = newtarget1
 
                 # every `refresh_rate` iterations, we refresh the target value, to avoid stale convergeance
                 if (not self.fixed_target) and self.iteration % self.refresh_rate == 0:
-                    m = self.chopfactor
-                    del self.vals[m:-m]
                     oldtarget = self.target
                     newtarget1 = self.refresh_target() # mutates `target`
-                    newtarget2 = self.very_greedy_refresh_target()
-                    self.target = newtarget2
-                    self.logmsg(7, "Difference in targets (afterdel): ", newtarget1 - newtarget2)
+                    self.target = newtarget1
 
                 if not self.callback is None:
                     self.callback(self)
