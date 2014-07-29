@@ -83,10 +83,17 @@ def calculate_stats(test, rs, time_total):
 
     return (failures, success_rate, time_avg, nfev_avg)
 
-def conduct_experiment(test, optimizer):
+def is_dm(optimizer):
+    return optimizer["tag"] == "dm"
+
+def conduct_experiment(exp_dir, test, optimizer):
     runs         = experiment_defaults["runs"]
     dimensions   = test["dimensions"] or sampler_defaults["dimensions"]
     range        = test["range"]      or sampler_defaults["range"]
+
+    if is_dm(optimizer):
+        logs_dir = path.join(exp_dir, "logs")
+        os.makedirs(logs_dir)
 
     # construct the objective function from the string passed into the subprocess
     f_ = eval(test["function"]) # extract the function from the string
@@ -96,12 +103,17 @@ def conduct_experiment(test, optimizer):
     internal_optimizer = optimizer["optimizer"]
     optimizer_config   = optimizer["config"]
     rs = [] # collect the OptimizeResult objects in here.
+
     start_time = time()
     for i in xrange(runs):
+        if is_dm(optimizer):
+            optimizer_config["logfile"] = open(path.join(logs_dir, str(i) + ".log"), 'a')
         rs.append(internal_optimizer(f, dimensions, range, optimizer_config))
-    end_time   = time()
+        if is_dm(optimizer):
+            optimizer_config["logfile"].close()
+    end_time = time()
 
-    time_total    = end_time - start_time
+    time_total = end_time - start_time
 
     return calculate_stats(test, rs, time_total) + (rs,)
 
@@ -142,7 +154,7 @@ def experiment_task(args):
 
     start_time = time()
     # Perform the experiment, rs is the actual OptimizeResult objects
-    (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(test, optimizer);
+    (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(exp_dir, test, optimizer);
     end_time = time()
     errprint(test["name"] + ":", "spent", end_time - start_time, "seconds performing experiment.")
 
