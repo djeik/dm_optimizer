@@ -41,10 +41,10 @@ transpose = lambda x: zip(*x)
 def randomr_guess(dim, r=(-1,1)):
     return np.array([random.uniform(*rr) for rr in repeat(r, dim)])
 
-def randomr_dm(f, d, range, dm_args={}):
+def randomr_dm(f, d, range, dm_args):
     return dm.minimize(f, randomr_guess(d, range), randomr_guess(d, range), **dm_args)
 
-def randomr_sa(f, d, range, sa_args={}):
+def randomr_sa(f, d, range, sa_args):
     r = basinhopping(f, randomr_guess(d, range), **sa_args)
     r.success = True # TODO this needs to be something that sucks less.
     return r
