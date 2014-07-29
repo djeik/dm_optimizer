@@ -32,7 +32,7 @@ tests = map(lambda xs: dict(zip(
 poll_names = ["function_value", "best_minimum", "step_size"] # the names of the things extracted from the optimizer internal state
 
 sampler_defaults = {"dimensions":5, "range":(-100, 100)}
-experiment_defaults = {"runs":250, "success_threshold":0.001}
+experiment_defaults = {"runs":75, "success_threshold":0.001}
 dm_defaults = {"refresh_rate":5, "max_iterations":150, "callback":dm_poll_callback, "verbosity":"any"}
 sa_defaults = {"niter":100}
 
