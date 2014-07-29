@@ -449,14 +449,18 @@ def minimize(f, x1, x2, **kwargs):
 
     #return optimizer.minimize(x1, x2)
     try:
-        return optimizer.minimize(x1, x2)
+        res = optimizer.minimize(x1, x2)
     except Exception as e:
         res = sopt.OptimizeResult()
-        res.message = [str(e)]
+        res.message = ["Exception!", str(e)]
         res.status  = 2
         res.success = False
         res.nfev    = optimizer.nfev
         res.njev    = optimizer.njev
         res.opt = optimizer # we'll put the broken optimizer in here in case we need it to recover some failure information
-        return res
 
+    try:
+        optimizer.logmsg(1, "Exit message(s):", *res.message)
+    except Exception as e:
+        print("Fatal error: could not write exit messages to logfile.")
+    return res
