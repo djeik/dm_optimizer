@@ -122,6 +122,7 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
         and finally [[[a]]] is a list of such statistics, and produce a [[a]] the same length as the input [[[a]]] that is a a list of averages
         w.r.t. time.
         """
+    # TODO the following is crap. It assumes statistics is in a format which it is no longer in. This causes exceptions due to divisions by zero.
     def avg_vs_t(s):
     # take in the list of runs and their courses, and line them up
         s_ = zip(*pad_lists(0, s)) # the first element of this thing is the list of values of the variable at the first iteration

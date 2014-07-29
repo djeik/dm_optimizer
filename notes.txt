@@ -97,3 +97,5 @@ IDEA: could it be that we split up the configuration for DM and SA that the max_
 Damn. It seems that the correct kwargs are being passed to dm_optimizer. It's really only running the right number of times.
 
 It turns out that... this was all expected behaviour. It turns out that in that commit in which I generalize the code to work for SA that I change the default number of dimensions tested from 2 to 5, and that some of the objective functions, especially the Rosenbrock function, take superlinear time in the number of dimensions. (Rosenbrock appears quadratic from what I saw in its source code.) That explains why Rosenbrock goes from 200 seconds to... a large number.
+
+So now there's another bug woooooooo!! Looks like a divide by zero is occurring based on self.iteration in dm_tests, causing the subprocesses to die. Without knowing it, commit dff4f0c8d4cf35065de1a43104cebd6245bf1abc was mitigating this, since self.iteration becomes an ordinal, and so starts at 1. Therefore, the nit stored in the OptimizeResult is 1 and the divide by zero does not occur.
