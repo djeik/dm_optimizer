@@ -122,13 +122,10 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
         and finally [[[a]]] is a list of such statistics, and produce a [[a]] the same length as the input [[[a]]] that is a a list of averages
         w.r.t. time.
         """
-    # TODO the following is crap. It assumes statistics is in a format which it is no longer in. This causes exceptions due to divisions by zero.
-    def avg_vs_t(s):
-    # take in the list of runs and their courses, and line them up
-        s_ = zip(*pad_lists(0, s)) # the first element of this thing is the list of values of the variable at the first iteration
-        # for each list in s_, we compute the average, making a list of averages. That is the progression of the average value over time.
-        return map(lambda x: sum(x) / float(len(x)), s_)
-    return map(avg_vs_t, statistics)
+    def avg(l):
+        return sum(l) / float(len(l))
+    avgs = [[avg(data) for data in iteration] for iteration in statistics]
+    return zip(*avgs) # transpose
 
 def write_experiment_data(exp_dir, complete_experiment):
     """ Expects a tuple in the form (name, averages, all runs), and writes out all the data for this experiment into the given directory. """
