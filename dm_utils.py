@@ -42,7 +42,6 @@ def randomr_guess(dim, r=(-1,1)):
     return np.array([random.uniform(*rr) for rr in repeat(r, dim)])
 
 def randomr_dm(f, d, range, dm_args):
-    errprint(dm_args)
     return dm.minimize(f, randomr_guess(d, range), randomr_guess(d, range), **dm_args)
 
 def randomr_sa(f, d, range, sa_args):
