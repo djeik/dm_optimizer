@@ -341,7 +341,7 @@ class dm_optimizer:
                         res = sopt.OptimizeResult()
                         res.nit     = self.iteration
                         res.success = True
-                        res.message = ["All local minima have converged to a point. Optimization cannot proceed."]
+                        res.message = ["All local minima have converged to a point. Optimization cannot proceed.", "new_target failed."]
                         res.status  = 3
                         res.x       = self.pmin
                         res.fun     = self.fv
@@ -369,7 +369,7 @@ class dm_optimizer:
                     res = sopt.OptimizeResult()
                     res.nit     = self.iteration
                     res.success = True
-                    res.message = ["All local minima have converged to a point. Optimization cannot proceed."]
+                    res.message = ["All local minima have converged to a point. Optimization cannot proceed.", "best_minimum_x failed."]
                     res.status  = 3
                     res.x       = self.pmin
                     res.fun     = self.fv
