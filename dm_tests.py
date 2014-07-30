@@ -123,16 +123,17 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
         w.r.t. time.
         """
     def avg(l):
-        return sum(l) / float(len(l))
+        if len(l) == 0:
+            return 0
+        return sum(imap(lambda x: 0 if x is None else x, l)) / float(len(l))
     avgs = [[avg(data) for data in iteration] for iteration in statistics]
-    return zip(*avgs) # transpose
+    return avgs # transpose
 
 def write_experiment_data(exp_dir, complete_experiment):
     """ Expects a tuple in the form (name, averages, all runs), and writes out all the data for this experiment into the given directory. """
     for (name, average_vs_t, data) in complete_experiment:
         with open(exp_dir + "/" + name + ".txt", 'w') as f:
             for (i, run_i) in enumerate(zip(*pad_lists(None, data))):
-                #f.write(str(i) + ',') # writing the iteration number is not useful, since they're in order. Therefore, line # = iteration #.
                 f.write(str(average_vs_t[i]))
                 for value in run_i:
                     f.write(',' + str(value))
@@ -161,12 +162,12 @@ def experiment_task(args):
         # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
         # line up all the data for a given iteration
         vs = map(lambda r: copy(r.opt.vs), rs)
-        #vs_trans = map(transpose, vs) # vs_trans :: list of 3-tuples of lists, so [([y], [best min], [stepsize])]
-        mkll = lambda: map(lambda x: list(), xrange(len(vs))) # to make a list of lists
-        data_vs_iter = [mkll() for _ in xrange(len(poll_names))] # make a a list of lists for each data-type that is being polled
-        for (i, run) in enumerate(vs):
-            for (j, iteration_data) in enumerate(run):
-                [data_vs_iter[k][j].append(d) for (k, d) in enumerate(iteration_data)]
+
+        maxlen = reduce(max, imap(len, vs))
+        names_n = len(poll_names)
+        data_vs_iter = [[[run[iteration_i][data_i] if iteration_i < len(run) else None for run in vs]
+                                                                                       for iteration_i in xrange(maxlen)]
+                                                                                       for data_i in xrange(names_n)]
 
         avgs = calculate_averages(data_vs_iter)
         complete_data = zip(names, avgs, data_vs_iter)
