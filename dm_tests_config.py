@@ -18,7 +18,7 @@ tests = map(lambda xs: dict(zip(
         ("h1",          "unwrap_bench(bench.h1)",          maximization,        2,            (-100, 100),   2), # required
         ("himmelblau",  "unwrap_bench(bench.himmelblau)",  minimization,        2,            (-6, 6),       0), # required
         ("rastrigin",   "unwrap_bench(bench.rastrigin)",   minimization,        6,            (-5.12, 5.12), 0), # best
-        ("rosenbrock",  "unwrap_bench(bench.rosenbrock)",  minimization,        10,           None,          0), # large, but slow
+        ("rosenbrock",  "unwrap_bench(bench.rosenbrock)",  minimization,        7,           None,          0),  # large, but slow
         ("schaffer",    "unwrap_bench(bench.schaffer)",    minimization,        2,            (-100, 100),   0), # best
         ("schwefel",    "unwrap_bench(bench.schwefel)",    minimization,        2,            (-500, 500),   0), # best
         ("simon_f2",    "simon_f2",                        minimization,        2,            (-100, 100),   0), # required
