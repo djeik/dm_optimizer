@@ -43,7 +43,7 @@ No real work on the optimizer today, but discussed with Simon different approach
 07-23
 =====
 No real work on the optimizer today, but more discussion of future directions with Simon.
-* use SA as a benchmark to determine what's the best dimension for testing each objective function
+* use SA as a benchmark to determine what's the best dimension for testing each objective function     (done)
 * try playing with the number of iterations in SA: do higher counts necessarily improve it? (For DM, playing with the counts is basically unnecessary past some threshold around 250, it seems.)
 * try fancy "sniffing before digging" methods, like line searches and checking what happens if we step in many different directions, based on more than one past local minimum.
 Really weird bug... seems like only three iterations are recorded out of the 250 ! Is seems that this bug was introduced when I switched to the generalized system in which I can test DM and SA uniformly...
