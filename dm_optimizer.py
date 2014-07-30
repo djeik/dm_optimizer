@@ -248,20 +248,36 @@ class dm_optimizer:
 
         return step
 
-    def step_to_best_minimum(self, deltay_curr):
-        stepdir = self.vals[0].x - self.pmin
-        deltay_prev = self.vals[0].y - self.target
-        #if deltay_prev < 0:
-        #    raise ValueError("Negative y-distance to target.")
+    def calculate_step_scale(self, destination, deltay_curr):
+        deltay_prev = destination.y - self.target
 
         if (deltay_curr - deltay_prev)**2 < self.pseudo**2:
-            stepscale = deltay_curr / self.pseudo
+            stepscale = deltay_curr / self.pseudo # avoid crazy huge steps
         else:
             stepscale = deltay_curr / (deltay_curr - deltay_prev)
 
-        step = stepscale * stepdir
+        return stepscale
 
-        return step
+    def step_toward(self, destination, deltay_curr):
+        """ Calculate a step toward a given destination using the standard stepscale calculation method. """
+        stepdir = destination.x - self.pmin
+        return self.calculate_step_scale(destination, deltay_curr) * stepdir
+
+    def step_to_best_minimum(self, deltay_curr):
+        return self.step_toward(vals[0], deltay_curr)
+
+    def fv_after_step(self, step):
+        """ Evaluate the score of the objective function after hypothetically taking the given step. """
+        return self.evalf(self.nx1 + step)
+
+    def all_possible_steps(self, deltay_curr):
+        return map(lambda x: self.step_toward(x, deltay_curr), self.vals)
+
+    def best_of_steps(self, steps):
+        return min(steps, key=self.fv_after_step)
+
+    def best_possible_step(self, deltay_curr):
+        return self.best_of_steps(self.all_possible_steps(deltay_curr))
 
     def average_minima_spread(self):
         """ For each minimum, calculate its average distance to all the other minima, and average these averages.
