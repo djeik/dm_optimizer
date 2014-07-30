@@ -106,3 +106,7 @@ Well I'm silly. The reason, it seems, why it was failing with a divide by zero i
 
 Seems like it was the transposing that was failing. Seems like it's fixed now, since I've written the transpose out by hand. 
 
+Turns out that the cigar function fails immediately. It doesn't even make it through one iteration (the callback is never called.)
+
+Idea: try to step toward each of the past minima, using the same scaling method (i.e. the difference between that minimum's y-value and the target is used to scale) and pick the direction that yields the lowest value.
+This would mean generalizing/parameterizing the scaling function, which could be useful in the long run as it gives me a centralized place to work in when it comes to the scaling factors.
