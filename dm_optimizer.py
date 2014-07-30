@@ -329,17 +329,17 @@ class dm_optimizer:
         if not self.fixed_target:
             self.target = self.first_target_ratio * f0
 
-        nx1 = x1
+        self.nx1 = x1
         self.fv = f0
         self.pmin = x0min
-        self.lpos = [(self.evalf(nx1), nx1)]
+        self.lpos = [(self.evalf(self.nx1), self.nx1)]
 
         self.logmsg(2, "Entering loop.")
 
         try:
             for self.iteration in xrange(1, self.max_iterations + 1):
-                self.logmsg(2, "Guess point for this iteration:", nx1)
-                self.pmin = self.local_min(nx1)
+                self.logmsg(2, "Guess point for this iteration:", self.nx1)
+                self.pmin = self.local_min(self.nx1)
                 self.fv = self.evalf(self.pmin) # the function value at the local minimum for this iteration
                 self.logmsg(6, "Minimum for this iteration f", self.pmin, " = ", self.fv, sep='')
                 self.logmsg(7, "Target:", self.target)
@@ -399,8 +399,8 @@ class dm_optimizer:
 
                 self.step = self.best_possible_step(deltay_curr)
 
-                nx1 += self.step # actually take the step
-                self.lpos.append((self.evalf(nx1), copy(nx1))) # add the new position to the list of past positions
+                self.nx1 += self.step # actually take the step
+                self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
                 self.logmsg(2, "Took step ", self.step)
 
                 self.vals.add(value_box( (self.fv, copy(self.pmin)) ))
