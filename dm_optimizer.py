@@ -395,13 +395,9 @@ class dm_optimizer:
                     res.opt     = self
                     return res
 
-
                 self.logmsg(1, "Nearest old minimum f", xnear, " = ", ynear, sep='')
 
-                if self.iteration % self.refresh_rate == 0:
-                    self.step = self.step_to_best_minimum(deltay_curr)
-                else:
-                    self.step = self.step_to_nearest_minimum( (ynear, xnear), deltay_curr)
+                self.step = self.best_possible_step(deltay_curr)
 
                 nx1 += self.step # actually take the step
                 self.lpos.append((self.evalf(nx1), copy(nx1))) # add the new position to the list of past positions
