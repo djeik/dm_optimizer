@@ -321,7 +321,7 @@ class dm_optimizer:
         self.logmsg(2, "Entering loop.")
 
         try:
-            for self.iteration in xrange(self.max_iterations, 1):
+            for self.iteration in xrange(1, self.max_iterations):
                 self.logmsg(2, "Guess point for this iteration:", nx1)
                 self.pmin = self.local_min(nx1)
                 self.fv = self.evalf(self.pmin) # the function value at the local minimum for this iteration
