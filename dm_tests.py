@@ -163,7 +163,7 @@ def experiment_task(args):
         # line up all the data for a given iteration
         vs = map(lambda r: copy(r.opt.vs), rs)
 
-        maxlen = reduce(max, imap(len, vs))
+        maxlen = reduce(max, imap(len, vs), 0)
         names_n = len(poll_names)
         data_vs_iter = [[[run[iteration_i][data_i] if iteration_i < len(run) else None for run in vs]
                                                                                        for iteration_i in xrange(maxlen)]
