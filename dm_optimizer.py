@@ -249,7 +249,7 @@ class dm_optimizer:
         return step
 
     def calculate_step_scale(self, destination, deltay_curr):
-        return 0.5
+        return 0.75
 
     def step_toward(self, destination, deltay_curr):
         """ Calculate a step toward a given destination using the standard stepscale calculation method. """
