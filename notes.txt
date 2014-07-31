@@ -110,3 +110,15 @@ Turns out that the cigar function fails immediately. It doesn't even make it thr
 
 Idea: try to step toward each of the past minima, using the same scaling method (i.e. the difference between that minimum's y-value and the target is used to scale) and pick the direction that yields the lowest value.
 This would mean generalizing/parameterizing the scaling function, which could be useful in the long run as it gives me a centralized place to work in when it comes to the scaling factors.
+
+It seems that using this method of looking at all the past minima doesn't really change anything. The success rates haven't budged in using it. On the other hand, I think that coming up with a more satisfactory algorithm for calculating the step scale based on .... well, I'm not sure yet. Right now it's based on the ratio of the distances to the target. IT TURNS OUT THAT if you make it a constant 50%... there's a really nice improvement. Heh.
+
+Talked with Simon, some thoughts:
+ * Compare with other solvers, not just SA, especially not just SA in python. Mathematica would be a good thing to try. Simon said that he might do that since he's more familiar with Mathematica. I would also need to get Mathematica installed. I really should get IT to do that for me...
+ * do an *actual* comparison with SA. As in, find a way to actually put a number on the difference in performance.
+ * find a less sketchy way of scoring the performance of DM and SA, perhaps by taking a ratio of success and function evaluations. Simon said in practice, the number of function evaluations is important because the functions are tough to evaluate, but are otherwise not terrifically difficult to solve. Hm.
+ * do a truly directional 1/2-search. So right now we have this ultra-greedy search using a step that's 1/2 the distance between the current minimum and the best minimum. It could be that what I have already has this, but I'm not sure. The idea is that it needs to *keep moving in the direction of the best minimum*. So, suppose that I'm at some minimum A that is AFAIK the global minimum. I want to do another iteration so I find the best minimum that is not the one that I'm at and call it B. Rather than step *toward B*, I should step *from B to A*, since A is better than B! I don't that's what I'm currently doing, but it's what I should do.
+ * Look back into the minimum-dropping technique. Investigate whether I can replicate what it's doing without doing it :P
+ * Line search: evaluate the objective function N times along the *line* defined by that step vector. Take the minimal place as the new location of the iterate.
+ * Try different constants for the 1/2 method. In that case it wouldn't be a 1/2 method, now would it.
+ * See whether bracketing is actually what's causing the significant success increase in the Griewank function.
