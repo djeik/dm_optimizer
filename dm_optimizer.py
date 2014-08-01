@@ -204,16 +204,6 @@ class dm_optimizer:
 
             return self.vals[0].y + self.greediness * diff
 
-    def very_greedy_refresh_target(self):
-        """ Perform a target refresh with the best and worst local minima only, rather than the two best. """
-        if self.fixed_target:
-            pass
-            self.logmsg(2, "Target is fixed; refusing to refresh target.")
-        else:
-            if len(self.vals) < 2:
-                raise ValueError("Insufficient number of discovered local minima to perform a target update.")
-            return self.vals[0].y + self.greediness * (self.vals[0].y - self.vals[-1].y)
-
     def calculate_step_scale(self, destination, deltay_curr):
         deltay_prev = destination.y - self.target
 
