@@ -81,3 +81,12 @@ def normalize(v, tolerance=1e-8):
     if norm(v) < tolerance:
         raise ValueError("Vector too small to properly normalize.")
     return v / norm(v)
+
+def ndiv(numerator, denominator, epsilon=1e-7):
+    if isinstance(denominator, float):
+        if denominator**2 < epsilon**2:
+            return 0;
+    elif isinstance(denominator, int):
+        if denominator == 0:
+            return 0;
+    return numerator / float(denominator)
