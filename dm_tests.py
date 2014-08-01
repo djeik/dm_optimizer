@@ -73,8 +73,6 @@ def plotf_3d(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=
             linewidth=0, antialiased=True)
     fig.colorbar(surf, shrink=0.5, aspect=5)
 
-    plt.show()
-
 def multiplot(dats, names=[], nrows=None, ncols=1):
     """ Make multiple plots in the case where each x value has several y values associated with it.
         If nrows is None, then the number of rows is calculated based on the size of the tuples in dats and
