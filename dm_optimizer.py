@@ -214,40 +214,6 @@ class dm_optimizer:
                 raise ValueError("Insufficient number of discovered local minima to perform a target update.")
             return self.vals[0].y + self.greediness * (self.vals[0].y - self.vals[-1].y)
 
-    def step_to_nearest_minimum(self, (ynear, xnear), deltay_curr):
-        """ Create a 'step' delta x in the direction of the nearest past local minimum. """
-
-        #if self.iteration % self.refresh_rate == 0:
-        #    self.logmsg(7, "Stepping towards best minimum.")
-        #    stepdir = self.vals[0].x - self.pmin
-        #else:
-        stepdir = xnear - self.pmin # the direction of the step
-
-        deltay_prev = ynear - self.target # how far away is the best previously-found local minimum from the target
-        # if things are going well, then deltay_curr should be less than deltay_prev
-        self.logmsg(2, "Best minimum delta:", deltay_prev)
-
-        if (deltay_curr - deltay_prev)**2 < self.pseudo**2: # calculate the step scale.
-            self.logmsg(1, "Very close deltas.")
-            stepscale = deltay_curr / self.pseudo # Use pseudo to avoid jumping away to infinity, if necessary.
-        else:
-            stepscale = deltay_curr / (deltay_curr - deltay_prev)
-
-        #if abs(stepscale) < self.tolerance:
-        #    stepscale = stepscale / abs(stepscale) * 2.0
-
-        step = stepscale * stepdir
-
-        if stepscale == 0:
-            raise Exception("Zero length step towards nearest minimum.")
-
-        self.logmsg(2, "Current delta y:", deltay_curr)
-        self.logmsg(2, "Stepscale:", stepscale)
-        self.logmsg(2, "Step:", step)
-        self.logmsg(1, "Step size:", norm(stepdir))
-
-        return step
-
     def calculate_step_scale(self, destination, deltay_curr):
         deltay_prev = destination.y - self.target
 
@@ -377,26 +343,6 @@ class dm_optimizer:
                     #raise Exception("Current distance to target is too small; target update failed.")
                     deltay_curr = self.tolerance # this is probably not wise.
 
-                # let's take the *best* minimum, i.e. the minimum closest to our current minimum
-                try:
-                    ynear, xnear = self.best_minimum_x().unbox()
-                except BestMinimumException:
-                    # this is a failure sink
-                    res = sopt.OptimizeResult()
-                    res.nit     = self.iteration
-                    res.success = True
-                    res.message = ["All local minima have converged to a point. Optimization cannot proceed.", "best_minimum_x failed."]
-                    res.status  = 3
-                    res.x       = self.pmin
-                    res.fun     = self.fv
-                    res.njev    = self.njev
-                    res.nfev    = self.nfev
-                    res.lpos    = self.lpos
-                    res.opt     = self
-                    return res
-
-                self.logmsg(1, "Nearest old minimum f", xnear, " = ", ynear, sep='')
-
                 self.step = self.best_possible_step(deltay_curr)
 
                 self.nx1 += self.step # actually take the step
@@ -408,7 +354,7 @@ class dm_optimizer:
                 map(lambda x: self.logmsg(2, x.unbox()), self.vals[-3:])
 
                 if norm(self.step) < self.tolerance:
-                    self.logmsg(1, "Found fixed point: f", self.pmin, " = ", ynear, sep='')
+                    self.logmsg(1, "Found fixed point at", self.pmin)
                     self.logmsg(1, "Step was:", self.step)
                     newtarget1 = self.refresh_target()
                     self.target = newtarget1
