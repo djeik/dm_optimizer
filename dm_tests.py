@@ -45,7 +45,7 @@ def simon_f2(xs):
     return simon_f1(xy)
 
 # Visual debug tool for 3d
-def plotf(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0, autobound=True, autosmooth=True):
+def plotf_3d(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0, autobound=True, autosmooth=True):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
@@ -72,8 +72,6 @@ def plotf(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0
     surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm, # draw the surface
             linewidth=0, antialiased=True)
     fig.colorbar(surf, shrink=0.5, aspect=5)
-
-    plt.show()
 
 def multiplot(dats, names=[], nrows=None, ncols=1):
     """ Make multiple plots in the case where each x value has several y values associated with it.
