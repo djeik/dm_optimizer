@@ -8,7 +8,6 @@ import dm_optimizer as dm
 import numpy as np
 from itertools import repeat, imap, chain, islice, izip
 
-import dm_tests_config as dmtc
 
 # deap's benchmarking functions return the values as 1-tuples
 # so we need to unpack element 0 which is the actual function-value.
@@ -36,17 +35,17 @@ def pad_lists(*args):
 mkfprint = lambda f: lambda *args, **kwargs: print(*args, file=f, **kwargs)
 errprint = mkfprint(sys.stderr)
 
-# Construct a function that takes arbitrarily many arguments, but ignores them, always returning the same value.
-const = lambda x: lambda *y: x
+# Construct a function that takes arbitrarily many positional and keyword arguments, but ignores them, always returning the same value.
+const = lambda x: lambda *y, **kwargs: x
 transpose = lambda x: zip(*x)
 
 def randomr_guess(dim, r=(-1,1)):
     return np.array([random.uniform(*rr) for rr in repeat(r, dim)])
 
-def randomr_dm(f, d, range, dm_args=dmtc.dm_defaults):
+def randomr_dm(f, d, range, dm_args):
     return dm.minimize(f, randomr_guess(d, range), randomr_guess(d, range), **dm_args)
 
-def randomr_sa(f, d, range, sa_args=dmtc.sa_defaults):
+def randomr_sa(f, d, range, sa_args):
     r = basinhopping(f, randomr_guess(d, range), **sa_args)
     r.success = True # TODO this needs to be something that sucks less.
     return r

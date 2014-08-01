@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from dm_utils import *
+import dm_utils as dmu
 from numpy.linalg import norm
 
 def dm_poll_callback(self):
@@ -36,5 +36,5 @@ experiment_defaults = {"runs":75, "success_threshold":0.001}
 dm_defaults = {"refresh_rate":5, "max_iterations":150, "callback":dm_poll_callback, "verbosity":"any"}
 sa_defaults = {"niter":100}
 
-optimizers = {"dm":{"tag":"dm", "optimizer":randomr_dm, "config":dm_defaults},
-              "sa":{"tag":"sa", "optimizer":randomr_sa, "config":sa_defaults}}
+optimizers = {"dm":{"tag":"dm", "optimizer":dmu.randomr_dm, "config":dm_defaults},
+              "sa":{"tag":"sa", "optimizer":dmu.randomr_sa, "config":sa_defaults}}
