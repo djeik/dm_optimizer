@@ -296,3 +296,15 @@ def generate_all_dm_plots(edir):
             ax.plot(xrange(1, len(average) + 1), average, color=plots_config["average_color"])
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
             fig.clear()
+
+def dm_plot_3d(edir, test_all_2d=False):
+    # get all those functions whose domains are 2D, or everything if test_all_2d is true.
+    tests_2d = filter(lambda fe: test_all_2d or fe["dimensions"] == 2, tests)
+
+    for test in tests_2d:
+        f = eval(test["function"])
+        while True:
+            res = randomr_dm(f, 2, test["range"])
+            if not res.success:
+                continue
+        plotf_3d(f, res.opt.lpos)
