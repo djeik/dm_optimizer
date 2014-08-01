@@ -156,7 +156,7 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
             return 0
         return sum(imap(lambda x: 0 if x is None else x, l)) / float(len(l))
     avgs = [[avg(data) for data in iteration] for iteration in statistics]
-    return avgs # transpose
+    return avgs
 
 def write_experiment_data(exp_dir, complete_experiment):
     """ Expects a tuple in the form (name, averages, all runs), and writes out all the data for this experiment into the given directory. """
