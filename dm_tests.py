@@ -208,7 +208,8 @@ def experiment_task(args):
 
     write_experiment_messages(exp_dir, rs)
     errprint("End experiment:", test["name"])
-    return (test["name"], (success_rate, time_avg, nfev_avg, failures)) # this will get appended to the all_statistics of the master process
+    # the return value will get appended to the all_statistics of the master process
+    return (test["name"], (success_rate, time_avg, nfev_avg, ndiv(nfev_avg, success_rate), failures))
 
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
 def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defaults, names=poll_names):
@@ -227,17 +228,19 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
     all_statistics  = [result[1] for result in results]
 
     with open(path.join(edir, "averages.txt"), 'w', 1) as f:
-        print_csv("test", "success rate", "average time", "average fun. evals.", "failures", file=f)
+        print_csv("test", "success rate", "average time", "average fun. evals.", "average performance", "failures", file=f)
         # print the general test data to the common file
-        map(lambda (name, (success_rate, time_avg, nfev_avg, failures)): print_csv(name, success_rate, time_avg, nfev_avg, failures, file=f),
-                results)
+        map(lambda (name, (success_rate, time_avg, nfev_avg, perf_avg, failures)): print_csv(name, success_rate, time_avg,
+                                                                                             nfev_avg, perf_avg, failures, file=f),
+            results)
 
         ## calculate the global statistics
         # transpose the list of statistics, and calculate the averages.
         global_statistics = tuple(map(lambda stat: sum(stat) / float(len(stat)), zip(*all_statistics)))
         # record the data
         print_csv("AVERAGE", *global_statistics, file=f)
-        end_time = time()
+
+    end_time = time()
 
     with open(path.join(edir, "time.txt"), 'w') as f:
         print(end_time - start_time, file=f)

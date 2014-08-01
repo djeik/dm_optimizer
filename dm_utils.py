@@ -74,3 +74,11 @@ def csv_to_tuples(csv):
 def print_csv(*args, **kwargs):
     print(*args, sep=',', **kwargs)
 
+def ndiv(numerator, denominator, epsilon=1e-7):
+    if isinstance(denominator, float):
+        if denominator**2 < epsilon**2:
+            return 0;
+    elif isinstance(denominator, int):
+        if denominator == 0:
+            return 0;
+    return numerator / float(denominator)
