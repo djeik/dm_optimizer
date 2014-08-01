@@ -188,7 +188,7 @@ def experiment_task(args):
     end_time = time()
     errprint(test["name"] + ":", "spent", end_time - start_time, "seconds performing experiment.")
 
-    if optimizer["tag"] == "dm": # if the given optimizer is dm, we know how to inspect its internals and fish out useful information.
+    if is_dm(optimizer): # if the given optimizer is dm, we know how to inspect its internals and fish out useful information.
         start_time = time()
         # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
         # line up all the data for a given iteration
@@ -296,6 +296,3 @@ def generate_all_dm_plots(edir):
             ax.plot(xrange(1, len(average) + 1), average, color=plots_config["average_color"])
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
             fig.clear()
-
-
-

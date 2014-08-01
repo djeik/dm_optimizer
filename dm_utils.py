@@ -73,3 +73,6 @@ def csv_to_tuples(csv):
 def print_csv(*args, **kwargs):
     print(*args, sep=',', **kwargs)
 
+def is_dm(optimizer):
+    return optimizer["tag"] == "dm"
+
