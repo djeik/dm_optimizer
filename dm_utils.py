@@ -8,6 +8,8 @@ import dm_optimizer as dm
 import numpy as np
 from itertools import repeat, imap, chain, islice, izip
 
+import dm_tests_config as dmtc
+
 # deap's benchmarking functions return the values as 1-tuples
 # so we need to unpack element 0 which is the actual function-value.
 def unwrap_bench(f):
@@ -41,10 +43,10 @@ transpose = lambda x: zip(*x)
 def randomr_guess(dim, r=(-1,1)):
     return np.array([random.uniform(*rr) for rr in repeat(r, dim)])
 
-def randomr_dm(f, d, range, dm_args):
+def randomr_dm(f, d, range, dm_args=dmtc.dm_defaults):
     return dm.minimize(f, randomr_guess(d, range), randomr_guess(d, range), **dm_args)
 
-def randomr_sa(f, d, range, sa_args):
+def randomr_sa(f, d, range, sa_args=dmtc.sa_defaults):
     r = basinhopping(f, randomr_guess(d, range), **sa_args)
     r.success = True # TODO this needs to be something that sucks less.
     return r
