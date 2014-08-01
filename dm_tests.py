@@ -44,6 +44,37 @@ def simon_f2(xs):
     xy = xs - np.array([100, 100])
     return simon_f1(xy)
 
+# Visual debug tool for 3d
+def plotf(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0, autobound=True, autosmooth=True):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    z, xys = zip(*xyzs_) # prepare to draw the line
+    x, y = zip(*xys)
+    N = len(x)
+    for i in xrange(N-1):
+        ax.plot(x[i:i+2], y[i:i+2], z[i:i+2], color=plt.cm.jet(255*i/N))
+
+    if autobound:
+        start = reduce(np.minimum, xys)
+        end = reduce (np.maximum, xys)
+
+    if autosmooth:
+        smoothness = norm(end - start) / 100.0
+
+    print(start, end, smoothness)
+
+    xs = np.arange(start[0], end[0], smoothness)
+    ys = np.arange(start[1] + y[-1], end[1] + y[-1], smoothness)
+    X, Y = np.meshgrid(xs, ys)
+    zs = np.array([f((x,y)) for x,y in zip(np.ravel(X), np.ravel(Y))])
+    Z = zs.reshape(X.shape)
+    surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm, # draw the surface
+            linewidth=0, antialiased=True)
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+
+    plt.show()
+
 def multiplot(dats, names=[], nrows=None, ncols=1):
     """ Make multiple plots in the case where each x value has several y values associated with it.
         If nrows is None, then the number of rows is calculated based on the size of the tuples in dats and
