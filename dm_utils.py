@@ -82,3 +82,6 @@ def ndiv(numerator, denominator, epsilon=1e-7):
         if denominator == 0:
             return 0;
     return numerator / float(denominator)
+
+def is_dm(optimizer):
+    return optimizer["tag"] == "dm"
