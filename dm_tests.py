@@ -297,5 +297,7 @@ def generate_all_dm_plots(edir):
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
             fig.clear()
 
-
+def dm_plot_3d(edir):
+    # get all those functions whose domains are 2D.
+    tests_2d = filter(lambda fe: fe["dimensions"] == 2, tests)
 
