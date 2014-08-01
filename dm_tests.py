@@ -245,6 +245,7 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
     with open(path.join(edir, "optimizer.txt"), 'w') as f:
         print(optimizer["tag"], file=f)
 
+# PIPELINE (called from run_test.py)
 def run_test(edir, optimizer_name):
     return conduct_all_experiments(edir, optimizers[optimizer_name])
 
@@ -270,6 +271,7 @@ def parse_typical_poll_file(path):
 
 plots_config = {"individual_color":"0.6", "average_color":"blue"}
 
+# PIPELINE
 def generate_all_dm_plots(edir):
     dmdir = path.join(edir, "../dm")
     function_dirs = filter(lambda p: path.isdir(path.join(dmdir, p)), os.listdir(dmdir)) # function_dirs will be relative to dmdir
@@ -295,7 +297,8 @@ def generate_all_dm_plots(edir):
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
             fig.clear()
 
-def dm_plot_3d(edir, test_all_2d=False):
+# PIPELINE
+def dm_plot_3d(edir, test_all_2d=False, show=False):
     # get all those functions whose domains are 2D, or everything if test_all_2d is true.
     tests_2d = filter(lambda fe: test_all_2d or fe["dimensions"] == 2, tests)
 
@@ -306,3 +309,7 @@ def dm_plot_3d(edir, test_all_2d=False):
             if not res.success:
                 continue
         plotf_3d(f, res.opt.lpos)
+        fig = plt.gcf()
+        if show:
+            plt.show()
+        fig.savefig(path.join(edir, test["name"] + ".pdf"))
