@@ -45,7 +45,7 @@ def simon_f2(xs):
     return simon_f1(xy)
 
 # Visual debug tool for 3d
-def plotf(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0, autobound=True, autosmooth=True):
+def plotf_3d(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0, autobound=True, autosmooth=True):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
