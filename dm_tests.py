@@ -71,7 +71,8 @@ def plotf_3d(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=
     Z = zs.reshape(X.shape)
     surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm, # draw the surface
             linewidth=0, antialiased=True)
-    fig.colorbar(surf, shrink=0.5, aspect=5)
+    #fig.colorbar(surf, shrink=0.5, aspect=5)
+    return fig
 
 def multiplot(dats, names=[], nrows=None, ncols=1):
     """ Make multiple plots in the case where each x value has several y values associated with it.
@@ -302,14 +303,19 @@ def dm_plot_3d(edir, test_all_2d=False, show=False):
     # get all those functions whose domains are 2D, or everything if test_all_2d is true.
     tests_2d = filter(lambda fe: test_all_2d or fe["dimensions"] == 2, tests)
 
+    opts = dict(dm_defaults)
+    opts["verbosity"] = 0
+
     for test in tests_2d:
         f = eval(test["function"])
         while True:
-            res = randomr_dm(f, 2, test["range"])
-            if not res.success:
-                continue
-        plotf_3d(f, res.opt.lpos)
-        fig = plt.gcf()
+            res = randomr_dm(f, 2, test["range"], opts)
+            if res.success: # TODO THIS IS SO SKETCHY ...
+                errprint("Completed", test["name"])
+                break
+        fig = plotf_3d(f, res.opt.lpos)
         if show:
             plt.show()
+
+
         fig.savefig(path.join(edir, test["name"] + ".pdf"))
