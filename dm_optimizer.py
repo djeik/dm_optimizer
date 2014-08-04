@@ -247,6 +247,10 @@ class dm_optimizer:
             totals.append(sum(norms) / len(norms))
         return sum(totals) / len(totals)
 
+    def take_step(self, step):
+        self.nx1 += step
+        self.step = step
+
     def minimize(self, x0, x1):
         """ Perform the minimization given two initial points.
 
@@ -335,9 +339,8 @@ class dm_optimizer:
                     #raise Exception("Current distance to target is too small; target update failed.")
                     deltay_curr = self.tolerance # this is probably not wise.
 
-                self.step = self.best_possible_step(deltay_curr)
+                self.take_step(self.best_possible_step(deltay_curr))
 
-                self.nx1 += self.step # actually take the step
                 self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
                 self.logmsg(2, "Took step ", self.step)
 
