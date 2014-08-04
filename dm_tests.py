@@ -316,6 +316,8 @@ def dm_plot_3d(edir, test_all_2d=False, show=False):
             if res.success: # TODO THIS IS SO SKETCHY ...
                 errprint("Completed", test["name"])
                 break
+            else:
+                errprint("Run failed! Performing another one.")
         fig = plotf_3d(f, res.opt.lpos)
         if show:
             plt.show()
