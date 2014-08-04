@@ -243,7 +243,9 @@ class dm_optimizer:
         return best_step[0]
 
     def drop_middle_minima(self):
-        del self.vals[self.chopfactor:-(self.chopfactor + 1)]
+        """ Drop all the middle minima. This ignores the chopfactor member. """
+        if len(self.vals) > 1:
+            del self.vals[1:-1]
 
     def step_toward(self, destination, deltay_curr):
         """ Calculate a step toward a given destination using the standard stepscale calculation method.
