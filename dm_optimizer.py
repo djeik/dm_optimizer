@@ -76,7 +76,7 @@ class dm_optimizer:
         self.minimizer_kwargs           = minimizer_kwargs
         self.callback                   = callback
 
-        if not target is None:
+        if target is not None:
             self.logmsg(7, "Setting fixed target.")
             self.fixed_target = True
             self.target       = target
@@ -256,7 +256,7 @@ class dm_optimizer:
         self.valsi                      = []
         self.lpos                       = []
 
-        if not self.callback is None:
+        if self.callback is not None:
             self.vs = []
 
         # and that our counters are zero
@@ -348,7 +348,7 @@ class dm_optimizer:
                     newtarget1 = self.refresh_target() # mutates `target`
                     self.target = newtarget1
 
-                if not self.callback is None:
+                if self.callback is not None:
                     self.callback(self)
 
         except Exception as e:
