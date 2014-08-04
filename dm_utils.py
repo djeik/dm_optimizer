@@ -85,3 +85,8 @@ def ndiv(numerator, denominator, epsilon=1e-7):
 
 def is_dm(optimizer):
     return optimizer["tag"] == "dm"
+
+def normalize(v, tolerance=1e-8):
+    if norm(v) < tolerance:
+        raise ValueError("Vector too small to properly normalize.")
+    return v / norm(v)
