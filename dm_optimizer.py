@@ -214,6 +214,34 @@ class dm_optimizer:
 
         return stepscale
 
+    def line_search(self, destination, scalemax=3, n=10):
+        """ To determine the step, evaluate the objective function along the line determined by the current
+            minimum and the given destination point at constant intervals, for a given total number of
+            evaluations. The step is taken to be the one that brings the iterate to the place where the
+            function value is the least. This step value is returned.
+
+            Arguments:
+                destination (y, x)  -- the minimum to move towards
+                scalemax (number)   -- how much line to look at
+                n (number)          -- how many function evaluations to make along the line
+
+            Returns:
+                The step to take, as a vector to be added to the current position of the iterate.
+            """
+        direction = destination.x - self.pmin
+        maxpoint = self.pmin +  scalemax * direction
+        minpoint = self.pmin + -scalemax * direction
+        unitdir = (4 * scalemax**2 * norm(direction)) / float(n) # the total norm from minpoint to maxpoint, divided by the number of samples to take.
+
+        ps = [] # we'll collect pairs (step, fv after step) in here.
+
+        def gen_samples():
+            for i in xrange(n):
+                step_i = -scalemax*direction + i*unitdir
+                yield (step_i, self.fv_after_step(step_i))
+        best_step = min(gen_samples(), key=lambda (_1, _2): _2)
+        return best_step[0]
+
     def step_toward(self, destination, deltay_curr):
         """ Calculate a step toward a given destination using the standard stepscale calculation method.
             If the destination's function-value is less good than the current one, the direction is reversed.
