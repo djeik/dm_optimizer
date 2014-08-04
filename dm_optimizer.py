@@ -216,7 +216,7 @@ class dm_optimizer:
 
     def step_toward(self, destination, deltay_curr):
         """ Calculate a step toward a given destination using the standard stepscale calculation method.
-            If the destination's function-value is less good that the current one, the direction is reversed.
+            If the destination's function-value is less good than the current one, the direction is reversed.
             """
         stepdir = (1 if destination.y <= self.fv else -1) * (destination.x - self.pmin)
         return self.calculate_step_scale(destination, deltay_curr) * stepdir
