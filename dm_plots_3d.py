@@ -23,5 +23,6 @@ if __name__ == "__main__":
             show = True
         else:
             raise ValueError("fatal: unrecognized command line option ``%s''." % arg)
+        i += 1
 
     dmt.dm_plot_3d(dir, test_all, show)
