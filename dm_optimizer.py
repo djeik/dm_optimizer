@@ -242,6 +242,9 @@ class dm_optimizer:
         best_step = min(gen_samples(), key=lambda (_1, _2): _2)
         return best_step[0]
 
+    def drop_middle_minima(self):
+        del self.vals[self.chopfactor:-(self.chopfactor + 1)]
+
     def step_toward(self, destination, deltay_curr):
         """ Calculate a step toward a given destination using the standard stepscale calculation method.
             If the destination's function-value is less good than the current one, the direction is reversed.
@@ -384,6 +387,7 @@ class dm_optimizer:
 
                 # every `refresh_rate` iterations, we refresh the target value, to avoid stale convergeance
                 if (not self.fixed_target) and self.iteration % self.refresh_rate == 0:
+                    self.drop_middle_minima()
                     oldtarget = self.target
                     newtarget1 = self.refresh_target() # mutates `target`
                     self.target = newtarget1
