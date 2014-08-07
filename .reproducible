@@ -1,8 +1,10 @@
 dm_optimizer.py
 dm_tests.py
 dm_tests_config.py
+dm_utils.py
 run_test.py
 run_dm.sh
 run_sa.sh
+dm_plots_3d.sh
 .reproducible
 .pipeline
