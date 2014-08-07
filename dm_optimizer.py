@@ -201,31 +201,34 @@ class dm_optimizer:
 
             return self.vals[0].y + self.greediness * diff
 
-    def calculate_step_scale(self, destination, deltay_curr):
+    def calculate_step_scale(self, destination):
         return 0.75
 
-    def step_toward(self, destination, deltay_curr):
+    def step_toward(self, destination):
         """ Calculate a step toward a given destination using the standard stepscale calculation method.
             If the destination's function-value is less good than the current one, the direction is reversed.
             """
         stepdir = (1 if destination.y <= self.fv else -1) * (destination.x - self.pmin)
-        return self.calculate_step_scale(destination, deltay_curr) * stepdir
+        return self.calculate_step_scale(destination) * stepdir
 
-    def step_to_best_minimum(self, deltay_curr):
-        return self.step_toward(vals[0], deltay_curr)
+    def step_to_best_minimum(self):
+        return self.step_toward(vals[0])
 
     def fv_after_step(self, step):
         """ Evaluate the score of the objective function after hypothetically taking the given step. """
         return self.evalf(self.nx1 + step)
 
-    def all_possible_steps(self, deltay_curr):
-        return map(lambda x: self.step_toward(x, deltay_curr), self.vals)
+    def all_possible_steps(self):
+        return map(lambda x: self.step_toward(x), self.vals)
 
     def best_of_steps(self, steps):
         return min(steps, key=self.fv_after_step)
 
-    def best_possible_step(self, deltay_curr):
-        return self.best_of_steps(self.all_possible_steps(deltay_curr))
+    def best_possible_step(self):
+        return self.best_of_steps(self.all_possible_steps())
+
+    def greedy_step(self):
+        return self.step_toward(self.vals[0])
 
     def average_minima_spread(self):
         """ For each minimum, calculate its average distance to all the other minima, and average these averages.
@@ -286,8 +289,11 @@ class dm_optimizer:
         self.pmin = x0min
         self.lpos = [(self.evalf(self.nx1), self.nx1)]
 
-        self.logmsg(2, "Entering loop.")
+        # prepare the optimization result
+        res = sopt.OptimizeResult()
+        res.message = []
 
+        self.logmsg(2, "Entering loop.")
         try:
             for self.iteration in xrange(1, self.max_iterations + 1):
                 self.logmsg(2, "Guess point for this iteration:", self.nx1)
@@ -295,41 +301,8 @@ class dm_optimizer:
                 self.fv = self.evalf(self.pmin) # the function value at the local minimum for this iteration
                 self.logmsg(6, "Minimum for this iteration f", self.pmin, " = ", self.fv, sep='')
                 self.logmsg(7, "Target:", self.target)
-                deltay_curr = self.fv - self.target # how far away is our current minimum from the target value
 
-                self.logmsg(2, "Got delta:", deltay_curr)
-
-                #if deltay_curr <= self.tolerance**2: # we've fallen below the target, so we create a new target
-                if deltay_curr < 0: # we've fallen below the target, so we create a new target
-                    self.logmsg(2, "Beat target!")
-                    try:
-                        self.new_target(self.fv) # to get the next target, all we need is the current function value and the list of minima so far
-                    except BestMinimumException:
-                        # this is a failure sink
-                        res = sopt.OptimizeResult()
-                        res.nit     = self.iteration
-                        res.success = True
-                        res.message = ["All local minima have converged to a point. Optimization cannot proceed.", "new_target failed."]
-                        res.status  = 3
-                        res.x       = self.pmin
-                        res.fun     = self.fv
-                        res.njev    = self.njev
-                        res.nfev    = self.nfev
-                        res.lpos    = self.lpos
-                        res.opt     = self
-                        return res
-
-                    deltay_curr = self.fv - self.target # recalculate delta for the new target
-                    self.logmsg(2, "New delta:", deltay_curr)
-                else:
-                    pass
-                    self.logmsg(2, "Target y-value", self.target)
-
-                if deltay_curr < self.tolerance:
-                    #raise Exception("Current distance to target is too small; target update failed.")
-                    deltay_curr = self.tolerance # this is probably not wise.
-
-                self.take_step(self.best_possible_step(deltay_curr))
+                self.take_step(self.best_possible_step())
 
                 self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
                 self.logmsg(2, "Took step ", self.step)
@@ -339,19 +312,13 @@ class dm_optimizer:
                 map(lambda x: self.logmsg(2, x.unbox()), self.vals[-3:])
 
                 if norm(self.step) < self.tolerance:
-                    self.logmsg(1, "Found fixed point at", self.pmin)
-                    self.logmsg(1, "Step was:", self.step)
-                    newtarget1 = self.refresh_target()
-                    self.target = newtarget1
-
-                # every `refresh_rate` iterations, we refresh the target value, to avoid stale convergeance
-                if (not self.fixed_target) and self.iteration % self.refresh_rate == 0:
-                    oldtarget = self.target
-                    newtarget1 = self.refresh_target() # mutates `target`
-                    self.target = newtarget1
+                    res.message.append("Fixed point found.")
+                    break
 
                 if self.callback is not None:
                     self.callback(self)
+            else:
+                res.message.append("Maximum number of iterations reached.")
 
         except Exception as e:
             self.logmsg(-1, "An error occurred while optimizing:", e)
@@ -361,10 +328,8 @@ class dm_optimizer:
         self.lpos.append(min(self.vals, key=lambda v: v.y).unbox())
         self.fv, self.pmin = self.lpos[-1]
 
-        res = sopt.OptimizeResult()
         res.nit     = self.iteration
         res.success = True
-        res.message = ["Maximum number of iterations reached."]
         res.status  = 1
         res.x       = self.pmin
         res.fun     = self.fv
