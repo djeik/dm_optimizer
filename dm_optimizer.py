@@ -212,7 +212,7 @@ class dm_optimizer:
         return self.calculate_step_scale(destination) * stepdir
 
     def step_to_best_minimum(self):
-        return self.step_toward(vals[0])
+        return self.step_toward(self.vals[0])
 
     def fv_after_step(self, step):
         """ Evaluate the score of the objective function after hypothetically taking the given step. """

@@ -21,7 +21,7 @@ def ipad_lists(padding, matrix):
     """ Pad the component lists of a list of lists to make it into a matrix. The operation is performed in-place, but the matrix is also returned,
         to allow chaining.
         """
-    maxlen = reduce(max, imap(len, matrix))
+    maxlen = reduce(max, imap(len, matrix), 0)
     for vector_ in matrix:
         vector = list(vector_) # copy the list
         vector.extend(repeat(padding, maxlen - len(vector)))
