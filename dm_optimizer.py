@@ -120,10 +120,7 @@ class dm_optimizer:
         return res.x
 
     def best_minimum_x(self):
-        """ Find the minimum in the list of past minima that is closest to the given value.
-
-            Arguments:
-                pmin -- the point from which the distances are to be calculated.
+        """ Find the the past minimum that is closest to the current iteration minimum self.pmin.
 
             Returns:
                 _(y, x)_ -- the minimum closest to the given point.
