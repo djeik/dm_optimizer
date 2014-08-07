@@ -227,9 +227,6 @@ class dm_optimizer:
     def best_possible_step(self):
         return self.best_of_steps(self.all_possible_steps())
 
-    def greedy_step(self):
-        return self.step_toward(self.vals[0])
-
     def average_minima_spread(self):
         """ For each minimum, calculate its average distance to all the other minima, and average these averages.
             This gives a measure of how much of the search space was explored.
@@ -302,7 +299,7 @@ class dm_optimizer:
                 self.logmsg(6, "Minimum for this iteration f", self.pmin, " = ", self.fv, sep='')
                 self.logmsg(7, "Target:", self.target)
 
-                self.take_step(self.best_possible_step())
+                self.take_step(self.step_to_best_minimum())
 
                 self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
                 self.logmsg(2, "Took step ", self.step)
