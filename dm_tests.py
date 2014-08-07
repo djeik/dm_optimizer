@@ -164,7 +164,7 @@ def write_experiment_data(exp_dir, complete_experiment):
     for (name, average_vs_t, data) in complete_experiment:
         with open(exp_dir + "/" + name + ".txt", 'w') as f:
             for (i, run_i) in enumerate(zip(*pad_lists(None, data))):
-                f.write(str(average_vs_t[i]))
+                f.write(str(average_vs_t[i]) if i < len(average_vs_t) else str(None))
                 for value in run_i:
                     f.write(',' + str(value))
                 f.write('\n')

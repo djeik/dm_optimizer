@@ -308,12 +308,12 @@ class dm_optimizer:
                 self.valsi.append(value_box( (self.fv, copy(self.pmin)) ))
                 map(lambda x: self.logmsg(2, x.unbox()), self.vals[-3:])
 
+                if self.callback is not None:
+                    self.callback(self)
+
                 if norm(self.step) < self.tolerance:
                     res.message.append("Fixed point found.")
                     break
-
-                if self.callback is not None:
-                    self.callback(self)
             else:
                 res.message.append("Maximum number of iterations reached.")
 
