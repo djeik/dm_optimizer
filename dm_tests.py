@@ -152,11 +152,20 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
         and finally [[[a]]] is a list of such statistics, and produce a [[a]] the same length as the input [[[a]]] that is a a list of averages
         w.r.t. time.
         """
-    def avg(l):
-        if len(l) == 0:
-            return 0
-        return sum(imap(lambda x: 0 if x is None else x, l)) / float(len(l))
-    avgs = [[avg(data) for data in iteration] for iteration in statistics]
+    avgs = []
+    for iteration in statistics:
+        lasts = iteration[0]
+        avgs.append([])
+        for run in iteration:
+            s = 0
+            for (run_i, value) in enumerate(run):
+                if value is None:
+                    s += lasts[run_i]
+                else:
+                    s += value
+                    lasts[run_i] = value
+            avgs[-1].append(s/float(len(run)))
+
     avgs[-2][-1] *= len(filter(lambda x: x == 0, avgs[-2])) # For the performance. Zero looks like it's giving SA an advantage.
     return avgs
 
@@ -164,7 +173,7 @@ def write_experiment_data(exp_dir, complete_experiment):
     """ Expects a tuple in the form (name, averages, all runs), and writes out all the data for this experiment into the given directory. """
     for (name, average_vs_t, data) in complete_experiment:
         with open(exp_dir + "/" + name + ".txt", 'w') as f:
-            for (i, run_i) in enumerate(zip(*pad_lists(None, data))):
+            for (i, run_i) in enumerate(data):
                 f.write(str(average_vs_t[i]) if i < len(average_vs_t) else str(None))
                 for value in run_i:
                     f.write(',' + str(value))
