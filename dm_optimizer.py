@@ -33,7 +33,7 @@ class value_box:
         return self.y == other.y
 
 class dm_optimizer:
-    """ A global optimizer using the difference map-based algorithm with or without constraints.
+    """ A global optimizer using the difference map-based algorithm with or without penalty-style constraints.
         Attributes:
             max_iterations      -- the maximum number of iterations to perform before aborting minimization.
             tolerance           -- the threshold above which we consider two points to be distinct.
@@ -211,8 +211,15 @@ class dm_optimizer:
         stepdir = (1 if destination.y <= self.fv else -1) * (destination.x - self.pmin)
         return self.calculate_step_scale(destination) * stepdir
 
+    def get_best_minimum(self):
+        """ Get the best past minimum that is at least a certain distance away from the current minimum, stored in pmin. """
+        for m in self.vals:
+            if norm(m.x, self.pmin) > self.tolerance:
+                return m
+        raise BestMinimumException("There are no past minima.")
+
     def step_to_best_minimum(self):
-        return self.step_toward(self.vals[0])
+        return self.step_toward(self.get_best_minimum())
 
     def fv_after_step(self, step):
         """ Evaluate the score of the objective function after hypothetically taking the given step. """
@@ -299,9 +306,10 @@ class dm_optimizer:
                 self.logmsg(6, "Minimum for this iteration f", self.pmin, " = ", self.fv, sep='')
                 self.logmsg(7, "Target:", self.target)
 
+                self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
+
                 self.take_step(self.step_to_best_minimum())
 
-                self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
                 self.logmsg(2, "Took step ", self.step)
 
                 self.vals.add(value_box( (self.fv, copy(self.pmin)) ))
