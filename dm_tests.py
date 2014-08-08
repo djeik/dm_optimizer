@@ -157,7 +157,8 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
             return 0
         return sum(imap(lambda x: 0 if x is None else x, l)) / float(len(l))
     avgs = [[avg(data) for data in iteration] for iteration in statistics]
-    return avgs # transpose
+    avgs[-2][-1] *= len(filter(lambda x: x == 0, avgs[-2])) # For the performance. Zero looks like it's giving SA an advantage.
+    return avgs
 
 def write_experiment_data(exp_dir, complete_experiment):
     """ Expects a tuple in the form (name, averages, all runs), and writes out all the data for this experiment into the given directory. """
@@ -217,6 +218,12 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
     all_statistics = [] # we will collect the general statistics for each experiment here, to perform a global average over all experiments.
     global_statistics = []
 
+    with open(path.join(edir, "in-progress.txt"), 'w') as f:
+        print("A pipeline is running, with output to this folder.\n" +
+              "DO NOT DELETE IT.\n" +
+              "If the pipeline has stopped and this file is still present, then the pipeline probably crashed.",
+              file=f)
+
     pool = mp.Pool()
 
     start_time = time()
@@ -242,6 +249,8 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
         print_csv("AVERAGE", *global_statistics, file=f)
 
     end_time = time()
+
+    os.remove(path.join(edir, "in-progress.txt"))
 
     with open(path.join(edir, "time.txt"), 'w') as f:
         print(end_time - start_time, file=f)
