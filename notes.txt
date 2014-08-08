@@ -145,3 +145,13 @@ Plotting is still broken. Let's look at some sample output from Ackley: (functio
 0.935985697107  18.1388196991  13.9581243418  14.4848973376  13.6281766403  13.7137544063  13.6281766403  None           None           None           None           None
 
 The first thing to notice is that None value phase in and out. That shouldn't be possible. Once None occurs in a column, all subsequent values in that column should be None: it represents that that run prematurely terminated. This makes me thing that I'm padding the lists at the wrong time, before or after some transpose. This is probably why the plots look weird.
+
+Yay, that's fixed.
+
+Talked with Simon:
+ * My priority should be on getting some really nice graphics for comparing DM and SA. He suggests graphs showing the fraction of solved runs as a function of the iteration number (see paper in folder).
+ * I should look back on the past strategies, esp. the minimum-dropping method, and see with this comparison whether it really beats SA.
+ * I should see with some other constants for the fixed-step method, e.g. 0.1 and 1.0. 
+ * I need to write the summary of the algorithm.
+
+I should probably use a very high number of iterations for that fraction solved vs time graph, around 4000. This means that running it on abacus is probably the best way to do things. I'll need to adapt the code in run_reproducible_pipeline then, since as of right now, it fails with a file not found error about git...
