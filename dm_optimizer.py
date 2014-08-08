@@ -308,6 +308,9 @@ class dm_optimizer:
 
                 self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
 
+                if self.callback is not None:
+                    self.callback(self)
+
                 self.take_step(self.step_to_best_minimum())
 
                 self.logmsg(2, "Took step ", self.step)
@@ -315,9 +318,6 @@ class dm_optimizer:
                 self.vals.add(value_box( (self.fv, copy(self.pmin)) ))
                 self.valsi.append(value_box( (self.fv, copy(self.pmin)) ))
                 map(lambda x: self.logmsg(2, x.unbox()), self.vals[-3:])
-
-                if self.callback is not None:
-                    self.callback(self)
 
                 if norm(self.step) < self.tolerance:
                     res.message.append("Fixed point found.")
