@@ -233,7 +233,7 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
               "If the pipeline has stopped and this file is still present, then the pipeline probably crashed.",
               file=f)
 
-    pool = mp.Pool()
+    pool = mp.Pool(3)
 
     start_time = time()
     results = pool.map(experiment_task, izip(repeat(edir), tests, repeat(optimizer), repeat(names)))
