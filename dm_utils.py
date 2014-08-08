@@ -66,7 +66,7 @@ def tuples_to_csv(dats):
     return '\n'.join([','.join(map(str, x)) for x in dats])
 
 def csv_to_tuples(csv):
-    """ Expect a list of records, where each record consist of fields that are comma-separated.
+    """ Expect a list of records, where each record consists of fields that are comma-separated.
         Return a list of lists. No handling of escaping the commas is done.
         """
     return [tuple(x.split(',')) for x in csv]
