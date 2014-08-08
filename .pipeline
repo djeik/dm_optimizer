@@ -1,4 +1,4 @@
 ./run_dm.sh dm
 ./run_sa.sh sa
-./dm_sa_compare compare
+./dm_sa_compare.py compare
 ./make_plots_dm.py dm_plots
