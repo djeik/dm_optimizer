@@ -5,12 +5,14 @@ from sys import argv as args
 from sys import exit
 from datetime import datetime
 import dm_tests as dmt
+from os import path
 
 if __name__ == "__main__":
     try:
-        path = args[1]
+        out_dir = args[1]
     except:
-        path = str(datetime.now())
+        out_dir = str(datetime.now())
 
+    out_dir = path.join("results/" + out_dir)
 
-    dmt.solved_vs_iterations(path)
+    dmt.solved_vs_iterations(out_dir)
