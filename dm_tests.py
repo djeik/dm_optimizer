@@ -364,31 +364,40 @@ def safe_set_iteration_count(optimizer, iterations_count):
 
     return new_settings
 
-def solved_vs_iterations_inner(*args):
-    (test_dir, optimizer_name, test) = args
+def solved_vs_iterations_inner(args):
+    (solver_dir, optimizer_name, test) = args
     my_optimizer = dict(optimizers[optimizer_name]) # clone this dict so that changes to the config aren't global
     data_points = []
 
-    for iterations_count in xrange(*[iterations_config[s] for s in ["start", "end", "step"]])
+#test_dir is date/optimizer/
+    test_dir = path.join(solver_dir, "data", test["name"])
+    os.makedirs(test_dir)
+
+    for iterations_count in xrange(*[iterations_config[s] for s in ["start", "end", "step"]]):
+        output_dir = path.join(test_dir, str(iterations_count))
         my_optimizer["config"] = safe_set_iteration_count(my_optimizer, iterations_count)
-        (results, all_statistics, global_averages, global_stdevs) = conduct_all_experiments_inner(test_dir, my_optimizer)
+        experiment_output = conduct_experiment(test_dir, test, my_optimizer)
+        data_points.append( (iterations_count, experiment_output[1]) ) # success is the second value returned by conduct_experiment
 
-        data_points.append( (iterations_count, global_averages[0]) ) # success is the first average
-
-    return data_points
+    return (test["name"], data_points)
 
 def solved_vs_iterations(edir):
     pool = mp.Pool(3)
 
     if not path.exists(edir):
-        os.makedirs(edir)
+        os.makedirs(edir) #edir is the date-named folder
 
     for optimizer_name in optimizers.keys():
-        data_points_s = pool.map(solved_vs_iterations_inner,
-                                 izip(imap(lambda: path.join(edir, test["name"]), tests),
+        solver_dir = path.join(edir, optimizer_name)
+        result_dir = path.join(solver_dir, "results")
+        map(os.makedirs, [solver_dir, result_dir])
+
+        data_points_s = map(solved_vs_iterations_inner,
+                                 izip(repeat(solver_dir),
                                       repeat(optimizer_name),
                                       tests))
 
-        for data_points in data_points_s:
-            with open(path.join(edir, test["name"], "success-vs-iterations.txt"), 'w') as f:
+        for (name, data_points) in data_points_s:
+            test_result_path = path.join(result_dir, name + ".csv")
+            with open(test_result_path, 'w') as f:
                 [print_csv(*point, file=f) for point in data_points]
