@@ -222,6 +222,26 @@ def experiment_task(args):
     # the return value will get appended to the all_statistics of the master process
     return (test["name"], (success_rate, time_avg, nfev_avg, ndiv(nfev_avg, success_rate), failures))
 
+def conduct_all_experiments_inner(edir, optimizer, experiment_defaults=experiment_defaults, names=poll_names, subproc_count=4):
+    """ Inner function called by conduct_all_experiments that runs a given number of subprocesses to run each of the test objective
+        functions listed in dm_tests_config.py, with a given set of experiment settings, taken by default from experiment_defaults.
+        Internally, this function calls experiment_task for each of the tests, which will generate a folder with the number of the
+        test in the "edir" directory, where any information relevant to the function will be saved.
+        """
+    pool = mp.Pool(4)
+
+    results = pool.map(experiment_task, izip(repeat(edir), tests, repeat(optimizer), repeat(names)))
+
+    # collect the results of the subprocesses
+    all_statistics  = [result[1] for result in results]
+
+    ## calculate the global statistics
+    # transpose the list of statistics, and calculate the averages.
+    global_averages = tuple(map(lambda stat: sum(stat) / float(len(stat)), zip(*all_statistics)))
+    global_stdevs   = tuple(map(np.std, zip(*all_statistics)))
+
+    return (results, all_statistics, global_averages, global_stdevs)
+
 # statistics measured: success rate, average runtime, average function evals, function value vs time, best minimum vs time, stepsize vs time
 def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defaults, names=poll_names):
     all_statistics = [] # we will collect the general statistics for each experiment here, to perform a global average over all experiments.
@@ -233,16 +253,9 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
               "If the pipeline has stopped and this file is still present, then the pipeline probably crashed.",
               file=f)
 
-    pool = mp.Pool(3)
-
     start_time = time()
-    results = pool.map(experiment_task, izip(repeat(edir), tests, repeat(optimizer), repeat(names)))
-    #results = [pool.apply_async(experiment_task, edir, test) for test in tests]
-    #pool.close()
-    #pool.join() # now we wait for the subprocesses to finish.
-
-    # collect the results of the subprocesses
-    all_statistics  = [result[1] for result in results]
+    results, all_statistics, global_averages, global_stdevs = conduct_all_experiments_inner(edir, optimizer, experiment_defaults, names)
+    end_time = time()
 
     with open(path.join(edir, "averages.txt"), 'w', 1) as f:
         print_csv("test", "success rate", "average time", "average fun. evals.", "average performance", "failures", file=f)
@@ -251,16 +264,9 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
                                                                                              nfev_avg, perf_avg, failures, file=f),
             results)
 
-        ## calculate the global statistics
-        # transpose the list of statistics, and calculate the averages.
-        global_averages = tuple(map(lambda stat: sum(stat) / float(len(stat)), zip(*all_statistics)))
-        global_stdevs   = tuple(map(np.std, zip(*all_statistics)))
-
         # record the data
         print_csv("AVERAGE", *global_averages, file=f)
         print_csv("STDEV", *global_stdevs, file=f)
-
-    end_time = time()
 
     os.remove(path.join(edir, "in-progress.txt"))
 
