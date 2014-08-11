@@ -359,7 +359,7 @@ def safe_set_iteration_count(optimizer, iterations_count):
         new_settings["max_iterations"] = iterations_count
     elif is_optimizer("sa"):
         new_settings["niter"] = iterations_count
-    else
+    else:
         raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
 
     return new_settings
