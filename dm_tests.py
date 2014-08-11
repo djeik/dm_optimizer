@@ -364,26 +364,36 @@ def safe_set_iteration_count(optimizer, iterations_count):
 
     return new_settings
 
+def solved_vs_iterations_inner_inner(args):
+    iterations_count, test, test_dir, optimizer_name = args
+
+    errprint(test["name"] + ":", iterations_count, '/', iterations_config["end"])
+
+    my_optimizer = dict(optimizers[optimizer_name])
+    my_optimizer["config"] = safe_set_iteration_count(my_optimizer, iterations_count)
+
+    output_dir = path.join(test_dir, str(iterations_count))
+    experiment_output = conduct_experiment(output_dir, test, my_optimizer)
+
+    return (iterations_count, experiment_output[1])  # success is the second value returned by conduct_experiment
+
 def solved_vs_iterations_inner(args):
     (solver_dir, optimizer_name, test) = args
-    my_optimizer = dict(optimizers[optimizer_name]) # clone this dict so that changes to the config aren't global
-    data_points = []
 
 #test_dir is date/optimizer/
     test_dir = path.join(solver_dir, "data", test["name"])
     os.makedirs(test_dir)
 
-    for iterations_count in xrange(*[iterations_config[s] for s in ["start", "end", "step"]]):
-        output_dir = path.join(test_dir, str(iterations_count))
-        my_optimizer["config"] = safe_set_iteration_count(my_optimizer, iterations_count)
-        experiment_output = conduct_experiment(test_dir, test, my_optimizer)
-        data_points.append( (iterations_count, experiment_output[1]) ) # success is the second value returned by conduct_experiment
+    pool = mp.Pool(10)
+
+    data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(*[iterations_config[s] for s in ["start", "end", "step"]]),
+                                                                  repeat(test),
+                                                                  repeat(test_dir),
+                                                                  repeat(optimizer_name)))
 
     return (test["name"], data_points)
 
 def solved_vs_iterations(edir):
-    pool = mp.Pool(3)
-
     if not path.exists(edir):
         os.makedirs(edir) #edir is the date-named folder
 
@@ -392,10 +402,12 @@ def solved_vs_iterations(edir):
         result_dir = path.join(solver_dir, "results")
         map(os.makedirs, [solver_dir, result_dir])
 
+        errprint("Running solver:", optimizer_name)
+
         data_points_s = map(solved_vs_iterations_inner,
                                  izip(repeat(solver_dir),
                                       repeat(optimizer_name),
-                                      tests))
+                                      tests[:1]))
 
         for (name, data_points) in data_points_s:
             test_result_path = path.join(result_dir, name + ".csv")
