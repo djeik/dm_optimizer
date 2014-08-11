@@ -347,5 +347,48 @@ def dm_plot_3d(edir, test_all_2d=False, show=False):
         if show:
             plt.show()
 
-
         fig.savefig(path.join(edir, test["name"] + ".pdf"))
+
+def safe_set_iteration_count(optimizer, iterations_count):
+    """ For the given optimizer, generate a new configuration dictionary with the number of iterations set
+        to the given value. The new dictionary is returned.
+        """
+    new_settings = dict(optimizer["config"])
+    is_optimizer = lambda x: optimizer["tag"] == x
+    if is_optimizer("dm"):
+        new_settings["max_iterations"] = iterations_count
+    elif is_optimizer("sa"):
+        new_settings["niter"] = iterations_count
+    else
+        raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
+
+    return new_settings
+
+def solved_vs_iterations_inner(*args):
+    (test_dir, optimizer_name, test) = args
+    my_optimizer = dict(optimizers[optimizer_name]) # clone this dict so that changes to the config aren't global
+    data_points = []
+
+    for iterations_count in xrange(*[iterations_config[s] for s in ["start", "end", "step"]])
+        my_optimizer["config"] = safe_set_iteration_count(my_optimizer, iterations_count)
+        (results, all_statistics, global_averages, global_stdevs) = conduct_all_experiments_inner(test_dir, my_optimizer)
+
+        data_points.append( (iterations_count, global_averages[0]) ) # success is the first average
+
+    return data_points
+
+def solved_vs_iterations(edir):
+    pool = mp.Pool(3)
+
+    if not path.exists(edir):
+        os.makedirs(edir)
+
+    for optimizer_name in optimizers.keys():
+        data_points_s = pool.map(solved_vs_iterations_inner,
+                                 izip(imap(lambda: path.join(edir, test["name"]), tests),
+                                      repeat(optimizer_name),
+                                      tests))
+
+        for data_points in data_points_s:
+            with open(path.join(edir, test["name"], "success-vs-iterations.txt"), 'w') as f:
+                [print_csv(*point, file=f) for point in data_points]

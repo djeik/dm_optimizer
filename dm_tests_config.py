@@ -33,3 +33,5 @@ sa_defaults = {"niter":100}
 
 optimizers = {"dm":{"tag":"dm", "optimizer":dmu.randomr_dm, "config":dm_defaults},
               "sa":{"tag":"sa", "optimizer":dmu.randomr_sa, "config":sa_defaults}}
+
+iterations_config = {"start":25, "end":1000, "step":25}
