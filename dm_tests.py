@@ -203,13 +203,13 @@ def experiment_task(args):
         # line up all the data for a given iteration
         vs = map(lambda r: copy(r.opt.vs), rs)
 
-        maxlen = reduce(max, imap(len, vs), 0)
-        names_n = len(poll_names)
+        maxlen       = reduce(max, imap(len, vs), 0)
+        names_n      = len(poll_names)
         data_vs_iter = [[[run[iteration_i][data_i] if iteration_i < len(run) else None for run in vs]
                                                                                        for iteration_i in xrange(maxlen)]
                                                                                        for data_i in xrange(names_n)]
 
-        avgs = calculate_averages(data_vs_iter)
+        avgs          = calculate_averages(data_vs_iter)
         complete_data = zip(names, avgs, data_vs_iter)
 
         # print the test-specific data to its own directory.
@@ -253,9 +253,12 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
 
         ## calculate the global statistics
         # transpose the list of statistics, and calculate the averages.
-        global_statistics = tuple(map(lambda stat: sum(stat) / float(len(stat)), zip(*all_statistics)))
+        global_averages = tuple(map(lambda stat: sum(stat) / float(len(stat)), zip(*all_statistics)))
+        global_stdevs   = tuple(map(np.std, zip(*all_statistics)))
+
         # record the data
-        print_csv("AVERAGE", *global_statistics, file=f)
+        print_csv("AVERAGE", *global_averages, file=f)
+        print_csv("STDEV", *global_stdevs, file=f)
 
     end_time = time()
 
