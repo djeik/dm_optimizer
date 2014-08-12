@@ -53,7 +53,7 @@ class dm_optimizer:
 
         Notes:
             vals is stored as a sorted list, since we frequently just need to get the n smallest values.
-            It is a list of tuples (y, x), which is convenient since Python tuples are totally ordered according
+            It is a list of value_box objects, which are just wrappers around tuples, sorted according to their first element.
             to their first element.
             """
 
@@ -75,14 +75,6 @@ class dm_optimizer:
         self.logfile                    = logfile
         self.minimizer_kwargs           = minimizer_kwargs
         self.callback                   = callback
-
-        if target is not None:
-            self.logmsg(7, "Setting fixed target.")
-            self.fixed_target = True
-            self.target       = target
-        else:
-            self.fixed_target = False
-
 
     def logmsg(self, priority, *args, **kwargs):
         """ Forward all arguments to print if the given priority is less than or equal to the verbosity of the optimizer. The file keyword argument
@@ -118,88 +110,6 @@ class dm_optimizer:
         if 'nhev' in res.keys():
             self.nhev += res.nhev
         return res.x
-
-    def best_minimum_x(self):
-        """ Find the the past minimum that is closest to the current iteration minimum self.pmin.
-
-            Returns:
-                _(y, x)_ -- the minimum closest to the given point.
-
-            Notes:
-                To avoid accidental rapid convergeance to a fixed point, this function will not return the true closest minimum
-                if it is considered to be the same as the given point; it will instead return the second-closest minimum. Two points
-                are considered the same if their distance is less than `tolerance`.
-            """
-        minima = sorted([x for x in self.vals
-                                 if norm(x.x - self.pmin) >= self.tolerance
-                                 #and (self.evalf(self.pmin) - x.y)**2 >= 0.1
-                        ], key=lambda v: norm(self.pmin - v.x))
-
-        if len(minima) == 0:
-            raise BestMinimumException("There are no local minima far away enough from the current minimum to be considered distinct.")
-
-        return minima[0]
-
-    def new_target(self, best):
-        """ Calculate a new target value.
-
-            Arguments:
-                best -- the current function-value.
-
-            Returns:
-                Nothing.
-
-            Notes:
-                Sets the objects internal `target` attribute to the new target value. This method should be called when the actual function value
-                falls below the current target value.
-            """
-        if self.fixed_target:
-            pass
-            logmsg(7, "Target is fixed; refusing to create a new target.")
-        else:
-            # get the minimum y value recorded in our list of minima, and push down from there.
-            oldtarget = self.target
-            mins = []
-            for v in self.vals:
-                if v.y - best > self.tolerance:
-                    mins.append(v.y)
-                else:
-                    self.logmsg(1, "Skipping over bad minimum in newtarget calculation.")
-            if not mins:
-                raise BestMinimumException()
-                #mins = [self.vals[0].y]
-            self.target = best + self.greediness * (best - min(mins))
-            if self.target != oldtarget:
-                pass
-                self.logmsg(7, "Target updated to ", self.target, " (", "higher" if self.target > oldtarget else "lower", ")", sep='')
-
-    def refresh_target(self): # no effects on attributes.
-        """ Refresh the target value.
-
-            Arguments:
-                None.
-
-            Returns:
-                Nothing.
-
-            Notes:
-                Uses the internally-maintained list of past minima to set `target` to the new target value.
-            """
-        if self.fixed_target:
-            pass
-            self.logmsg(7, "Target is fixed. Refusing to refresh target.")
-        else:
-            if len(self.vals) < 2:
-                raise ValueError("Insufficient number of discovered local minima to perform a target update.")
-
-            self.logmsg(1, "Two best minima so far: ", self.vals[0].unbox(), " and ", self.vals[1].unbox())
-            diff = self.vals[0].y - self.vals[1].y
-            if diff > 0: # this should never evaluate to True, since self.vals is sorted in ascending order.
-                raise Exception("The difference between the two best minima should be negative!")
-            self.logmsg(2, "Y-Difference between the minima: ", diff)
-            self.logmsg(1, "Refreshed target to", self.target)
-
-            return self.vals[0].y + self.greediness * diff
 
     def calculate_step_scale(self, destination):
         return 0.75
@@ -282,9 +192,6 @@ class dm_optimizer:
         self.vals.add(value_box( (f0, x0min) ))
         self.valsi.append(value_box( (f0, x0min) ))
 
-        if not self.fixed_target:
-            self.target = self.first_target_ratio * f0
-
         self.nx1 = x1
         self.fv = f0
         self.pmin = x0min
@@ -301,7 +208,6 @@ class dm_optimizer:
                 self.pmin = self.local_min(self.nx1)
                 self.fv = self.evalf(self.pmin) # the function value at the local minimum for this iteration
                 self.logmsg(6, "Minimum for this iteration f", self.pmin, " = ", self.fv, sep='')
-                self.logmsg(7, "Target:", self.target)
 
                 self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
 
