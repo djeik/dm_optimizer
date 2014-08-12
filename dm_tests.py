@@ -353,40 +353,37 @@ def safe_set_iteration_count(optimizer, iterations_count):
     """ For the given optimizer, generate a new configuration dictionary with the number of iterations set
         to the given value. The new dictionary is returned.
         """
-    new_settings = dict(optimizer["config"])
     is_optimizer = lambda x: optimizer["tag"] == x
     if is_optimizer("dm"):
-        new_settings["max_iterations"] = iterations_count
+        optimizer["config"]["max_iterations"] = iterations_count
     elif is_optimizer("sa"):
-        new_settings["niter"] = iterations_count
+        optimizer["config"]["niter"] = iterations_count
     else:
         raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
 
-    return new_settings
-
 def solved_vs_iterations_inner_inner(args):
-    iterations_count, test, test_dir, optimizer_name = args
+    run_number, test, test_dir, optimizer_name = args
 
-    errprint(test["name"] + ":", iterations_count, '/', iterations_config["end"])
+    my_optimizer = optimizer_config_gen(dict(optimizers[optimizer_name]), test["optimum"]),
+    safe_set_iteration_count(my_optimizer, iterations_config["end"])
 
-    my_optimizer = dict(optimizers[optimizer_name])
-    my_optimizer["config"] = safe_set_iteration_count(my_optimizer, iterations_count)
-
-    output_dir = path.join(test_dir, str(iterations_count))
+    output_dir = path.join(test_dir, str(run_number))
     experiment_output = conduct_experiment(output_dir, test, my_optimizer)
 
-    return (iterations_count, experiment_output[1])  # success is the second value returned by conduct_experiment
+    # since we record one v for each iter, and the optimizer will end if the global minimum is found, the length of the vs
+    # represents how many iterations it took to find the global minimum
+    return len(my_optimizer["callback"].vs)
 
 def solved_vs_iterations_inner(args):
     (solver_dir, optimizer_name, test) = args
 
-#test_dir is date/optimizer/
+    #test_dir is date/optimizer/
     test_dir = path.join(solver_dir, "data", test["name"])
     os.makedirs(test_dir)
 
     pool = mp.Pool(10)
 
-    data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(*[iterations_config[s] for s in ["start", "end", "step"]]),
+    data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(experiment_defaults["runs"]),
                                                                   repeat(test),
                                                                   repeat(test_dir),
                                                                   repeat(optimizer_name)))

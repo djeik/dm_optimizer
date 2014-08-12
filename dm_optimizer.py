@@ -266,9 +266,6 @@ class dm_optimizer:
         self.valsi                      = []
         self.lpos                       = []
 
-        if self.callback is not None:
-            self.vs = []
-
         # and that our counters are zero
         self.nfev       = 0
         self.njev       = 0
@@ -309,7 +306,9 @@ class dm_optimizer:
                 self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
 
                 if self.callback is not None:
-                    self.callback(self)
+                    if self.callback(self):
+                        res.message.append("Callback function requested termination.")
+                        break
 
                 self.take_step(self.step_to_best_minimum())
 
