@@ -364,15 +364,17 @@ def safe_set_iteration_count(optimizer, iterations_count):
 def solved_vs_iterations_inner_inner(args):
     run_number, test, test_dir, optimizer_name = args
 
-    my_optimizer = optimizer_config_gen(dict(optimizers[optimizer_name]), test["optimum"]),
+    my_optimizer = optimizer_config_gen(dict(optimizers[optimizer_name]), test["optimum"])
     safe_set_iteration_count(my_optimizer, iterations_config["end"])
 
     output_dir = path.join(test_dir, str(run_number))
-    experiment_output = conduct_experiment(output_dir, test, my_optimizer)
+    experiment_output = my_optimizer["optimizer"](eval(test["function"]), test["dimensions"],
+                                                  test["range"] or sampler_defaults["range"],
+                                                  my_optimizer["config"])
 
     # since we record one v for each iter, and the optimizer will end if the global minimum is found, the length of the vs
     # represents how many iterations it took to find the global minimum
-    return len(my_optimizer["callback"].vs)
+    return len(my_optimizer["config"]["callback"].vs)
 
 def solved_vs_iterations_inner(args):
     (solver_dir, optimizer_name, test) = args
@@ -381,14 +383,26 @@ def solved_vs_iterations_inner(args):
     test_dir = path.join(solver_dir, "data", test["name"])
     os.makedirs(test_dir)
 
-    pool = mp.Pool(10)
+    pool = mp.Pool(4)
 
     data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(experiment_defaults["runs"]),
                                                                   repeat(test),
                                                                   repeat(test_dir),
                                                                   repeat(optimizer_name)))
 
-    return (test["name"], data_points)
+    # data_points is just a list of ints, that say how long it took for that run to finish
+    def alive_vs_t(lifetimes):
+        ls = list(lifetimes)
+        alives = []
+        for i in xrange(iterations_config["end"]):
+            # remove all the lifetimes that are less that the iteration number
+            ls = filter(lambda n: n > i, ls)
+            alives.append(len(ls)) # record how many runs were still going at this iteration
+        return alives
+
+    alives_vs_t = alive_vs_t(data_points)
+
+    return (test["name"], alives_vs_t)
 
 def solved_vs_iterations(edir):
     if not path.exists(edir):
@@ -404,9 +418,9 @@ def solved_vs_iterations(edir):
         data_points_s = map(solved_vs_iterations_inner,
                                  izip(repeat(solver_dir),
                                       repeat(optimizer_name),
-                                      tests[:1]))
+                                      tests))
 
         for (name, data_points) in data_points_s:
             test_result_path = path.join(result_dir, name + ".csv")
             with open(test_result_path, 'w') as f:
-                [print_csv(*point, file=f) for point in data_points]
+                [print_csv(count, file=f) for count in data_points]

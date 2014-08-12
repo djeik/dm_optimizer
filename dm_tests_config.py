@@ -24,28 +24,28 @@ tests = map(lambda xs: dict(zip(
 poll_names = ["function_value", "best_minimum", "step_size"] # the names of the things extracted from the optimizer internal state
 
 sampler_defaults = {"dimensions":5, "range":(-100, 100)}
-experiment_defaults = {"runs":75, "success_threshold":0.001}
-dm_defaults = {"refresh_rate":5, "max_iterations":100, "callback":dm_poll_callback, "verbosity":"any"}
+experiment_defaults = {"runs":250, "success_threshold":0.001}
+dm_defaults = {"refresh_rate":5, "max_iterations":100}
 sa_defaults = {"niter":100}
 
-class solver_callback:
+class solver_callback(object):
     def __init__(self, optimum=float("nan"), experiment_settings=experiment_defaults):
         self.vs = []
         self.optimum = optimum
-        self.experiment
+        self.experiment_settings = experiment_defaults
 
 class dm_callback(solver_callback):
-    def __init__(*args, **kwargs):
-        super(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(dm_callback, self).__init__(*args, **kwargs)
 
     def __call__(self, solver):
-        self.vs.append( (self.fv, self.vals[0].y, norm(self.step)) )
+        self.vs.append( (solver.fv, solver.vals[0].y, norm(solver.step)) )
         if (solver.vals[0].y - self.optimum)**2 <= self.experiment_settings["success_threshold"]**2:
             return True
 
-class sa_callback:
-    def __init__(*args, **kwargs):
-        super(*args, **kwargs)
+class sa_callback(solver_callback):
+    def __init__(self, *args, **kwargs):
+        super(sa_callback, self).__init__(*args, **kwargs)
 
     def __call__(self, x, f, accept):
         if accept:
@@ -60,7 +60,7 @@ def make_dm_defaults(optimum=float("nan")):
     defaults["callback"] = dm_callback(optimum)
     return defaults
 
-def make_sa_callback(optimum=float("nan")):
+def make_sa_defaults(optimum=float("nan")):
     defaults = dict(sa_defaults)
     defaults["callback"] = sa_callback(optimum)
     return defaults
@@ -70,5 +70,6 @@ optimizers = {"dm":{"tag":"dm", "optimizer":dmu.randomr_dm, "config_gen":make_dm
 
 def optimizer_config_gen(optimizer, optimum=float("nan")):
     optimizer["config"] = optimizer["config_gen"](optimum)
+    return optimizer
 
 iterations_config = {"start":25, "end":1000, "step":25}
