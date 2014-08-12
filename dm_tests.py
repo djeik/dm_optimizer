@@ -384,7 +384,7 @@ def solved_vs_iterations_inner(args):
     test_dir = path.join(solver_dir, "data", test["name"])
     os.makedirs(test_dir)
 
-    pool = mp.Pool(10)
+    pool = mp.Pool(solved_vs_iterations_subproc_count)
 
     data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(*[iterations_config[s] for s in ["start", "end", "step"]]),
                                                                   repeat(test),
