@@ -42,7 +42,6 @@ class dm_optimizer:
             greediness          -- how quickly should the target value be lowered.
             fun                 -- the objective function.
             pseudo              -- special value to use to determine the step size when it would otherwise be very large.
-            refresh_rate        -- how frequently to update the target value, in iterations per update.
             nfev                -- total number of function evaluations.
             vals                -- the local minima collected along the way, in ascending order.
             valsi               -- the local minima collected along the way, in order of discovery.
@@ -58,8 +57,7 @@ class dm_optimizer:
             """
 
     def __init__(self, fun, max_iterations=2500, target=None, constraints=[], nonsatisfaction_penalty=0, tolerance=0.000001, verbosity=0,
-            pseudo=0.001, greediness=0.05, first_target_ratio=0.9, refresh_rate=10, chopfactor=1, logfile=sys.stderr,
-            callback=None, minimizer_kwargs={}):
+            pseudo=0.001, logfile=sys.stderr, callback=None, minimizer_kwargs={}, stepscale_constant=0.5):
         self._fun                       = fun # store the objective function in a 'hidden' attribute to avoid accidentally
                                               # calling the unwrapped version
         self.max_iterations             = max_iterations
@@ -68,13 +66,10 @@ class dm_optimizer:
         self.tolerance                  = tolerance
         self.verbosity                  = verbosity
         self.pseudo                     = pseudo
-        self.greediness                 = greediness
-        self.first_target_ratio         = first_target_ratio
-        self.refresh_rate               = refresh_rate
-        self.chopfactor                 = chopfactor
         self.logfile                    = logfile
         self.minimizer_kwargs           = minimizer_kwargs
         self.callback                   = callback
+        self.stepscale_constant         = stepscale_constant
 
     def logmsg(self, priority, *args, **kwargs):
         """ Forward all arguments to print if the given priority is less than or equal to the verbosity of the optimizer. The file keyword argument
@@ -112,7 +107,7 @@ class dm_optimizer:
         return res.x
 
     def calculate_step_scale(self, destination):
-        return 0.75
+        return self.stepscale_constant
 
     def step_toward(self, destination):
         """ Calculate a step toward a given destination using the standard stepscale calculation method.
