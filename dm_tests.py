@@ -374,7 +374,9 @@ def solved_vs_iterations_inner_inner(args):
 
     # since we record one v for each iter, and the optimizer will end if the global minimum is found, the length of the vs
     # represents how many iterations it took to find the global minimum
-    return len(my_optimizer["config"]["callback"].vs)
+    v = len(my_optimizer["config"]["callback"].vs)
+    errprint("Run #", run_number, ": ", v, sep='')
+    return v
 
 def solved_vs_iterations_inner(args):
     (solver_dir, optimizer_name, test) = args
@@ -383,12 +385,18 @@ def solved_vs_iterations_inner(args):
     test_dir = path.join(solver_dir, "data", test["name"])
     os.makedirs(test_dir)
 
+    errprint("Running test: ", test["name"], "...", sep='')
+
     pool = mp.Pool(4)
 
     data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(experiment_defaults["runs"]),
                                                                   repeat(test),
                                                                   repeat(test_dir),
                                                                   repeat(optimizer_name)))
+
+    errprint("Done running test.")
+
+    errprint("Parsing experiment data... ", end='')
 
     # data_points is just a list of ints, that say how long it took for that run to finish
     def alive_vs_t(lifetimes):
@@ -401,6 +409,8 @@ def solved_vs_iterations_inner(args):
         return alives
 
     alives_vs_t = alive_vs_t(data_points)
+
+    errprint("Done.")
 
     return (test["name"], alives_vs_t)
 
