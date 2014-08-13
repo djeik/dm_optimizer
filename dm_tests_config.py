@@ -68,8 +68,10 @@ def make_sa_defaults(optimum=float("nan")):
 optimizers = {"dm":{"tag":"dm", "optimizer":dmu.randomr_dm, "config_gen":make_dm_defaults},
               "sa":{"tag":"sa", "optimizer":dmu.randomr_sa, "config_gen":make_sa_defaults}}
 
-def optimizer_config_gen(optimizer, optimum=float("nan")):
+def optimizer_config_gen(optimizer, optimum=float("nan"), extra_config={}):
     optimizer["config"] = optimizer["config_gen"](optimum)
+    for (k, v) in extra_config.items():
+        optimizer["config"][k] = v
     return optimizer
 
 iterations_config = {"start":25, "end":1000, "step":25}

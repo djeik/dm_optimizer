@@ -362,9 +362,9 @@ def safe_set_iteration_count(optimizer, iterations_count):
         raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
 
 def solved_vs_iterations_inner_inner(args):
-    run_number, test, test_dir, optimizer_name = args
+    run_number, test, test_dir, optimizer_name, extra_optimizer_config = args
 
-    my_optimizer = optimizer_config_gen(dict(optimizers[optimizer_name]), test["optimum"])
+    my_optimizer = optimizer_config_gen(dict(optimizers[optimizer_name]), test["optimum"], extra_optimizer_config)
     safe_set_iteration_count(my_optimizer, iterations_config["end"])
 
     output_dir = path.join(test_dir, str(run_number))
@@ -379,7 +379,7 @@ def solved_vs_iterations_inner_inner(args):
     return v
 
 def solved_vs_iterations_inner(args):
-    (solver_dir, optimizer_name, test) = args
+    (solver_dir, optimizer_name, test, extra_optimizer_config) = args
 
     #test_dir is date/optimizer/
     test_dir = path.join(solver_dir, "data", test["name"])
@@ -392,7 +392,8 @@ def solved_vs_iterations_inner(args):
     data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(experiment_defaults["runs"]),
                                                                   repeat(test),
                                                                   repeat(test_dir),
-                                                                  repeat(optimizer_name)))
+                                                                  repeat(optimizer_name),
+                                                                  repeat(extra_optimizer_config)))
 
     errprint("Done running test.")
 
@@ -414,7 +415,7 @@ def solved_vs_iterations_inner(args):
 
     return (test["name"], alives_vs_t)
 
-def solved_vs_iterations(edir):
+def solved_vs_iterations(edir, extra_settings={"dm":{}, "sa":{}}):
     if not path.exists(edir):
         os.makedirs(edir) #edir is the date-named folder
 
@@ -428,7 +429,8 @@ def solved_vs_iterations(edir):
         data_points_s = map(solved_vs_iterations_inner,
                                  izip(repeat(solver_dir),
                                       repeat(optimizer_name),
-                                      tests))
+                                      tests,
+                                      repeat(extra_settings[optimizer_name] if optimizer_name in extra_settings else {})))
 
         for (name, data_points) in data_points_s:
             test_result_path = path.join(result_dir, name + ".csv")
