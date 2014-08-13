@@ -7,7 +7,8 @@ from scipy.optimize import basinhopping
 import dm_optimizer as dm
 import numpy as np
 from itertools import repeat, imap, chain, islice, izip
-
+import os
+from os import path
 
 # deap's benchmarking functions return the values as 1-tuples
 # so we need to unpack element 0 which is the actual function-value.
@@ -90,3 +91,22 @@ def ndiv(numerator, denominator, epsilon=1e-7):
         if denominator == 0:
             return 0;
     return numerator / float(denominator)
+
+def with_file(f, path, mode='r'):
+    """ Run a function on a file handle, using a with-statement. Useful in lambdas. """
+    with open(path, mode) as handle:
+        return f(handle)
+
+def mapzip(f, seq):
+    """ Map a function over a sequence and zip that sequence with the results of the applications. """
+    return zip(seq, imap(f, seq))
+
+def rebase_path(base_file, relative_file):
+    return path.join(path.dirname(base_file), relative_file)
+
+def mkdir_p(dir):
+    if not path.exists(dir):
+        os.makedirs(dir)
+        return True
+    else:
+        return False

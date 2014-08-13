@@ -434,3 +434,35 @@ def solved_vs_iterations(edir):
             test_result_path = path.join(result_dir, name + ".csv")
             with open(test_result_path, 'w') as f:
                 [print_csv(count, file=f) for count in data_points]
+
+def parse_solved_vs_iterations_data(data_dir, runs_count):
+    optimizer_names = optimizers.keys()
+    path_to_data = lambda solver_name, func_name: path.join(data_dir, solver_name, "results", func_name + ".csv")
+    data = dict(map(
+        lambda test: (test["name"], dict(map(
+            lambda optimizer: (optimizer, with_file(
+                lambda f: map(
+                    lambda x: (runs_count - int(x)) / float(runs_count),
+                    f),
+                path_to_data(optimizer, test["name"]))),
+            optimizer_names))),
+        tests)) # :: Map FunctionName ([FractionSolved1], [FractionSolved2])
+    return data
+
+def solved_vs_iterations_plots(data_dir, iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
+    data = parse_solved_vs_iterations_data(data_dir, runs_count)
+
+    mkdir_p(path.join(data_dir, "solved_vs_iterations"))
+
+    for (func_name, each_optimizer) in data.items():
+        fig = plt.figure()
+        fig.suptitle("%s - fraction of successful runs vs. time" % func_name)
+        ax = fig.add_subplot(1,1,1)
+        ax.set_xlim(0, iterations_count)
+        ax.set_ylim(0, 1)
+        for (solver_name, values) in each_optimizer.items():
+            ax.plot(values, label=solver_name)
+        ax.legend()
+        fig.savefig(path.join(data_dir, "solved_vs_iterations", func_name + ".pdf"))
+
+
