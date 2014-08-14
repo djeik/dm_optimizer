@@ -362,9 +362,9 @@ def safe_set_iteration_count(optimizer, iterations_count):
         raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
 
 def solved_vs_iterations_inner_inner(args):
-    run_number, test, test_dir, optimizer_name = args
+    run_number, test, test_dir, optimizer_name, extra_optimizer_config = args
 
-    my_optimizer = optimizer_config_gen(dict(optimizers[optimizer_name]), test["optimum"])
+    my_optimizer = optimizer_config_gen(dict(optimizers[optimizer_name]), test["optimum"], extra_optimizer_config)
     safe_set_iteration_count(my_optimizer, iterations_config["end"])
 
     output_dir = path.join(test_dir, str(run_number))
@@ -374,21 +374,29 @@ def solved_vs_iterations_inner_inner(args):
 
     # since we record one v for each iter, and the optimizer will end if the global minimum is found, the length of the vs
     # represents how many iterations it took to find the global minimum
-    return len(my_optimizer["config"]["callback"].vs)
+    v = len(my_optimizer["config"]["callback"].vs)
+    errprint("Run #", run_number, ": ", v, sep='')
+    return v
 
 def solved_vs_iterations_inner(args):
-    (solver_dir, optimizer_name, test) = args
+    (solver_dir, optimizer_name, test, extra_optimizer_config) = args
 
     #test_dir is date/optimizer/
     test_dir = path.join(solver_dir, "data", test["name"])
     os.makedirs(test_dir)
 
+    errprint("Running test: ", test["name"], "...", sep='')
     pool = mp.Pool(solved_vs_iterations_subproc_count)
 
     data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(experiment_defaults["runs"]),
                                                                   repeat(test),
                                                                   repeat(test_dir),
-                                                                  repeat(optimizer_name)))
+                                                                  repeat(optimizer_name),
+                                                                  repeat(extra_optimizer_config)))
+
+    errprint("Done running test.")
+
+    errprint("Parsing experiment data... ", end='')
 
     # data_points is just a list of ints, that say how long it took for that run to finish
     def alive_vs_t(lifetimes):
@@ -402,9 +410,11 @@ def solved_vs_iterations_inner(args):
 
     alives_vs_t = alive_vs_t(data_points)
 
+    errprint("Done.")
+
     return (test["name"], alives_vs_t)
 
-def solved_vs_iterations(edir):
+def solved_vs_iterations(edir, extra_settings={"dm":{}, "sa":{}}):
     if not path.exists(edir):
         os.makedirs(edir) #edir is the date-named folder
 
@@ -418,9 +428,42 @@ def solved_vs_iterations(edir):
         data_points_s = map(solved_vs_iterations_inner,
                                  izip(repeat(solver_dir),
                                       repeat(optimizer_name),
-                                      tests))
+                                      tests,
+                                      repeat(extra_settings[optimizer_name] if optimizer_name in extra_settings else {})))
 
         for (name, data_points) in data_points_s:
             test_result_path = path.join(result_dir, name + ".csv")
             with open(test_result_path, 'w') as f:
                 [print_csv(count, file=f) for count in data_points]
+
+def parse_solved_vs_iterations_data(data_dir, runs_count):
+    optimizer_names = optimizers.keys()
+    path_to_data = lambda solver_name, func_name: path.join(data_dir, solver_name, "results", func_name + ".csv")
+    data = dict(map(
+        lambda test: (test["name"], dict(map(
+            lambda optimizer: (optimizer, with_file(
+                lambda f: map(
+                    lambda x: (runs_count - int(x)) / float(runs_count),
+                    f),
+                path_to_data(optimizer, test["name"]))),
+            optimizer_names))),
+        tests)) # :: Map FunctionName ([FractionSolved1], [FractionSolved2])
+    return data
+
+def solved_vs_iterations_plots(data_dir, iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
+    data = parse_solved_vs_iterations_data(data_dir, runs_count)
+
+    mkdir_p(path.join(data_dir, "solved_vs_iterations"))
+
+    for (func_name, each_optimizer) in data.items():
+        fig = plt.figure()
+        fig.suptitle("%s - fraction of successful runs vs. time" % func_name)
+        ax = fig.add_subplot(1,1,1)
+        ax.set_xlim(0, iterations_count)
+        ax.set_ylim(0, 1)
+        for (solver_name, values) in each_optimizer.items():
+            ax.plot(values, label=solver_name)
+        ax.legend()
+        fig.savefig(path.join(data_dir, "solved_vs_iterations", func_name + ".pdf"))
+
+
