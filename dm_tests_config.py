@@ -74,3 +74,5 @@ def optimizer_config_gen(optimizer, optimum=float("nan"), extra_config={}):
     return optimizer
 
 iterations_config = {"start":25, "end":1000, "step":25}
+
+solved_vs_iterations_subproc_count = 1
