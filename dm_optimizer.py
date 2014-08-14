@@ -193,7 +193,7 @@ class dm_optimizer:
         self.lpos = [(self.evalf(self.nx1), self.nx1)]
 
         # prepare the optimization result
-        res = sopt.OptimizeResult()
+        res = sopt.optimize.OptimizeResult()
         res.message = []
 
         self.logmsg(2, "Entering loop.")
@@ -264,7 +264,7 @@ def minimize(f, x1, x2, **kwargs):
     try:
         res = optimizer.minimize(x1, x2)
     except Exception as e:
-        res = sopt.OptimizeResult()
+        res = sopt.optimize.OptimizeResult()
         res.message = ["Exception!", str(e)]
         res.status  = 2
         res.success = False
