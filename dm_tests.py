@@ -429,7 +429,7 @@ def solved_vs_iterations(edir, extra_settings={"dm":{}, "sa":{}}):
         data_points_s = map(solved_vs_iterations_inner,
                                  izip(repeat(solver_dir),
                                       repeat(optimizer_name),
-                                      tests[:1],
+                                      tests,
                                       repeat(extra_settings[optimizer_name] if optimizer_name in extra_settings else {})))
 
         for (name, data_points) in data_points_s:
