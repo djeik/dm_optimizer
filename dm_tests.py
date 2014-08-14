@@ -387,7 +387,7 @@ def solved_vs_iterations_inner(args):
 
     errprint("Running test: ", test["name"], "...", sep='')
 
-    pool = mp.Pool(4)
+    pool = mp.Pool(solved_vs_iterations_subproc_count)
 
     data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(experiment_defaults["runs"]),
                                                                   repeat(test),
