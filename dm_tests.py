@@ -353,45 +353,56 @@ def safe_set_iteration_count(optimizer, iterations_count):
     """ For the given optimizer, generate a new configuration dictionary with the number of iterations set
         to the given value. The new dictionary is returned.
         """
-    new_settings = dict(optimizer["config"])
     is_optimizer = lambda x: optimizer["tag"] == x
     if is_optimizer("dm"):
-        new_settings["max_iterations"] = iterations_count
+        optimizer["config"]["max_iterations"] = iterations_count
     elif is_optimizer("sa"):
-        new_settings["niter"] = iterations_count
+        optimizer["config"]["niter"] = iterations_count
     else:
         raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
 
-    return new_settings
-
 def solved_vs_iterations_inner_inner(args):
-    iterations_count, test, test_dir, optimizer_name = args
+    run_number, test, test_dir, optimizer_name = args
 
-    errprint(test["name"] + ":", iterations_count, '/', iterations_config["end"])
+    my_optimizer = optimizer_config_gen(dict(optimizers[optimizer_name]), test["optimum"])
+    safe_set_iteration_count(my_optimizer, iterations_config["end"])
 
-    my_optimizer = dict(optimizers[optimizer_name])
-    my_optimizer["config"] = safe_set_iteration_count(my_optimizer, iterations_count)
+    output_dir = path.join(test_dir, str(run_number))
+    experiment_output = my_optimizer["optimizer"](eval(test["function"]), test["dimensions"],
+                                                  test["range"] or sampler_defaults["range"],
+                                                  my_optimizer["config"])
 
-    output_dir = path.join(test_dir, str(iterations_count))
-    experiment_output = conduct_experiment(output_dir, test, my_optimizer)
-
-    return (iterations_count, experiment_output[1])  # success is the second value returned by conduct_experiment
+    # since we record one v for each iter, and the optimizer will end if the global minimum is found, the length of the vs
+    # represents how many iterations it took to find the global minimum
+    return len(my_optimizer["config"]["callback"].vs)
 
 def solved_vs_iterations_inner(args):
     (solver_dir, optimizer_name, test) = args
 
-#test_dir is date/optimizer/
+    #test_dir is date/optimizer/
     test_dir = path.join(solver_dir, "data", test["name"])
     os.makedirs(test_dir)
 
     pool = mp.Pool(solved_vs_iterations_subproc_count)
 
-    data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(*[iterations_config[s] for s in ["start", "end", "step"]]),
+    data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(experiment_defaults["runs"]),
                                                                   repeat(test),
                                                                   repeat(test_dir),
                                                                   repeat(optimizer_name)))
 
-    return (test["name"], data_points)
+    # data_points is just a list of ints, that say how long it took for that run to finish
+    def alive_vs_t(lifetimes):
+        ls = list(lifetimes)
+        alives = []
+        for i in xrange(iterations_config["end"]):
+            # remove all the lifetimes that are less that the iteration number
+            ls = filter(lambda n: n > i, ls)
+            alives.append(len(ls)) # record how many runs were still going at this iteration
+        return alives
+
+    alives_vs_t = alive_vs_t(data_points)
+
+    return (test["name"], alives_vs_t)
 
 def solved_vs_iterations(edir):
     if not path.exists(edir):
@@ -407,9 +418,9 @@ def solved_vs_iterations(edir):
         data_points_s = map(solved_vs_iterations_inner,
                                  izip(repeat(solver_dir),
                                       repeat(optimizer_name),
-                                      tests[:1]))
+                                      tests))
 
         for (name, data_points) in data_points_s:
             test_result_path = path.join(result_dir, name + ".csv")
             with open(test_result_path, 'w') as f:
-                [print_csv(*point, file=f) for point in data_points]
+                [print_csv(count, file=f) for count in data_points]
