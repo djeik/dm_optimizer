@@ -437,6 +437,9 @@ def solved_vs_iterations(edir, extra_settings={"dm":{}, "sa":{}}):
             with open(test_result_path, 'w') as f:
                 [print_csv(count, file=f) for count in data_points]
 
+        if optimizer_name in extra_settings:
+            with_file(lambda f: print(extra_settings[optimizer_name], file=f), path.join(solver_dir, "extra-settings.txt"))
+
 def parse_solved_vs_iterations_data(data_dir, runs_count):
     optimizer_names = optimizers.keys()
     path_to_data = lambda solver_name, func_name: path.join(data_dir, solver_name, "results", func_name + ".csv")
