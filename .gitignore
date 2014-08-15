@@ -2,3 +2,4 @@
 experiments/
 results/
 run_reproducible_pipeline.py
+log/
