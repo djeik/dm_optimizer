@@ -65,7 +65,8 @@ def make_sa_defaults(optimum=float("nan")):
     defaults["callback"] = sa_callback(optimum)
     return defaults
 
-optimizers = {"dm":{"tag":"dm", "optimizer":dmu.randomr_dm, "config_gen":make_dm_defaults}}
+optimizers = {"dm":{"tag":"dm", "optimizer":dmu.randomr_dm, "config_gen":make_dm_defaults},
+              "sa":{"tag":"sa", "optimizer":dmu.randomr_sa, "config_gen":make_sa_defaults}}
 
 def optimizer_config_gen(optimizer, optimum=float("nan"), extra_config={}):
     optimizer["config"] = optimizer["config_gen"](optimum)
