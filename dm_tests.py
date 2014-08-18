@@ -20,6 +20,7 @@ import deap.benchmarks as bench # various test functions
 from scipy.optimize import basinhopping
 
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
@@ -414,36 +415,41 @@ def solved_vs_iterations_inner(args):
 
     errprint("Done.")
 
-    return (test["name"], alives_vs_t)
+    return alives_vs_t
 
-def solved_vs_iterations(edir, extra_settings={"dm":{}, "sa":{}}):
-    if not path.exists(edir):
-        os.makedirs(edir) #edir is the date-named folder
+def parse_solved_vs_iterations_data_for_one_optimizer(data_dir, runs_count):
+    """ Return a dict associating each objective function in dm_tests_config.tests to a list that represents
+        the fraction of solved runs versus time.
 
-    for optimizer_name in optimizers.keys():
-        solver_dir = path.join(edir, optimizer_name)
-        result_dir = path.join(solver_dir, "results")
-        map(os.makedirs, [solver_dir, result_dir])
+        Arguments:
+            data_dir (string) -- the path to the folder that contains the <function>.csv files.
+            runs_count (int)  -- the number of runs to average over.
 
-        errprint("Running solver:", optimizer_name)
+        Notes:
+            The <function>.csv files should be the number of runs _still operating_ at the iteration number
+        identified by the line number in the file. This function will take care of performing the calculation
+                (a - x) / a
+            where a is the total number of runs (runs_count) and x is the value on that line.
+        """
+    path_to_data = lambda func_name: path.join(data_dir, func_name + ".csv")
+    to_fraction = lambda x: (runs_count - x) / float(runs_count)
 
-        data_points_s = map(solved_vs_iterations_inner,
-                                 izip(repeat(solver_dir),
-                                      repeat(optimizer_name),
-                                      tests,
-                                      repeat(extra_settings[optimizer_name] if optimizer_name in extra_settings else {})))
+    test_names = map(project("name"), tests)
 
-        for (name, data_points) in data_points_s:
-            test_result_path = path.join(result_dir, name + ".csv")
-            with open(test_result_path, 'w') as f:
-                [print_csv(count, file=f) for count in data_points]
+    d = dict(zipmap(lambda test_name: with_file(
+            map_c(compose(to_fraction, int)), # make a func that takes a seq, conv each elm to int and frac
+            path_to_data(test_name)), # for each test name we get the path to the data file
+        test_names))
 
-        if optimizer_name in extra_settings:
-            with_file(lambda f: print(extra_settings[optimizer_name], file=f), path.join(solver_dir, "extra-settings.txt"))
+    assert(len(d.keys()) == len(test_names) and len(test_names) == len(tests))
+
+    return d
 
 def parse_solved_vs_iterations_data(data_dir, runs_count):
     optimizer_names = optimizers.keys()
-    path_to_data = lambda solver_name, func_name: path.join(data_dir, solver_name, "results", func_name + ".csv")
+    path_to_data = lambda solver_name, func_name: path.join(
+            data_dir, solver_name, "results", func_name + ".csv")
+
     data = dict(map(
         lambda test: (test["name"], dict(map(
             lambda optimizer: (optimizer, with_file(
@@ -455,7 +461,49 @@ def parse_solved_vs_iterations_data(data_dir, runs_count):
         tests)) # :: Map FunctionName ([FractionSolved1], [FractionSolved2])
     return data
 
-def solved_vs_iterations_plots(data_dir, iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
+def solved_vs_iterations_plots_pro(iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
+    # we have data per stepsize stored in all-dm, in folders named with the stepsize.
+    path_to_stepsizes = path.join("results", "all-dm")
+    stepsizes = imap(
+            lambda s: (float(s), path.join(path_to_stepsizes, s, "dm", "results")),
+            os.listdir(path_to_stepsizes))
+
+    # make the directory where we'll save the plots
+    plot_dir = path.join("results", "all_dm_plots")
+    mkdir_p(plot_dir)
+
+    # dict like D[stepsize][function_name] : list representing fraction completed by time
+    functions_by_stepsize = map(
+        lambda (stepsize, directory): (stepsize,
+                                       parse_solved_vs_iterations_data_for_one_optimizer(directory, runs_count)),
+        stepsizes)
+
+    # now we need to do the same but for SA
+    simulated_annealing_path = "results/2014-08-13 10:46:25.954830/sa/results" # here's the successful run of SA
+    # TODO make a copy or symlink of that data in a place that's easier to find.
+
+    sa_data = parse_solved_vs_iterations_data_for_one_optimizer(simulated_annealing_path, runs_count)
+
+    with PdfPages(path.join(plot_dir, "solved_vs_iteractions_plots.pdf")) as pdf:
+        for test in tests:
+            if not (test["name"] in sa_data and all(imap(lambda d: test["name"] in d, imap(project(1), functions_by_stepsize)))):
+                print("Skipping function", test["name"], "because one or more datasets don't have entries for it.")
+                continue
+            fig = plt.figure()
+            fig.suptitle("%s (%d dimensions) - fraction of successful runs vs. time" % (test["name"], test["dimensions"]))
+            ax = fig.add_subplot(1,1,1)
+            ax.set_xlim(0, iterations_count)
+            ax.set_ylim(0, 1)
+            ax.plot(sa_data[test["name"]], label="sa", color=(0, 0, 1))
+            for (size, dm_data) in functions_by_stepsize:
+                errprint("Plotting for size", size)
+                ax.plot(dm_data[test["name"]], label="dm %f" % size, color=(size/1.2, 0.5, 0.5))
+            #ax.legend()
+            pdf.savefig(fig)
+            plt.close()
+
+def solved_vs_iterations_plots(data_dir,
+        iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
     data = parse_solved_vs_iterations_data(data_dir, runs_count)
 
     mkdir_p(path.join(data_dir, "solved_vs_iterations"))
