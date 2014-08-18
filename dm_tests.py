@@ -129,13 +129,14 @@ def conduct_experiment(exp_dir, test, optimizer):
     f  = lambda x: optimization_type * f_(x) # handle maximization
 
     internal_optimizer = optimizer["optimizer"]
-    optimizer_config   = optimizer["config"]
     rs = [] # collect the OptimizeResult objects in here.
 
     start_time = time()
     for i in xrange(runs):
+        optimizer_config = optimizer["config_gen"]()
         if is_dm(optimizer):
             optimizer_config["logfile"] = open(path.join(logs_dir, str(i) + ".log"), 'a')
+        # each run needs to gen its own config since the callbacks are objects whose data cannot be shared among multiple runs
         rs.append(internal_optimizer(f, dimensions, range, optimizer_config))
         if is_dm(optimizer):
             optimizer_config["logfile"].close()
