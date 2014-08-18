@@ -22,7 +22,7 @@ if __name__ == "__main__":
             sp.call(["Qmsub", "-n", str(dmtc.solved_vs_iterations_subproc_count),
                               "-h", "16",
                               "./run_solved_vs_iterations_inner.py",
-                              "-o",       "results/" + "all-dm/" + str(sscale),
+                              "-o",       "\"results/" + str(datetime.now()) + "/dm\"",
                               "-s",       str(sscale),
                               "-t",       test["name"],
                               "--solver", "dm"])
