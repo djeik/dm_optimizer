@@ -132,7 +132,7 @@ class dm_optimizer:
         """ Evaluate the score of the objective function after hypothetically taking the given step from the iterate. """
         return self.fv_after_step_from(self.nx1, step)
 
-    def fv_after_step_from_minimum(sefl, step):
+    def fv_after_step_from_minimum(self, step):
         """ Evaluate the score of the objective function after hypothetically taking the given step from the minimum. """
         return self.fv_after_step_from(self.pmin, step)
 

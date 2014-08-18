@@ -10,7 +10,7 @@ import os
 from os import path
 
 if __name__ == "__main__":
-    t = str(datetime.now())
+    t = str(datetime.now()).replace(" ", "-") # to prevent Qmsub_args derps
     for test in dmtc.tests:
         sp.call(["Qmsub", "-n", str(dmtc.solved_vs_iterations_subproc_count),
                           "-h", "16",
