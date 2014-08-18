@@ -12,7 +12,7 @@ from os import path
 if __name__ == "__main__":
     for test in dmtc.tests:
         sp.call(["Qmsub", "-n", str(dmtc.solved_vs_iterations_subproc_count),
-                          "-h", 16,
+                          "-h", "16",
                           "./run_solved_vs_iterations_inner.py",
                           "-o",       "\"results/" + str(datetime.now()) + "/sa\"",
                           "-t",       test["name"],
