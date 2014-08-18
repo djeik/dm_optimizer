@@ -123,7 +123,7 @@ def conduct_experiment(exp_dir, test, optimizer):
 
     if is_dm(optimizer):
         logs_dir = path.join(exp_dir, "logs")
-        os.makedirs(logs_dir)
+        mkdir_p(logs_dir)
 
     # construct the objective function from the string passed into the subprocess
     f_ = eval(test["function"]) # extract the function from the string
@@ -188,8 +188,7 @@ def experiment_task(args):
     errprint("Begin experiment:", test["name"])
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
-    if not os.path.exists(exp_dir):
-        os.makedirs(exp_dir)
+    mkdir_p(exp_dir)
 
     start_time = time()
     # Perform the experiment, rs is the actual OptimizeResult objects
@@ -312,7 +311,7 @@ def generate_all_dm_plots(edir):
 
     for function in function_dirs:
         plot_dir = path.join(edir, function) # where to save the plot
-        os.makedirs(plot_dir)
+        mkdir_p(plot_dir)
         for poll in poll_names:
             poll_pp = poll.replace("_", " ")
             data_path = path.join(dmdir, function, poll + ".txt")
@@ -380,10 +379,12 @@ def solved_vs_iterations_inner_inner(args):
 
 def solved_vs_iterations_inner(args):
     (solver_dir, optimizer_name, test, extra_optimizer_config) = args
+    mkdir_p(solver_dir)
 
     #test_dir is date/optimizer/
     test_dir = path.join(solver_dir, "data", test["name"])
-    os.makedirs(test_dir)
+    mkdir_p(test_dir)
+    result_dir = path.join(solver_dir, "results")
 
     errprint("Running test: ", test["name"], "...", sep='')
 
