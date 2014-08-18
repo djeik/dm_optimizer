@@ -199,7 +199,7 @@ def experiment_task(args):
         start_time = time()
         # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
         # line up all the data for a given iteration
-        vs = map(lambda r: copy(r.opt.vs), rs)
+        vs = map(lambda r: copy(r.opt.callback.vs), rs)
 
         maxlen       = reduce(max, imap(len, vs), 0)
         names_n      = len(poll_names)
