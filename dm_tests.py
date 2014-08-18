@@ -114,9 +114,6 @@ def calculate_stats(test, rs, time_total):
 
     return (failures, success_rate, time_avg, nfev_avg)
 
-def is_dm(optimizer):
-    return optimizer["tag"] == "dm"
-
 def conduct_experiment(exp_dir, test, optimizer):
     runs         = experiment_defaults["runs"]
     dimensions   = test["dimensions"] or sampler_defaults["dimensions"]
