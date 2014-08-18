@@ -375,8 +375,24 @@ def solved_vs_iterations_inner_inner(args):
     errprint("Run #", run_number, ": ", v, sep='')
     return v
 
-def solved_vs_iterations_inner(args):
-    (solver_dir, optimizer_name, test, extra_optimizer_config) = args
+def solved_vs_iterations_inner(solver_dir, optimizer_name, test, extra_optimizer_config):
+    """ Run the given optimizer on the given test, to generate data for a "fraction of successful runs versus time"
+        plot.
+
+        Arguments:
+            solver_dir (string)           -- the directory in which to create the data/ and results/ directories, where
+                                             runtime information about the solver and the resulting <function>.csv file are
+                                             saved, respectively. Usually, `solver_dir` is something like
+                                             "results/<date & time>/<solver name>".
+            optimizer_name (string)       -- the name of the solver to use. This is used as a key in the `optimizers` dict
+                                             declared in the dm_tests_config module.
+            test (dict)                   -- the test to run the optimizer on. This should be an entry from the `tests`
+                                             list declared in the dm_tests_config module.
+            extra_optimizer_config (dict) -- extra configuration dict to pass to the solver.
+
+        Returns:
+            A list whose value at index `i` is the number of unfinished runs still going at iteration i.
+        """
     mkdir_p(solver_dir)
 
     #test_dir is date/optimizer/

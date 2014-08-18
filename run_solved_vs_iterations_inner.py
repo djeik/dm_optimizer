@@ -65,8 +65,7 @@ if __name__ == "__main__":
     solver_dir = path.join(out_dir, solver)
     test = filter(lambda t: t["name"] == test_name, dmtc.tests)[0]
 
-    alives_vs_t = dmt.solved_vs_iterations_inner(
-            (solver_dir, solver, test, extra_settings) )
+    alives_vs_t = dmt.solved_vs_iterations_inner(solver_dir, solver, test, extra_settings)
 
     solver_results_dir = path.join(solver_dir, "results")
     dmu.mkdir_p(solver_results_dir)
