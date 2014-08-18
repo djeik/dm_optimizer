@@ -10,11 +10,12 @@ import os
 from os import path
 
 if __name__ == "__main__":
+    t = str(datetime.now())
     for test in dmtc.tests:
         sp.call(["Qmsub", "-n", str(dmtc.solved_vs_iterations_subproc_count),
                           "-h", "16",
                           "./run_solved_vs_iterations_inner.py",
-                          "-o",       "\"results/" + str(datetime.now()) + "/sa\"",
+                          "-o",       "\"results/" + t + "/sa\"",
                           "-t",       test["name"],
                           "--solver", "sa"])
 
@@ -22,7 +23,7 @@ if __name__ == "__main__":
             sp.call(["Qmsub", "-n", str(dmtc.solved_vs_iterations_subproc_count),
                               "-h", "16",
                               "./run_solved_vs_iterations_inner.py",
-                              "-o",       "\"results/" + str(datetime.now()) + "/dm\"",
+                              "-o",       "results/" + t + "/dm/" + str(sscale),
                               "-s",       str(sscale),
                               "-t",       test["name"],
                               "--solver", "dm"])
