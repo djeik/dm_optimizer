@@ -475,15 +475,16 @@ def parse_solved_vs_iterations_data(data_dir, runs_count):
         tests)) # :: Map FunctionName ([FractionSolved1], [FractionSolved2])
     return data
 
-def solved_vs_iterations_plots_pro(iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
+def solved_vs_iterations_plots_pro(path_to_data,
+        iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
     # we have data per stepsize stored in all-dm, in folders named with the stepsize.
-    path_to_stepsizes = path.join("results", "all-dm")
+    path_to_stepsizes = path.join(path_to_data, "dm")
     stepsizes = imap(
             lambda s: (float(s), path.join(path_to_stepsizes, s, "dm", "results")),
             os.listdir(path_to_stepsizes))
 
     # make the directory where we'll save the plots
-    plot_dir = path.join("results", "all_dm_plots")
+    plot_dir = path.join(path_to_data, "plots")
     mkdir_p(plot_dir)
 
     # dict like D[stepsize][function_name] : list representing fraction completed by time
@@ -493,12 +494,11 @@ def solved_vs_iterations_plots_pro(iterations_count=iterations_config["end"], ru
         stepsizes)
 
     # now we need to do the same but for SA
-    simulated_annealing_path = "results/2014-08-13 10:46:25.954830/sa/results" # here's the successful run of SA
-    # TODO make a copy or symlink of that data in a place that's easier to find.
+    simulated_annealing_path = path.join(path_to_data, "sa", "sa", "results") # here's the successful run of SA
 
     sa_data = parse_solved_vs_iterations_data_for_one_optimizer(simulated_annealing_path, runs_count)
 
-    with PdfPages(path.join(plot_dir, "solved_vs_iteractions_plots.pdf")) as pdf:
+    with PdfPages(path.join(plot_dir, "solved_vs_iterations_plots.pdf")) as pdf:
         for test in tests:
             if not (test["name"] in sa_data and all(imap(lambda d: test["name"] in d, imap(project(1), functions_by_stepsize)))):
                 print("Skipping function", test["name"], "because one or more datasets don't have entries for it.")
