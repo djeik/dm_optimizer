@@ -38,15 +38,36 @@ sys.stdout = os.fdopen(sys.__stdout__.fileno(), 'w', 1) # line buffered output
 
 # These are the functions Simon defined to test it on:
 def simon_f1(xy):
+    """ A test function crafted by Simon. It's minimum value is zero at the origin.
+        It is only defined for two dimensions.
+        """
     x, y = xy
     return 0.2 * (x**2 + y**2) / 2 + 10 * sin(x+y)**2 + 10 * sin(100 * (x - y))**2
 
 def simon_f2(xs):
+    """ A variation on Simon's function. To prevent "origin-bias", which can be a problem with optimizers,
+        we simply shift over the function, so that the minimum is now at (100, 100).
+        """
     xy = xs - np.array([100, 100])
     return simon_f1(xy)
 
 # Visual debug tool for 3d
 def plotf_3d(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0, autobound=True, autosmooth=True):
+    """ Plot a function in three dimensions and show a trajectory on it.
+
+        Arguments:
+            f (function)       -- the function to plot.
+            xyzs_ (ndarray)    -- the trajectory to draw, in the format [(z, (x, y)].
+            start (ndarray)    -- a corner in the bounding box of the sampled domain.
+            end (ndarray)      -- the opposite corner in the bounding box.
+            smoothness (float) -- how sparsely is the domain sampled. Smaller values look better, but take
+                                  longer to render.
+            autobound (bool)   -- automatically determine the bounding box based on the trajectory if True.
+            autosmooth (bool)  -- automatically calculate a decent smoothing value, based on the bounding box.
+
+        Return:
+            The generated figure, so that it may be rendered to a window or saved to a file by the caller.
+        """
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
@@ -220,7 +241,7 @@ def experiment_task(args):
     # the return value will get appended to the all_statistics of the master process
     return (test["name"], (success_rate, time_avg, nfev_avg, ndiv(nfev_avg, success_rate), failures))
 
-def conduct_all_experiments_inner(edir, optimizer, experiment_defaults=experiment_defaults, names=poll_names, subproc_count=4):
+def conduct_all_experiments_inner(edir, optimizer, names=poll_names, subproc_count=4):
     """ Inner function called by conduct_all_experiments that runs a given number of subprocesses to run each of the test objective
         functions listed in dm_tests_config.py, with a given set of experiment settings, taken by default from experiment_defaults.
         Internally, this function calls experiment_task for each of the tests, which will generate a folder with the number of the
@@ -252,7 +273,7 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
               file=f)
 
     start_time = time()
-    results, all_statistics, global_averages, global_stdevs = conduct_all_experiments_inner(edir, optimizer, experiment_defaults, names)
+    results, all_statistics, global_averages, global_stdevs = conduct_all_experiments_inner(edir, optimizer, names)
     end_time = time()
 
     with open(path.join(edir, "averages.txt"), 'w', 1) as f:
@@ -525,7 +546,7 @@ def solved_vs_iterations_plots(data_dir,
     for (func_name, each_optimizer) in data.items():
         fig = plt.figure()
         fig.suptitle("%s - fraction of successful runs vs. time" % func_name)
-        ax = fig.add_subplot(1,1,1)
+        ax = fig.add_subplot(1, 1, 1)
         ax.set_xlim(0, iterations_count)
         ax.set_ylim(0, 1)
         for (solver_name, values) in each_optimizer.items():
