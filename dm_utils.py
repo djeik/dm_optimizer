@@ -97,7 +97,7 @@ def with_file(f, path, mode='r'):
     with open(path, mode) as handle:
         return f(handle)
 
-def mapzip(f, seq):
+def zipmap(f, seq):
     """ Map a function over a sequence and zip that sequence with the results of the applications. """
     return zip(seq, imap(f, seq))
 
@@ -110,3 +110,22 @@ def mkdir_p(dir):
         return True
     else:
         return False
+
+def compose(f, g):
+    return lambda *args, **kwargs: f(g(*args, **kwargs))
+
+curry2 = lambda f: lambda x: lambda y: f(x, y)
+uncurry2 = lambda f: lambda x, y: f(x)(y)
+curry3 = lambda f: lambda x: lambda y: lambda z: f(x, y, z)
+map_c = curry2(map)
+imap_c = curry2(imap)
+
+# transform a function of many arguments into a function that takes one tuple
+splat = lambda f: lambda args: f(*args)
+
+map_z = lambda f: lambda *args: map(splat(f), zip(*args))
+
+# from a given key or index, make a function that projects the associated value from a dict of indexable.
+project = lambda k: lambda d: d[k]
+
+flip = lambda f: lambda x, y: f(y, x)

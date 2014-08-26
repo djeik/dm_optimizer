@@ -146,7 +146,7 @@ Plotting is still broken. Let's look at some sample output from Ackley: (functio
 
 The first thing to notice is that None value phase in and out. That shouldn't be possible. Once None occurs in a column, all subsequent values in that column should be None: it represents that that run prematurely terminated. This makes me thing that I'm padding the lists at the wrong time, before or after some transpose. This is probably why the plots look weird.
 
-Yay, that's fixed.
+Yay, that's fixed. In fact, the transpose was pretty much broken.
 
 Talked with Simon:
  * My priority should be on getting some really nice graphics for comparing DM and SA. He suggests graphs showing the fraction of solved runs as a function of the iteration number (see paper in folder).
@@ -163,3 +163,11 @@ Once I have those jobs running, I need to try to see if I get this sort of spiki
 I also need to get Mathematica so that I can compare with other solvers. This also means that I'm going to need to rewrite DM in Mathematica. Isn't that the supreme irony of life? Port the code from mathematica to python, so that when I'm done doing the real developing in Python, I can just port it back to Mathematica.
 In the functions where we fail really badly, it would be good to look at the trajectories of the iterate, to see _why_ we fail so badly. That might require moving into lower dimensions temporarily to make some plots of the trajectories.
 It would also be worthwhile to see what happens to the plots if we run this for much much longer, e.g. 10000 iterations. 
+
+08-18
+=====
+Alright, I finally have the nice plots showing the effect of the step scale. It seems in general that smaller values are better, except in some weird cases like the h1 function, where larger values are better! So we seem to be doing equally well, as simulated annealing. 
+It would be worthwhile to check out the following:
+ * use hypothetical steps in many directions, but from the current local minimum instead of from the iterate;
+ * boost the number of dimensions in the easier problems;
+ * look into adaptive step scaling heuristics. This is somewhat of a step backwards since the whole idea of using a fixed step scale is to *avoid* an adaptive method there. 

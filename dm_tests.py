@@ -20,6 +20,7 @@ import deap.benchmarks as bench # various test functions
 from scipy.optimize import basinhopping
 
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 
@@ -37,15 +38,36 @@ sys.stdout = os.fdopen(sys.__stdout__.fileno(), 'w', 1) # line buffered output
 
 # These are the functions Simon defined to test it on:
 def simon_f1(xy):
+    """ A test function crafted by Simon. It's minimum value is zero at the origin.
+        It is only defined for two dimensions.
+        """
     x, y = xy
     return 0.2 * (x**2 + y**2) / 2 + 10 * sin(x+y)**2 + 10 * sin(100 * (x - y))**2
 
 def simon_f2(xs):
+    """ A variation on Simon's function. To prevent "origin-bias", which can be a problem with optimizers,
+        we simply shift over the function, so that the minimum is now at (100, 100).
+        """
     xy = xs - np.array([100, 100])
     return simon_f1(xy)
 
 # Visual debug tool for 3d
 def plotf_3d(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0, autobound=True, autosmooth=True):
+    """ Plot a function in three dimensions and show a trajectory on it.
+
+        Arguments:
+            f (function)       -- the function to plot.
+            xyzs_ (ndarray)    -- the trajectory to draw, in the format [(z, (x, y)].
+            start (ndarray)    -- a corner in the bounding box of the sampled domain.
+            end (ndarray)      -- the opposite corner in the bounding box.
+            smoothness (float) -- how sparsely is the domain sampled. Smaller values look better, but take
+                                  longer to render.
+            autobound (bool)   -- automatically determine the bounding box based on the trajectory if True.
+            autosmooth (bool)  -- automatically calculate a decent smoothing value, based on the bounding box.
+
+        Return:
+            The generated figure, so that it may be rendered to a window or saved to a file by the caller.
+        """
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
@@ -113,9 +135,6 @@ def calculate_stats(test, rs, time_total):
 
     return (failures, success_rate, time_avg, nfev_avg)
 
-def is_dm(optimizer):
-    return optimizer["tag"] == "dm"
-
 def conduct_experiment(exp_dir, test, optimizer):
     runs         = experiment_defaults["runs"]
     dimensions   = test["dimensions"] or sampler_defaults["dimensions"]
@@ -123,7 +142,7 @@ def conduct_experiment(exp_dir, test, optimizer):
 
     if is_dm(optimizer):
         logs_dir = path.join(exp_dir, "logs")
-        os.makedirs(logs_dir)
+        mkdir_p(logs_dir)
 
     # construct the objective function from the string passed into the subprocess
     f_ = eval(test["function"]) # extract the function from the string
@@ -131,13 +150,14 @@ def conduct_experiment(exp_dir, test, optimizer):
     f  = lambda x: optimization_type * f_(x) # handle maximization
 
     internal_optimizer = optimizer["optimizer"]
-    optimizer_config   = optimizer["config"]
     rs = [] # collect the OptimizeResult objects in here.
 
     start_time = time()
     for i in xrange(runs):
+        optimizer_config = optimizer["config_gen"]()
         if is_dm(optimizer):
             optimizer_config["logfile"] = open(path.join(logs_dir, str(i) + ".log"), 'a')
+        # each run needs to gen its own config since the callbacks are objects whose data cannot be shared among multiple runs
         rs.append(internal_optimizer(f, dimensions, range, optimizer_config))
         if is_dm(optimizer):
             optimizer_config["logfile"].close()
@@ -188,8 +208,7 @@ def experiment_task(args):
     errprint("Begin experiment:", test["name"])
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
-    if not os.path.exists(exp_dir):
-        os.makedirs(exp_dir)
+    mkdir_p(exp_dir)
 
     start_time = time()
     # Perform the experiment, rs is the actual OptimizeResult objects
@@ -201,7 +220,7 @@ def experiment_task(args):
         start_time = time()
         # extract the vs list from each result; it contains those data that fluctuate over time. We transpose this list of lists to
         # line up all the data for a given iteration
-        vs = map(lambda r: copy(r.opt.vs), rs)
+        vs = map(lambda r: copy(r.opt.callback.vs), rs)
 
         maxlen       = reduce(max, imap(len, vs), 0)
         names_n      = len(poll_names)
@@ -222,7 +241,7 @@ def experiment_task(args):
     # the return value will get appended to the all_statistics of the master process
     return (test["name"], (success_rate, time_avg, nfev_avg, ndiv(nfev_avg, success_rate), failures))
 
-def conduct_all_experiments_inner(edir, optimizer, experiment_defaults=experiment_defaults, names=poll_names, subproc_count=4):
+def conduct_all_experiments_inner(edir, optimizer, names=poll_names, subproc_count=4):
     """ Inner function called by conduct_all_experiments that runs a given number of subprocesses to run each of the test objective
         functions listed in dm_tests_config.py, with a given set of experiment settings, taken by default from experiment_defaults.
         Internally, this function calls experiment_task for each of the tests, which will generate a folder with the number of the
@@ -254,7 +273,7 @@ def conduct_all_experiments(edir, optimizer, experiment_defaults=experiment_defa
               file=f)
 
     start_time = time()
-    results, all_statistics, global_averages, global_stdevs = conduct_all_experiments_inner(edir, optimizer, experiment_defaults, names)
+    results, all_statistics, global_averages, global_stdevs = conduct_all_experiments_inner(edir, optimizer, names)
     end_time = time()
 
     with open(path.join(edir, "averages.txt"), 'w', 1) as f:
@@ -312,7 +331,7 @@ def generate_all_dm_plots(edir):
 
     for function in function_dirs:
         plot_dir = path.join(edir, function) # where to save the plot
-        os.makedirs(plot_dir)
+        mkdir_p(plot_dir)
         for poll in poll_names:
             poll_pp = poll.replace("_", " ")
             data_path = path.join(dmdir, function, poll + ".txt")
@@ -378,14 +397,33 @@ def solved_vs_iterations_inner_inner(args):
     errprint("Run #", run_number, ": ", v, sep='')
     return v
 
-def solved_vs_iterations_inner(args):
-    (solver_dir, optimizer_name, test, extra_optimizer_config) = args
+def solved_vs_iterations_inner(solver_dir, optimizer_name, test, extra_optimizer_config):
+    """ Run the given optimizer on the given test, to generate data for a "fraction of successful runs versus time"
+        plot.
+
+        Arguments:
+            solver_dir (string)           -- the directory in which to create the data/ and results/ directories, where
+                                             runtime information about the solver and the resulting <function>.csv file are
+                                             saved, respectively. Usually, `solver_dir` is something like
+                                             "results/<date & time>/<solver name>".
+            optimizer_name (string)       -- the name of the solver to use. This is used as a key in the `optimizers` dict
+                                             declared in the dm_tests_config module.
+            test (dict)                   -- the test to run the optimizer on. This should be an entry from the `tests`
+                                             list declared in the dm_tests_config module.
+            extra_optimizer_config (dict) -- extra configuration dict to pass to the solver.
+
+        Returns:
+            A list whose value at index `i` is the number of unfinished runs still going at iteration i.
+        """
+    mkdir_p(solver_dir)
 
     #test_dir is date/optimizer/
     test_dir = path.join(solver_dir, "data", test["name"])
-    os.makedirs(test_dir)
+    mkdir_p(test_dir)
+    result_dir = path.join(solver_dir, "results")
 
     errprint("Running test: ", test["name"], "...", sep='')
+
     pool = mp.Pool(solved_vs_iterations_subproc_count)
 
     data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(experiment_defaults["runs"]),
@@ -412,36 +450,41 @@ def solved_vs_iterations_inner(args):
 
     errprint("Done.")
 
-    return (test["name"], alives_vs_t)
+    return alives_vs_t
 
-def solved_vs_iterations(edir, extra_settings={"dm":{}, "sa":{}}):
-    if not path.exists(edir):
-        os.makedirs(edir) #edir is the date-named folder
+def parse_solved_vs_iterations_data_for_one_optimizer(data_dir, runs_count):
+    """ Return a dict associating each objective function in dm_tests_config.tests to a list that represents
+        the fraction of solved runs versus time.
 
-    for optimizer_name in optimizers.keys():
-        solver_dir = path.join(edir, optimizer_name)
-        result_dir = path.join(solver_dir, "results")
-        map(os.makedirs, [solver_dir, result_dir])
+        Arguments:
+            data_dir (string) -- the path to the folder that contains the <function>.csv files.
+            runs_count (int)  -- the number of runs to average over.
 
-        errprint("Running solver:", optimizer_name)
+        Notes:
+            The <function>.csv files should be the number of runs _still operating_ at the iteration number
+        identified by the line number in the file. This function will take care of performing the calculation
+                (a - x) / a
+            where a is the total number of runs (runs_count) and x is the value on that line.
+        """
+    path_to_data = lambda func_name: path.join(data_dir, func_name + ".csv")
+    to_fraction = lambda x: (runs_count - x) / float(runs_count)
 
-        data_points_s = map(solved_vs_iterations_inner,
-                                 izip(repeat(solver_dir),
-                                      repeat(optimizer_name),
-                                      tests,
-                                      repeat(extra_settings[optimizer_name] if optimizer_name in extra_settings else {})))
+    test_names = map(project("name"), tests)
 
-        for (name, data_points) in data_points_s:
-            test_result_path = path.join(result_dir, name + ".csv")
-            with open(test_result_path, 'w') as f:
-                [print_csv(count, file=f) for count in data_points]
+    d = dict(zipmap(lambda test_name: with_file(
+            map_c(compose(to_fraction, int)), # make a func that takes a seq, conv each elm to int and frac
+            path_to_data(test_name)), # for each test name we get the path to the data file
+        test_names))
 
-        if optimizer_name in extra_settings:
-            with_file(lambda f: print(extra_settings[optimizer_name], file=f), path.join(solver_dir, "extra-settings.txt"))
+    assert(len(d.keys()) == len(test_names) and len(test_names) == len(tests))
+
+    return d
 
 def parse_solved_vs_iterations_data(data_dir, runs_count):
     optimizer_names = optimizers.keys()
-    path_to_data = lambda solver_name, func_name: path.join(data_dir, solver_name, "results", func_name + ".csv")
+    path_to_data = lambda solver_name, func_name: path.join(
+            data_dir, solver_name, "results", func_name + ".csv")
+
     data = dict(map(
         lambda test: (test["name"], dict(map(
             lambda optimizer: (optimizer, with_file(
@@ -453,7 +496,49 @@ def parse_solved_vs_iterations_data(data_dir, runs_count):
         tests)) # :: Map FunctionName ([FractionSolved1], [FractionSolved2])
     return data
 
-def solved_vs_iterations_plots(data_dir, iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
+def solved_vs_iterations_plots_pro(path_to_data,
+        iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
+    # we have data per stepsize stored in all-dm, in folders named with the stepsize.
+    path_to_stepsizes = path.join(path_to_data, "dm")
+    stepsizes = imap(
+            lambda s: (float(s), path.join(path_to_stepsizes, s, "dm", "results")),
+            os.listdir(path_to_stepsizes))
+
+    # make the directory where we'll save the plots
+    plot_dir = path.join(path_to_data, "plots")
+    mkdir_p(plot_dir)
+
+    # dict like D[stepsize][function_name] : list representing fraction completed by time
+    functions_by_stepsize = map(
+        lambda (stepsize, directory): (stepsize,
+                                       parse_solved_vs_iterations_data_for_one_optimizer(directory, runs_count)),
+        stepsizes)
+
+    # now we need to do the same but for SA
+    simulated_annealing_path = path.join(path_to_data, "sa", "sa", "results") # here's the successful run of SA
+
+    sa_data = parse_solved_vs_iterations_data_for_one_optimizer(simulated_annealing_path, runs_count)
+
+    with PdfPages(path.join(plot_dir, "solved_vs_iterations_plots.pdf")) as pdf:
+        for test in tests:
+            if not (test["name"] in sa_data and all(imap(lambda d: test["name"] in d, imap(project(1), functions_by_stepsize)))):
+                print("Skipping function", test["name"], "because one or more datasets don't have entries for it.")
+                continue
+            fig = plt.figure()
+            fig.suptitle("%s (%d dimensions) - fraction of successful runs vs. time" % (test["name"], test["dimensions"]))
+            ax = fig.add_subplot(1,1,1)
+            ax.set_xlim(0, iterations_count)
+            ax.set_ylim(0, 1)
+            ax.plot(sa_data[test["name"]], label="sa", color=(0, 0, 1))
+            for (size, dm_data) in functions_by_stepsize:
+                errprint("Plotting for size", size)
+                ax.plot(dm_data[test["name"]], label="dm %f" % size, color=(size/1.2, 0.5, 0.5))
+            #ax.legend()
+            pdf.savefig(fig)
+            plt.close()
+
+def solved_vs_iterations_plots(data_dir,
+        iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
     data = parse_solved_vs_iterations_data(data_dir, runs_count)
 
     mkdir_p(path.join(data_dir, "solved_vs_iterations"))
@@ -461,7 +546,7 @@ def solved_vs_iterations_plots(data_dir, iterations_count=iterations_config["end
     for (func_name, each_optimizer) in data.items():
         fig = plt.figure()
         fig.suptitle("%s - fraction of successful runs vs. time" % func_name)
-        ax = fig.add_subplot(1,1,1)
+        ax = fig.add_subplot(1, 1, 1)
         ax.set_xlim(0, iterations_count)
         ax.set_ylim(0, 1)
         for (solver_name, values) in each_optimizer.items():

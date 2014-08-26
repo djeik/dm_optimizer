@@ -33,15 +33,13 @@ class value_box:
         return self.y == other.y
 
 class dm_optimizer:
-    """ A global optimizer using the difference map-based algorithm with or without penalty-style constraints.
+    """ An unconstrained global optimizer using the difference map-based algorithm.
+
         Attributes:
             max_iterations      -- the maximum number of iterations to perform before aborting minimization.
             tolerance           -- the threshold above which we consider two points to be distinct.
             verbosity           -- controls debug output; higher numbers = more messages. Special string 'any' will cause everything to be logged.
-            first_target_ratio  -- determines how low the first target should be.
-            greediness          -- how quickly should the target value be lowered.
             fun                 -- the objective function.
-            pseudo              -- special value to use to determine the step size when it would otherwise be very large.
             nfev                -- total number of function evaluations.
             vals                -- the local minima collected along the way, in ascending order.
             valsi               -- the local minima collected along the way, in order of discovery.
@@ -53,11 +51,13 @@ class dm_optimizer:
         Notes:
             vals is stored as a sorted list, since we frequently just need to get the n smallest values.
             It is a list of value_box objects, which are just wrappers around tuples, sorted according to their first element.
-            to their first element.
-            """
+            to their first element. In order to maintain the order in which minima are discovered, we have valsi, in which value boxes are
+            stored in the order we find them. The number of function evaluations is accounted for by only calling it indirectly through a
+            method that updates a running count throughout the execution of the optimizer.
+        """
 
     def __init__(self, fun, max_iterations=2500, target=None, constraints=[], nonsatisfaction_penalty=0, tolerance=0.000001, verbosity=0,
-            pseudo=0.001, logfile=sys.stderr, callback=None, minimizer_kwargs={}, stepscale_constant=0.5):
+            logfile=sys.stderr, callback=None, minimizer_kwargs={}, stepscale_constant=0.5):
         self._fun                       = fun # store the objective function in a 'hidden' attribute to avoid accidentally
                                               # calling the unwrapped version
         self.max_iterations             = max_iterations
@@ -65,7 +65,6 @@ class dm_optimizer:
         self.nonsatisfaction_penalty    = nonsatisfaction_penalty
         self.tolerance                  = tolerance
         self.verbosity                  = verbosity
-        self.pseudo                     = pseudo
         self.logfile                    = logfile
         self.minimizer_kwargs           = minimizer_kwargs
         self.callback                   = callback
@@ -126,15 +125,22 @@ class dm_optimizer:
     def step_to_best_minimum(self):
         return self.step_toward(self.get_best_minimum())
 
-    def fv_after_step(self, step):
-        """ Evaluate the score of the objective function after hypothetically taking the given step. """
-        return self.evalf(self.nx1 + step)
+    def fv_after_step_from(self, origin, step):
+        return self.evalf(origin + step)
+
+    def fv_after_step_from_iterate(self, step):
+        """ Evaluate the score of the objective function after hypothetically taking the given step from the iterate. """
+        return self.fv_after_step_from(self.nx1, step)
+
+    def fv_after_step_from_minimum(self, step):
+        """ Evaluate the score of the objective function after hypothetically taking the given step from the minimum. """
+        return self.fv_after_step_from(self.pmin, step)
 
     def all_possible_steps(self):
         return map(lambda x: self.step_toward(x), self.vals)
 
     def best_of_steps(self, steps):
-        return min(steps, key=self.fv_after_step)
+        return min(steps, key=self.fv_after_step_from_minimum)
 
     def best_possible_step(self):
         return self.best_of_steps(self.all_possible_steps())
@@ -193,7 +199,7 @@ class dm_optimizer:
         self.lpos = [(self.evalf(self.nx1), self.nx1)]
 
         # prepare the optimization result
-        res = sopt.OptimizeResult()
+        res = sopt.optimize.Result()
         res.message = []
 
         self.logmsg(2, "Entering loop.")
@@ -264,7 +270,7 @@ def minimize(f, x1, x2, **kwargs):
     try:
         res = optimizer.minimize(x1, x2)
     except Exception as e:
-        res = sopt.OptimizeResult()
+        res = sopt.optimize.Result()
         res.message = ["Exception!", str(e)]
         res.status  = 2
         res.success = False

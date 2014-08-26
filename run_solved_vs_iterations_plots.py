@@ -8,4 +8,4 @@ if __name__ == "__main__":
         raise ValueError("Wrong number of arguments.")
 
     data_dir = args[1]
-    dmt.solved_vs_iterations_plots(data_dir)
+    dmt.solved_vs_iterations_plots_pro(data_dir)
