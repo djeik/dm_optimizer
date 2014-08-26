@@ -12,7 +12,7 @@ from itertools import imap, islice
 
 import sys
 
-from scipy.optimize import OptimizeResult
+from scipy.optimize.optimize import Result as OptimizeResult
 
 class BestMinimumException(Exception):
     def BestMinimumException(*args, **kwargs):
