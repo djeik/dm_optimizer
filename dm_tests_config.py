@@ -28,6 +28,8 @@ experiment_defaults = {"runs":250, "success_threshold":0.001}
 dm_defaults = {"max_iterations":100}
 sa_defaults = {"niter":100}
 
+plots_config = {"individual_color":"0.6", "average_color":"blue"}
+
 class solver_callback(object):
     def __init__(self, optimum=float("nan"), experiment_settings=experiment_defaults):
         self.vs = []

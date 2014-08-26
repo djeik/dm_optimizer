@@ -319,8 +319,6 @@ def parse_typical_poll_file(path):
         i += 1
     return (average, individuals)
 
-plots_config = {"individual_color":"0.6", "average_color":"blue"}
-
 # PIPELINE
 def generate_all_dm_plots(edir):
     dmdir = path.join(edir, "../dm")
