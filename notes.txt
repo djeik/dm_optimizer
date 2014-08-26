@@ -171,3 +171,6 @@ It would be worthwhile to check out the following:
  * use hypothetical steps in many directions, but from the current local minimum instead of from the iterate;
  * boost the number of dimensions in the easier problems;
  * look into adaptive step scaling heuristics. This is somewhat of a step backwards since the whole idea of using a fixed step scale is to *avoid* an adaptive method there. 
+
+Alright so I have 100+ jobs going on abacus. I feel like a baller :)
+It seems that the introduction of the many-step strategy introduced a bug that is causing failures in certain (all?) functions. This needs to be checked out. I've streamlined even more so the collection of data for each function and across many step sizes. I need to change that to do step sizes between 0.1 and 2.0, since now I just go to 1.2. I also need to make it so that when all the jobs complete, the plotting program is called. Furthermore, I need to update the plotting program to make use of the new directory structure that I have created.
