@@ -12,6 +12,8 @@ from itertools import imap, islice
 
 import sys
 
+from scipy.optimize import OptimizeResult
+
 class BestMinimumException(Exception):
     def BestMinimumException(*args, **kwargs):
         super(*args, **kwargs)
@@ -199,7 +201,7 @@ class dm_optimizer:
         self.lpos = [(self.evalf(self.nx1), self.nx1)]
 
         # prepare the optimization result
-        res = sopt.optimize.Result()
+        res = OptimizeResult()
         res.message = []
 
         self.logmsg(2, "Entering loop.")
@@ -270,7 +272,7 @@ def minimize(f, x1, x2, **kwargs):
     try:
         res = optimizer.minimize(x1, x2)
     except Exception as e:
-        res = sopt.optimize.Result()
+        res = OptimizeResult()
         res.message = ["Exception!", str(e)]
         res.status  = 2
         res.success = False
