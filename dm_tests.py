@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import matplotlib
-matplotlib.use("TkAgg")
 
 from datetime import datetime
 import sys
