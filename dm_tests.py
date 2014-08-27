@@ -240,12 +240,15 @@ def experiment_task(args):
     return (test["name"], (success_rate, time_avg, nfev_avg, ndiv(nfev_avg, success_rate), failures))
 
 def conduct_all_experiments_inner(edir, optimizer, names=poll_names, subproc_count=4):
-    """ Inner function called by conduct_all_experiments that runs a given number of subprocesses to run each of the test objective
-        functions listed in dm_tests_config.py, with a given set of experiment settings, taken by default from experiment_defaults.
-        Internally, this function calls experiment_task for each of the tests, which will generate a folder with the number of the
-        test in the "edir" directory, where any information relevant to the function will be saved.
+    """ Inner function called by conduct_all_experiments that runs a given
+        number of subprocesses to run each of the test objective functions
+        listed in dm_tests_config.py, with a given set of experiment settings,
+        taken by default from experiment_defaults.  Internally, this function
+        calls experiment_task for each of the tests, which will generate a
+        folder with the name of the test in the "edir" directory, where any
+        information relevant to the function will be saved.
         """
-    pool = mp.Pool(4)
+    pool = mp.Pool(subproc_count)
 
     results = pool.map(experiment_task, izip(repeat(edir), tests, repeat(optimizer), repeat(names)))
 
@@ -393,7 +396,8 @@ def solved_vs_iterations_inner_inner(args):
     errprint("Run #", run_number, ": ", v, sep='')
     return v
 
-def solved_vs_iterations_inner(solver_dir, optimizer_name, test, extra_optimizer_config):
+def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
+        extra_optimizer_config, experiment_settings=experiment_defaults):
     """ Run the given optimizer on the given test, to generate data for a "fraction of successful runs versus time"
         plot.
 
@@ -422,11 +426,13 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test, extra_optimizer
 
     pool = mp.Pool(solved_vs_iterations_subproc_count)
 
-    data_points = pool.map(solved_vs_iterations_inner_inner, izip(xrange(experiment_defaults["runs"]),
-                                                                  repeat(test),
-                                                                  repeat(test_dir),
-                                                                  repeat(optimizer_name),
-                                                                  repeat(extra_optimizer_config)))
+    data_points = pool.map(
+            solved_vs_iterations_inner_inner,
+            izip(xrange(experiment_settings["runs"]),
+                 repeat(test),
+                 repeat(test_dir),
+                 repeat(optimizer_name),
+                 repeat(extra_optimizer_config)))
 
     errprint("Done running test.")
 

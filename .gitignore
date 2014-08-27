@@ -1,5 +1,6 @@
 *.pyc
 experiments/
-results
+results*
 run_reproducible_pipeline.py
 log/
+jerrington_tools.py
