@@ -124,7 +124,7 @@ class dm_optimizer:
     def get_best_minimum(self):
         """ Get the best past minimum that is at least a certain distance away from the current minimum, stored in pmin. """
         for m in self.vals:
-            if norm(m.x - self.pmin) > self.tolerance:
+            if norm(self.step_toward(m)) >= self.tolerance:
                 return m
         raise BestMinimumException("There are no past minima.")
 
@@ -227,7 +227,11 @@ class dm_optimizer:
                         res.message.append("Callback function requested termination.")
                         break
 
-                self.take_step(self.step_to_best_minimum())
+                try:
+                    self.take_step(self.step_to_best_minimum())
+                except BestMinimumException as e:
+                    res.message.append(str(e))
+                    break
 
                 self.logmsg(2, "Took step ", self.step)
 
