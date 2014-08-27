@@ -12,6 +12,11 @@ from itertools import imap, islice
 
 import sys
 
+if int(scipy.__version__.split(".")[1]) < 14:
+    from scipy.optimize.optimize import Result as OptimizeResult
+else:
+    from scipy.optimize import OptimizeResult
+
 class BestMinimumException(Exception):
     def BestMinimumException(*args, **kwargs):
         super(*args, **kwargs)
@@ -33,16 +38,13 @@ class value_box:
         return self.y == other.y
 
 class dm_optimizer:
-    """ A global optimizer using the difference map-based algorithm with or without constraints.
+    """ An unconstrained global optimizer using the difference map-based algorithm.
+
         Attributes:
             max_iterations      -- the maximum number of iterations to perform before aborting minimization.
             tolerance           -- the threshold above which we consider two points to be distinct.
             verbosity           -- controls debug output; higher numbers = more messages. Special string 'any' will cause everything to be logged.
-            first_target_ratio  -- determines how low the first target should be.
-            greediness          -- how quickly should the target value be lowered.
             fun                 -- the objective function.
-            pseudo              -- special value to use to determine the step size when it would otherwise be very large.
-            refresh_rate        -- how frequently to update the target value, in iterations per update.
             nfev                -- total number of function evaluations.
             vals                -- the local minima collected along the way, in ascending order.
             valsi               -- the local minima collected along the way, in order of discovery.
@@ -53,13 +55,14 @@ class dm_optimizer:
 
         Notes:
             vals is stored as a sorted list, since we frequently just need to get the n smallest values.
-            It is a list of tuples (y, x), which is convenient since Python tuples are totally ordered according
-            to their first element.
-            """
+            It is a list of value_box objects, which are just wrappers around tuples, sorted according to their first element.
+            to their first element. In order to maintain the order in which minima are discovered, we have valsi, in which value boxes are
+            stored in the order we find them. The number of function evaluations is accounted for by only calling it indirectly through a
+            method that updates a running count throughout the execution of the optimizer.
+        """
 
     def __init__(self, fun, max_iterations=2500, target=None, constraints=[], nonsatisfaction_penalty=0, tolerance=0.000001, verbosity=0,
-            pseudo=0.001, greediness=0.05, first_target_ratio=0.9, refresh_rate=10, chopfactor=1, logfile=sys.stderr,
-            callback=None, minimizer_kwargs={}):
+            logfile=sys.stderr, callback=None, minimizer_kwargs={}, stepscale_constant=0.5):
         self._fun                       = fun # store the objective function in a 'hidden' attribute to avoid accidentally
                                               # calling the unwrapped version
         self.max_iterations             = max_iterations
@@ -67,22 +70,10 @@ class dm_optimizer:
         self.nonsatisfaction_penalty    = nonsatisfaction_penalty
         self.tolerance                  = tolerance
         self.verbosity                  = verbosity
-        self.pseudo                     = pseudo
-        self.greediness                 = greediness
-        self.first_target_ratio         = first_target_ratio
-        self.refresh_rate               = refresh_rate
-        self.chopfactor                 = chopfactor
         self.logfile                    = logfile
         self.minimizer_kwargs           = minimizer_kwargs
         self.callback                   = callback
-
-        if target is not None:
-            self.logmsg(7, "Setting fixed target.")
-            self.fixed_target = True
-            self.target       = target
-        else:
-            self.fixed_target = False
-
+        self.stepscale_constant         = stepscale_constant
 
     def logmsg(self, priority, *args, **kwargs):
         """ Forward all arguments to print if the given priority is less than or equal to the verbosity of the optimizer. The file keyword argument
@@ -119,156 +110,50 @@ class dm_optimizer:
             self.nhev += res.nhev
         return res.x
 
-    def best_minimum_x(self):
-        """ Find the minimum in the list of past minima that is closest to the given value.
+    def calculate_step_scale(self, destination):
+        """ Calculate the step scale to use in the direction of a given destination in the search space. """
+        return self.stepscale_constant
 
-            Arguments:
-                pmin -- the point from which the distances are to be calculated.
-
-            Returns:
-                _(y, x)_ -- the minimum closest to the given point.
-
-            Notes:
-                To avoid accidental rapid convergeance to a fixed point, this function will not return the true closest minimum
-                if it is considered to be the same as the given point; it will instead return the second-closest minimum. Two points
-                are considered the same if their distance is less than `tolerance`.
-            """
-        minima = sorted([x for x in self.vals
-                                 if norm(x.x - self.pmin) >= self.tolerance
-                                 #and (self.evalf(self.pmin) - x.y)**2 >= 0.1
-                        ], key=lambda v: norm(self.pmin - v.x))
-
-        if len(minima) == 0:
-            raise BestMinimumException("There are no local minima far away enough from the current minimum to be considered distinct.")
-
-        return minima[0]
-
-    def new_target(self, best):
-        """ Calculate a new target value.
-
-            Arguments:
-                best -- the current function-value.
-
-            Returns:
-                Nothing.
-
-            Notes:
-                Sets the objects internal `target` attribute to the new target value. This method should be called when the actual function value
-                falls below the current target value.
-            """
-        if self.fixed_target:
-            pass
-            logmsg(7, "Target is fixed; refusing to create a new target.")
-        else:
-            # get the minimum y value recorded in our list of minima, and push down from there.
-            oldtarget = self.target
-            mins = []
-            for v in self.vals:
-                if v.y - best > self.tolerance:
-                    mins.append(v.y)
-                else:
-                    self.logmsg(1, "Skipping over bad minimum in newtarget calculation.")
-            if not mins:
-                raise BestMinimumException()
-                #mins = [self.vals[0].y]
-            self.target = best + self.greediness * (best - min(mins))
-            if self.target != oldtarget:
-                pass
-                self.logmsg(7, "Target updated to ", self.target, " (", "higher" if self.target > oldtarget else "lower", ")", sep='')
-
-    def refresh_target(self): # no effects on attributes.
-        """ Refresh the target value.
-
-            Arguments:
-                None.
-
-            Returns:
-                Nothing.
-
-            Notes:
-                Uses the internally-maintained list of past minima to set `target` to the new target value.
-            """
-        if self.fixed_target:
-            pass
-            self.logmsg(7, "Target is fixed. Refusing to refresh target.")
-        else:
-            if len(self.vals) < 2:
-                raise ValueError("Insufficient number of discovered local minima to perform a target update.")
-
-            self.logmsg(1, "Two best minima so far: ", self.vals[0].unbox(), " and ", self.vals[1].unbox())
-            diff = self.vals[0].y - self.vals[1].y
-            if diff > 0: # this should never evaluate to True, since self.vals is sorted in ascending order.
-                raise Exception("The difference between the two best minima should be negative!")
-            self.logmsg(2, "Y-Difference between the minima: ", diff)
-            self.logmsg(1, "Refreshed target to", self.target)
-
-            return self.vals[0].y + self.greediness * diff
-
-    def calculate_step_scale(self, destination, deltay_curr):
-        deltay_prev = destination.y - self.target
-
-        if (deltay_curr - deltay_prev)**2 < self.pseudo**2:
-            stepscale = deltay_curr / self.pseudo # avoid crazy huge steps
-        else:
-            stepscale = deltay_curr / (deltay_curr - deltay_prev)
-
-        return stepscale
-
-    def line_search(self, destination, scalemax=3, n=10):
-        """ To determine the step, evaluate the objective function along the line determined by the current
-            minimum and the given destination point at constant intervals, for a given total number of
-            evaluations. The step is taken to be the one that brings the iterate to the place where the
-            function value is the least. This step value is returned.
-
-            Arguments:
-                destination (y, x)  -- the minimum to move towards
-                scalemax (number)   -- how much line to look at
-                n (number)          -- how many function evaluations to make along the line
-
-            Returns:
-                The step to take, as a vector to be added to the current position of the iterate.
-            """
-        direction = destination.x - self.pmin
-        maxpoint = self.pmin +  scalemax * direction
-        minpoint = self.pmin + -scalemax * direction
-        unitdir = (4 * scalemax**2 * norm(direction)) / float(n) # the total norm from minpoint to maxpoint, divided by the number of samples to take.
-
-        ps = [] # we'll collect pairs (step, fv after step) in here.
-
-        def gen_samples():
-            for i in xrange(n):
-                step_i = -scalemax*direction + i*unitdir
-                yield (step_i, self.fv_after_step(step_i))
-        best_step = min(gen_samples(), key=lambda (_1, _2): _2)
-        return best_step[0]
-
-    def drop_middle_minima(self):
-        """ Drop all the middle minima. This ignores the chopfactor member. """
-        if len(self.vals) > 1:
-            del self.vals[1:-1]
-
-    def step_toward(self, destination, deltay_curr):
+    def step_toward(self, destination):
         """ Calculate a step toward a given destination using the standard stepscale calculation method.
             If the destination's function-value is less good than the current one, the direction is reversed.
             """
         stepdir = (1 if destination.y <= self.fv else -1) * (destination.x - self.pmin)
-        return self.calculate_step_scale(destination, deltay_curr) * stepdir
+        return self.calculate_step_scale(destination) * stepdir
 
-    def step_to_best_minimum(self, deltay_curr):
-        return self.step_toward(vals[0], deltay_curr)
+    def get_best_minimum(self):
+        """ Get the best past minimum that is at least a certain distance away from the current minimum, stored in pmin. """
+        for m in self.vals:
+            if norm(m.x - self.pmin) > self.tolerance:
+                return m
+        raise BestMinimumException("There are no past minima.")
 
-    def fv_after_step(self, step):
-        """ Evaluate the score of the objective function after hypothetically taking the given step. """
-        return self.evalf(self.nx1 + step)
+    def step_to_best_minimum(self):
+        """ Calculate a step towards the best past minimum. For what "best" means, consult the documentation of
+            `get_best_minimum`. Note that the step is merely calculated, not taken. For that, pass the result of
+            this method to `take_step`.
+            """
+        return self.step_toward(self.get_best_minimum())
 
-    def all_possible_steps(self, deltay_curr):
-        return map(lambda x: self.step_toward(x, deltay_curr), self.vals)
+    def fv_after_step_from(self, origin, step):
+        return self.evalf(origin + step)
+
+    def fv_after_step_from_iterate(self, step):
+        """ Evaluate the score of the objective function after hypothetically taking the given step from the iterate. """
+        return self.fv_after_step_from(self.nx1, step)
+
+    def fv_after_step_from_minimum(self, step):
+        """ Evaluate the score of the objective function after hypothetically taking the given step from the minimum. """
+        return self.fv_after_step_from(self.pmin, step)
+
+    def all_possible_steps(self):
+        return map(lambda x: self.step_toward(x), self.vals)
 
     def best_of_steps(self, steps):
-        return min(steps, key=self.fv_after_step)
+        return min(steps, key=self.fv_after_step_from_minimum)
 
-    def best_possible_step(self, deltay_curr):
-        return self.best_of_steps(self.all_possible_steps(deltay_curr))
+    def best_possible_step(self):
+        return self.best_of_steps(self.all_possible_steps())
 
     def average_minima_spread(self):
         """ For each minimum, calculate its average distance to all the other minima, and average these averages.
@@ -302,9 +187,6 @@ class dm_optimizer:
         self.valsi                      = []
         self.lpos                       = []
 
-        if self.callback is not None:
-            self.vs = []
-
         # and that our counters are zero
         self.nfev       = 0
         self.njev       = 0
@@ -321,60 +203,32 @@ class dm_optimizer:
         self.vals.add(value_box( (f0, x0min) ))
         self.valsi.append(value_box( (f0, x0min) ))
 
-        if not self.fixed_target:
-            self.target = self.first_target_ratio * f0
-
         self.nx1 = x1
         self.fv = f0
         self.pmin = x0min
         self.lpos = [(self.evalf(self.nx1), self.nx1)]
 
-        self.logmsg(2, "Entering loop.")
+        # prepare the optimization result
+        res = OptimizeResult()
+        res.message = []
 
+        self.logmsg(2, "Entering loop.")
         try:
             for self.iteration in xrange(1, self.max_iterations + 1):
                 self.logmsg(2, "Guess point for this iteration:", self.nx1)
                 self.pmin = self.local_min(self.nx1)
                 self.fv = self.evalf(self.pmin) # the function value at the local minimum for this iteration
                 self.logmsg(6, "Minimum for this iteration f", self.pmin, " = ", self.fv, sep='')
-                self.logmsg(7, "Target:", self.target)
-                deltay_curr = self.fv - self.target # how far away is our current minimum from the target value
-
-                self.logmsg(2, "Got delta:", deltay_curr)
-
-                #if deltay_curr <= self.tolerance**2: # we've fallen below the target, so we create a new target
-                if deltay_curr < 0: # we've fallen below the target, so we create a new target
-                    self.logmsg(2, "Beat target!")
-                    try:
-                        self.new_target(self.fv) # to get the next target, all we need is the current function value and the list of minima so far
-                    except BestMinimumException:
-                        # this is a failure sink
-                        res = sopt.OptimizeResult()
-                        res.nit     = self.iteration
-                        res.success = True
-                        res.message = ["All local minima have converged to a point. Optimization cannot proceed.", "new_target failed."]
-                        res.status  = 3
-                        res.x       = self.pmin
-                        res.fun     = self.fv
-                        res.njev    = self.njev
-                        res.nfev    = self.nfev
-                        res.lpos    = self.lpos
-                        res.opt     = self
-                        return res
-
-                    deltay_curr = self.fv - self.target # recalculate delta for the new target
-                    self.logmsg(2, "New delta:", deltay_curr)
-                else:
-                    pass
-                    self.logmsg(2, "Target y-value", self.target)
-
-                if deltay_curr < self.tolerance:
-                    #raise Exception("Current distance to target is too small; target update failed.")
-                    deltay_curr = self.tolerance # this is probably not wise.
-
-                self.take_step(self.line_search(self.vals[0]))
 
                 self.lpos.append((self.evalf(self.nx1), copy(self.nx1))) # add the new position to the list of past positions
+
+                if self.callback is not None:
+                    if self.callback(self):
+                        res.message.append("Callback function requested termination.")
+                        break
+
+                self.take_step(self.step_to_best_minimum())
+
                 self.logmsg(2, "Took step ", self.step)
 
                 self.vals.add(value_box( (self.fv, copy(self.pmin)) ))
@@ -382,20 +236,10 @@ class dm_optimizer:
                 map(lambda x: self.logmsg(2, x.unbox()), self.vals[-3:])
 
                 if norm(self.step) < self.tolerance:
-                    self.logmsg(1, "Found fixed point at", self.pmin)
-                    self.logmsg(1, "Step was:", self.step)
-                    newtarget1 = self.refresh_target()
-                    self.target = newtarget1
-
-                # every `refresh_rate` iterations, we refresh the target value, to avoid stale convergeance
-                if (not self.fixed_target) and self.iteration % self.refresh_rate == 0:
-                    self.drop_middle_minima()
-                    oldtarget = self.target
-                    newtarget1 = self.refresh_target() # mutates `target`
-                    self.target = newtarget1
-
-                if self.callback is not None:
-                    self.callback(self)
+                    res.message.append("Fixed point found.")
+                    break
+            else:
+                res.message.append("Maximum number of iterations reached.")
 
         except Exception as e:
             self.logmsg(-1, "An error occurred while optimizing:", e)
@@ -405,10 +249,8 @@ class dm_optimizer:
         self.lpos.append(min(self.vals, key=lambda v: v.y).unbox())
         self.fv, self.pmin = self.lpos[-1]
 
-        res = sopt.OptimizeResult()
         res.nit     = self.iteration
         res.success = True
-        res.message = ["Maximum number of iterations reached."]
         res.status  = 1
         res.x       = self.pmin
         res.fun     = self.fv
@@ -438,7 +280,7 @@ def minimize(f, x1, x2, **kwargs):
     try:
         res = optimizer.minimize(x1, x2)
     except Exception as e:
-        res = sopt.OptimizeResult()
+        res = OptimizeResult()
         res.message = ["Exception!", str(e)]
         res.status  = 2
         res.success = False

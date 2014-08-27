@@ -117,8 +117,70 @@ Talked with Simon, some thoughts:
  * Compare with other solvers, not just SA, especially not just SA in python. Mathematica would be a good thing to try. Simon said that he might do that since he's more familiar with Mathematica. I would also need to get Mathematica installed. I really should get IT to do that for me...
  * do an *actual* comparison with SA. As in, find a way to actually put a number on the difference in performance.
  * find a less sketchy way of scoring the performance of DM and SA, perhaps by taking a ratio of success and function evaluations. Simon said in practice, the number of function evaluations is important because the functions are tough to evaluate, but are otherwise not terrifically difficult to solve. Hm.
- * do a truly directional 1/2-search. So right now we have this ultra-greedy search using a step that's 1/2 the distance between the current minimum and the best minimum. It could be that what I have already has this, but I'm not sure. The idea is that it needs to *keep moving in the direction of the best minimum*. So, suppose that I'm at some minimum A that is AFAIK the global minimum. I want to do another iteration so I find the best minimum that is not the one that I'm at and call it B. Rather than step *toward B*, I should step *from B to A*, since A is better than B! I don't that's what I'm currently doing, but it's what I should do.
+ * do a truly directional 1/2-search. So right now we have this ultra-greedy search using a step that's 1/2 the distance between the current minimum and the best minimum. It could be that what I have already has this, but I'm not sure. The idea is that it needs to *keep moving in the direction of the best minimum*. So, suppose that I'm at some minimum A that is AFAIK the global minimum. I want to do another iteration so I find the best minimum that is not the one that I'm at and call it B. Rather than step *toward B*, I should step *from B to A*, since A is better than B! I don't think that's what I'm currently doing, but it's what I should do.
  * Look back into the minimum-dropping technique. Investigate whether I can replicate what it's doing without doing it :P
  * Line search: evaluate the objective function N times along the *line* defined by that step vector. Take the minimal place as the new location of the iterate.
  * Try different constants for the 1/2 method. In that case it wouldn't be a 1/2 method, now would it.
  * See whether bracketing is actually what's causing the significant success increase in the Griewank function.
+
+08-08
+=====
+So I've implemented a kind of performance measure based on the number of function evaluations per success; smaller values are better. In the cases where the number of successes is zero, then I simply don't count that run towards the average performance. 
+
+Plotting is still broken. Let's look at some sample output from Ackley: (function_value.txt)
+18.5974318431   19.2283354885  17.7830204938  17.8118686259  17.8466315343  17.7830204938  None           None           None           None           None           None
+18.2216926693   17.8118686304  15.2236423435  13.9242956146  14.1008149469  13.8786458041  14.143491012   14.2271837228  13.8786458041  None           None           None
+17.7856391945   18.5853429536  19.7852007045  19.0040737652  18.7132880968  18.5841552596  18.5853429535  18.5841552596  None           None           None           None
+17.5676914986   19.0683152098  19.7999241674  19.3533977423  19.1165601866  19.0683152098  None           None           None           None           None           None
+17.4246455908   19.2335809224  19.8912558203  19.48623378    19.3169499344  19.2335809224  None           None           None           None           None           None
+13.1095090492   18.6351435018  17.8637134896  17.7282887987  17.7919554376  17.7282887987  None           None           None           None           None           None
+8.3539503274    17.3306432991  19.6693780906  18.2836152038  17.5824995569  17.4447187076  17.3306432991  None           None           None           None           None
+4.40495239475   19.5250988418  19.8246293632  19.6068527256  19.5623535036  19.5250988418  None           None           None           None           None           None
+2.87991069167   17.8594614998  19.7080320685  18.5661737461  17.9819027109  17.8184484388  17.9542533248  17.7762848346  17.8184484388  17.7762848346  None           None
+1.89917857862   19.6410972591  19.4230789425  19.3612910302  19.374707388   19.4168895541  19.3254222545  19.2906906034  19.2714755835  19.2714755835  None           None
+1.52860013572   19.0882843029  19.9625894819  19.5567096651  19.2041410677  19.1006390203  19.0882843029  None           None           None           None           None
+1.14729881615   17.8162583527  18.5947953008  17.9819026986  17.8509205633  17.8162583527  None           None           None           None           None           None
+0.93645800324   19.3686545498  18.4884061081  18.0617061376  18.1595599413  18.0561570939  18.0487229837  18.087304904   18.0487229837  None           None           None
+0.936104293508  19.6101704101  19.9632574556  19.7629386187  19.6460144398  19.6101704101  None           None           None           None           None           None
+0.935985697107  18.1388196991  13.9581243418  14.4848973376  13.6281766403  13.7137544063  13.6281766403  None           None           None           None           None
+
+The first thing to notice is that None value phase in and out. That shouldn't be possible. Once None occurs in a column, all subsequent values in that column should be None: it represents that that run prematurely terminated. This makes me thing that I'm padding the lists at the wrong time, before or after some transpose. This is probably why the plots look weird.
+
+Yay, that's fixed. In fact, the transpose was pretty much broken.
+
+Talked with Simon:
+ * My priority should be on getting some really nice graphics for comparing DM and SA. He suggests graphs showing the fraction of solved runs as a function of the iteration number (see paper in folder).
+ * I should look back on the past strategies, esp. the minimum-dropping method, and see with this comparison whether it really beats SA.
+ * I should see with some other constants for the fixed-step method, e.g. 0.1 and 1.0. 
+ * I need to write the summary of the algorithm.
+
+I should probably use a very high number of iterations for that fraction solved vs time graph, around 4000. This means that running it on abacus is probably the best way to do things. I'll need to adapt the code in run_reproducible_pipeline then, since as of right now, it fails with a file not found error about git...
+
+08-13
+=====
+Got some nice nice graphs! Simon really likes them too. I should launch a bunch of jobs on abacus parameterizing over the step scaling factor, to see its influence. I should also raise the number of dimensions in some the objective functions. I'm running many of them in just 2 (or even 1!) dimensions because when I first did my little check to see what dimension to try in, I was using SA with an iteration count that was significantly lower than what I'm currently using (1000 iterations).
+Once I have those jobs running, I need to try to see if I get this sort of spiking-up growth in simulated annealing (cf. plots from this morning) even if I use a lower number of iterations. I probably will, and that will indicate to me that simulated annealing's default cooling schedule is some sort of exponential decrease, I guess.
+I also need to get Mathematica so that I can compare with other solvers. This also means that I'm going to need to rewrite DM in Mathematica. Isn't that the supreme irony of life? Port the code from mathematica to python, so that when I'm done doing the real developing in Python, I can just port it back to Mathematica.
+In the functions where we fail really badly, it would be good to look at the trajectories of the iterate, to see _why_ we fail so badly. That might require moving into lower dimensions temporarily to make some plots of the trajectories.
+It would also be worthwhile to see what happens to the plots if we run this for much much longer, e.g. 10000 iterations. 
+
+08-18
+=====
+Alright, I finally have the nice plots showing the effect of the step scale. It seems in general that smaller values are better, except in some weird cases like the h1 function, where larger values are better! So we seem to be doing equally well, as simulated annealing. 
+It would be worthwhile to check out the following:
+ * use hypothetical steps in many directions, but from the current local minimum instead of from the iterate;
+ * boost the number of dimensions in the easier problems;
+ * look into adaptive step scaling heuristics. This is somewhat of a step backwards since the whole idea of using a fixed step scale is to *avoid* an adaptive method there. 
+
+Alright so I have 100+ jobs going on abacus. I feel like a baller :)
+It seems that the introduction of the many-step strategy introduced a bug that is causing failures in certain (all?) functions. This needs to be checked out. I've streamlined even more so the collection of data for each function and across many step sizes. I need to change that to do step sizes between 0.1 and 2.0, since now I just go to 1.2. I also need to make it so that when all the jobs complete, the plotting program is called. Furthermore, I need to update the plotting program to make use of the new directory structure that I have created.
+
+08-26
+=====
+CONCLUSIONS: it's getting to be time to write the paper.
+I need a comparison with other solvers, from Mathematica preferably, so I will need to rewrite the method in Mathematica.
+We need to characterize the performance of the method according to the number of dimensions. So a plot of "success rate after N iterations versus number of dimensions of the objective function" for all the functions I have in my bank of test functions would be good.
+As for other figures, something to show the intuition of the algorithm would be great, where we can see how the iterate moves according to how it finds the minima along the way.
+We would have a paragraph explaining the intuition alongside this diagram, and a more rigorous explanation. It's dead simple so it won't take too much space. We would also talk about how we draw this intuition from the Difference Map.
+We would talk about the properties of the algorithm, namely determinism, and we would need to do a literature search for other deterministic local search-based solvers, in order to compare the features of our method with those ones.
+Then we would present our comparison figures (against SA and other methods), like fraction solved versus time, and something or other to do with function evaluations.

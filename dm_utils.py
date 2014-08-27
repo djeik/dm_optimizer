@@ -1,13 +1,17 @@
 #!/usr/bin/env python2
 
 from __future__ import print_function
+
 import sys
 import random
-from scipy.optimize import basinhopping
-import dm_optimizer as dm
-import numpy as np
-from itertools import repeat, imap, chain, islice, izip
+import os
 
+import dm_optimizer as dm
+import numpy        as np
+
+from scipy.optimize import basinhopping
+from itertools      import repeat, imap, chain, islice, izip
+from os             import path
 
 # deap's benchmarking functions return the values as 1-tuples
 # so we need to unpack element 0 which is the actual function-value.
@@ -21,7 +25,7 @@ def ipad_lists(padding, matrix):
     """ Pad the component lists of a list of lists to make it into a matrix. The operation is performed in-place, but the matrix is also returned,
         to allow chaining.
         """
-    maxlen = reduce(max, imap(len, matrix))
+    maxlen = reduce(max, imap(len, matrix), 0)
     for vector_ in matrix:
         vector = list(vector_) # copy the list
         vector.extend(repeat(padding, maxlen - len(vector)))
@@ -66,7 +70,7 @@ def tuples_to_csv(dats):
     return '\n'.join([','.join(map(str, x)) for x in dats])
 
 def csv_to_tuples(csv):
-    """ Expect a list of records, where each record consist of fields that are comma-separated.
+    """ Expect a list of records, where each record consists of fields that are comma-separated.
         Return a list of lists. No handling of escaping the commas is done.
         """
     return [tuple(x.split(',')) for x in csv]
@@ -90,3 +94,61 @@ def normalize(v, tolerance=1e-8):
     if norm(v) < tolerance:
         raise ValueError("Vector too small to properly normalize.")
     return v / norm(v)
+
+def ndiv(numerator, denominator, epsilon=1e-7):
+    if isinstance(denominator, float):
+        if denominator**2 < epsilon**2:
+            return 0;
+    elif isinstance(denominator, int):
+        if denominator == 0:
+            return 0;
+    return numerator / float(denominator)
+
+def with_file(f, path, mode='r'):
+    """ Run a function on a file handle, using a with-statement. Useful in lambdas. """
+    with open(path, mode) as handle:
+        return f(handle)
+
+def zipmap(f, seq):
+    """ Map a function over a sequence and zip that sequence with the results of the applications. """
+    return zip(seq, imap(f, seq))
+
+def rebase_path(base_file, relative_file):
+    return path.join(path.dirname(base_file), relative_file)
+
+def mkdir_p(dir):
+    if not path.exists(dir):
+        os.makedirs(dir)
+        return True
+    else:
+        return False
+
+def compose(f, g):
+    return lambda *args, **kwargs: f(g(*args, **kwargs))
+
+curry2 = lambda f: lambda x: lambda y: f(x, y)
+uncurry2 = lambda f: lambda x, y: f(x)(y)
+curry3 = lambda f: lambda x: lambda y: lambda z: f(x, y, z)
+map_c = curry2(map)
+imap_c = curry2(imap)
+
+# transform a function of many arguments into a function that takes one tuple
+splat = lambda f: lambda args: f(*args)
+
+# transform a function of one collection into a function of many arguments
+unsplat = lambda f: lambda *args: f(args)
+
+# The (unary) identity function
+nop = lambda x: x
+
+# The n-ary identity function
+nops = unsplat(nop)
+
+# LAW: compose(splat, unsplat) = nop
+
+map_z = lambda f: lambda *args: map(splat(f), zip(*args))
+
+# from a given key or index, make a function that projects the associated value from a dict of indexable.
+project = lambda k: lambda d: d[k]
+
+flip = lambda f: lambda x, y: f(y, x)
