@@ -123,6 +123,17 @@ imap_c = curry2(imap)
 # transform a function of many arguments into a function that takes one tuple
 splat = lambda f: lambda args: f(*args)
 
+# transform a function of one collection into a function of many arguments
+unsplat = lambda f: lambda *args: f(args)
+
+# The (unary) identity function
+nop = lambda x: x
+
+# The n-ary identity function
+nops = unsplat(nop)
+
+# LAW: compose(splat, unsplat) = nop
+
 map_z = lambda f: lambda *args: map(splat(f), zip(*args))
 
 # from a given key or index, make a function that projects the associated value from a dict of indexable.
