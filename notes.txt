@@ -171,3 +171,16 @@ It would be worthwhile to check out the following:
  * use hypothetical steps in many directions, but from the current local minimum instead of from the iterate;
  * boost the number of dimensions in the easier problems;
  * look into adaptive step scaling heuristics. This is somewhat of a step backwards since the whole idea of using a fixed step scale is to *avoid* an adaptive method there. 
+
+Alright so I have 100+ jobs going on abacus. I feel like a baller :)
+It seems that the introduction of the many-step strategy introduced a bug that is causing failures in certain (all?) functions. This needs to be checked out. I've streamlined even more so the collection of data for each function and across many step sizes. I need to change that to do step sizes between 0.1 and 2.0, since now I just go to 1.2. I also need to make it so that when all the jobs complete, the plotting program is called. Furthermore, I need to update the plotting program to make use of the new directory structure that I have created.
+
+08-26
+=====
+CONCLUSIONS: it's getting to be time to write the paper.
+I need a comparison with other solvers, from Mathematica preferably, so I will need to rewrite the method in Mathematica.
+We need to characterize the performance of the method according to the number of dimensions. So a plot of "success rate after N iterations versus number of dimensions of the objective function" for all the functions I have in my bank of test functions would be good.
+As for other figures, something to show the intuition of the algorithm would be great, where we can see how the iterate moves according to how it finds the minima along the way.
+We would have a paragraph explaining the intuition alongside this diagram, and a more rigorous explanation. It's dead simple so it won't take too much space. We would also talk about how we draw this intuition from the Difference Map.
+We would talk about the properties of the algorithm, namely determinism, and we would need to do a literature search for other deterministic local search-based solvers, in order to compare the features of our method with those ones.
+Then we would present our comparison figures (against SA and other methods), like fraction solved versus time, and something or other to do with function evaluations.

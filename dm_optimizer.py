@@ -12,7 +12,10 @@ from itertools import imap, islice
 
 import sys
 
-from scipy.optimize import OptimizeResult
+if int(scipy.__version__.split(".")[1]) < 14:
+    from scipy.optimize.optimize import Result as OptimizeResult
+else:
+    from scipy.optimize import OptimizeResult
 
 class BestMinimumException(Exception):
     def BestMinimumException(*args, **kwargs):
@@ -108,6 +111,7 @@ class dm_optimizer:
         return res.x
 
     def calculate_step_scale(self, destination):
+        """ Calculate the step scale to use in the direction of a given destination in the search space. """
         return self.stepscale_constant
 
     def step_toward(self, destination):
@@ -125,6 +129,10 @@ class dm_optimizer:
         raise BestMinimumException("There are no past minima.")
 
     def step_to_best_minimum(self):
+        """ Calculate a step towards the best past minimum. For what "best" means, consult the documentation of
+            `get_best_minimum`. Note that the step is merely calculated, not taken. For that, pass the result of
+            this method to `take_step`.
+            """
         return self.step_toward(self.get_best_minimum())
 
     def fv_after_step_from(self, origin, step):

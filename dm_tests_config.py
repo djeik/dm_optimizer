@@ -18,7 +18,7 @@ tests = map(lambda xs: dict(zip(
         ("rosenbrock",  "unwrap_bench(bench.rosenbrock)",  minimization,        7,            None,          0),  # large, but slow
         ("schaffer",    "unwrap_bench(bench.schaffer)",    minimization,        4,            (-100, 100),   0),  # best
         ("schwefel",    "unwrap_bench(bench.schwefel)",    minimization,        4,            (-500, 500),   0),  # best
-        ("simon_f2",    "simon_f2",                        minimization,        4,            (-100, 100),   0),  # required
+        ("simon_f2",    "simon_f2",                        minimization,        2,            (-100, 100),   0),  # required
         ("sphere",      "unwrap_bench(bench.sphere)",      minimization,        10,           None,          0)]) # large
 
 poll_names = ["function_value", "best_minimum", "step_size"] # the names of the things extracted from the optimizer internal state
@@ -27,6 +27,8 @@ sampler_defaults = {"dimensions":5, "range":(-100, 100)}
 experiment_defaults = {"runs":250, "success_threshold":0.001}
 dm_defaults = {"max_iterations":100}
 sa_defaults = {"niter":100}
+
+plots_config = {"individual_color":"0.6", "average_color":"blue"}
 
 class solver_callback(object):
     def __init__(self, optimum=float("nan"), experiment_settings=experiment_defaults):
