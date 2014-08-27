@@ -43,7 +43,7 @@ def simon_f1(xy):
     x, y = xy
     return 0.2 * (x**2 + y**2) / 2 + 10 * sin(x+y)**2 + 10 * sin(100 * (x - y))**2
 
-def simon_f2(xs):
+def simonf2(xs):
     """ A variation on Simon's function. To prevent "origin-bias", which can be a problem with optimizers,
         we simply shift over the function, so that the minimum is now at (100, 100).
         """
@@ -515,23 +515,21 @@ def solved_vs_iterations_plots_pro(path_to_data,
 
     sa_data = parse_solved_vs_iterations_data_for_one_optimizer(simulated_annealing_path, runs_count)
 
-    with PdfPages(path.join(plot_dir, "solved_vs_iterations_plots.pdf")) as pdf:
-        for test in tests:
-            if not (test["name"] in sa_data and all(imap(lambda d: test["name"] in d, imap(project(1), functions_by_stepsize)))):
-                print("Skipping function", test["name"], "because one or more datasets don't have entries for it.")
-                continue
-            fig = plt.figure()
-            fig.suptitle("%s (%d dimensions) - fraction of successful runs vs. time" % (test["name"], test["dimensions"]))
-            ax = fig.add_subplot(1,1,1)
-            ax.set_xlim(0, iterations_count)
-            ax.set_ylim(0, 1)
-            ax.plot(sa_data[test["name"]], label="sa", color=(0, 0, 1))
-            for (size, dm_data) in functions_by_stepsize:
-                errprint("Plotting for size", size)
-                ax.plot(dm_data[test["name"]], label="dm %f" % size, color=(size/1.2, 0.5, 0.5))
-            #ax.legend()
-            pdf.savefig(fig)
-            plt.close()
+    for test in tests:
+        if not (test["name"] in sa_data and all(imap(lambda d: test["name"] in d, imap(project(1), functions_by_stepsize)))):
+            print("Skipping function", test["name"], "because one or more datasets don't have entries for it.")
+            continue
+        fig = plt.figure()
+        fig.suptitle("%s (%d dimensions) - fraction of successful runs vs. time" % (test["name"], test["dimensions"]))
+        ax = fig.add_subplot(1,1,1)
+        ax.set_xlim(0, iterations_count)
+        ax.set_ylim(0, 1)
+        ax.plot(sa_data[test["name"]], label="sa", color=(0, 0, 1))
+        for (size, dm_data) in functions_by_stepsize:
+            errprint("Plotting for size", size)
+            ax.plot(dm_data[test["name"]], label="dm %f" % size, color=(size/1.2, 0.5, 0.5))
+        #ax.legend()
+        fig.savefig(path.join(plot_dir, test["name"] + ".eps"))
 
 def solved_vs_iterations_plots(data_dir,
         iterations_count=iterations_config["end"], runs_count=experiment_defaults["runs"]):
