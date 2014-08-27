@@ -12,7 +12,10 @@ from itertools import imap, islice
 
 import sys
 
-from scipy.optimize.optimize import Result as OptimizeResult
+if int(scipy.__version__.split(".")[1]) < 14:
+    from scipy.optimize.optimize import Result as OptimizeResult
+else:
+    from scipy.optimize import OptimizeResult
 
 class BestMinimumException(Exception):
     def BestMinimumException(*args, **kwargs):
