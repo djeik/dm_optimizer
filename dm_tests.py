@@ -1,41 +1,41 @@
+#!/usr/bin/env python
+
 from __future__ import print_function
 
-import matplotlib
-
-from datetime import datetime
+# System and standard libraries
 import sys
 import random
-
 import os
-from os import path
+import multiprocessing as mp
+from time           import time
+from math           import sin
+from copy           import copy
+from os             import path
+from itertools      import repeat, imap, ifilter, islice, chain, izip, takewhile
+from datetime       import datetime
+from matplotlib     import cm
 
-from time import time
-from math import sin
-from copy import copy
-
+# The main scientific and numeric libraries
 import numpy as np
-from numpy.linalg import norm
-import deap.benchmarks as bench # various test functions
+from numpy.linalg   import norm
 from scipy.optimize import basinhopping
-
-import matplotlib.pyplot as plt
+import deap.benchmarks as bench # various test functions
 from matplotlib.backends.backend_pdf import PdfPages
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
+import matplotlib.pyplot as plt
 
-from itertools import repeat, imap, ifilter, islice, chain, izip, takewhile
-
+# Other modules in this project
 import dm_optimizer as dm
-from dm_optimizer import dm_optimizer
+from dm_optimizer   import dm_optimizer
 
 from dm_tests_config import *
 from dm_utils        import *
 
-import multiprocessing as mp
+# Force line buffered output regardless of the type of device connected to stdout
+# This is necessary to avoid block buffering that becomes enabled by default by the C library's stdio
+# if it detects that a terminal is connected to stdout.
+sys.stdout = os.fdopen(sys.__stdout__.fileno(), 'w', 1)
 
-sys.stdout = os.fdopen(sys.__stdout__.fileno(), 'w', 1) # line buffered output
-
-# These are the functions Simon defined to test it on:
 def simon_f1(xy):
     """ A test function crafted by Simon. It's minimum value is zero at the origin.
         It is only defined for two dimensions.
@@ -50,7 +50,6 @@ def simon_f2(xs):
     xy = xs - np.array([100, 100])
     return simon_f1(xy)
 
-# Visual debug tool for 3d
 def plotf_3d(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]), smoothness=1.0, autobound=True, autosmooth=True):
     """ Plot a function in three dimensions and show a trajectory on it.
 
