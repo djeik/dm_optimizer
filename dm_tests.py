@@ -31,6 +31,8 @@ from dm_optimizer   import dm_optimizer
 from dm_tests_config import *
 from dm_utils        import *
 
+import jerrington_tools as j
+
 # Force line buffered output regardless of the type of device connected to stdout
 # This is necessary to avoid block buffering that becomes enabled by default by the C library's stdio
 # if it detects that a terminal is connected to stdout.
@@ -133,7 +135,7 @@ def calculate_stats(test, rs, time_total):
 
     return (failures, success_rate, time_avg, nfev_avg)
 
-def conduct_experiment(exp_dir, test, optimizer):
+def conduct_experiment(exp_dir, test, optimizer, experiment_defaults=experiment_defaults):
     runs         = experiment_defaults["runs"]
     dimensions   = test["dimensions"] or sampler_defaults["dimensions"]
     range        = test["range"]      or sampler_defaults["range"]
@@ -203,7 +205,7 @@ def write_experiment_messages(exp_dir, rs):
 
 def experiment_task(args):
     edir, test, optimizer, names = args
-    errprint("Begin experiment:", test["name"])
+    j.errprint("Begin experiment:", test["name"])
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
     mkdir_p(exp_dir)
@@ -212,7 +214,7 @@ def experiment_task(args):
     # Perform the experiment, rs is the actual OptimizeResult objects
     (failures, success_rate, time_avg, nfev_avg, rs) = conduct_experiment(exp_dir, test, optimizer);
     end_time = time()
-    errprint(test["name"] + ":", "spent", end_time - start_time, "seconds performing experiment.")
+    j.errprint(test["name"] + ":", "spent", end_time - start_time, "seconds performing experiment.")
 
     if is_dm(optimizer): # if the given optimizer is dm, we know how to inspect its internals and fish out useful information.
         start_time = time()
@@ -232,10 +234,10 @@ def experiment_task(args):
         # print the test-specific data to its own directory.
         write_experiment_data(exp_dir, complete_data)
         end_time = time()
-        errprint(test["name"] + ":", "spent", end_time - start_time, "seconds writing.")
+        j.errprint(test["name"] + ":", "spent", end_time - start_time, "seconds writing.")
 
     write_experiment_messages(exp_dir, rs)
-    errprint("End experiment:", test["name"])
+    j.errprint("End experiment:", test["name"])
     # the return value will get appended to the all_statistics of the master process
     return (test["name"], (success_rate, time_avg, nfev_avg, ndiv(nfev_avg, success_rate), failures))
 
@@ -359,7 +361,7 @@ def dm_plot_3d(edir, test_all_2d=False, show=False):
         while True:
             res = randomr_dm(f, 2, test["range"], opts)
             if res.success: # TODO THIS IS SO SKETCHY ...
-                errprint("Completed", test["name"])
+                j.errprint("Completed", test["name"])
                 break
         fig = plotf_3d(f, res.opt.lpos)
         if show:
@@ -393,7 +395,7 @@ def solved_vs_iterations_inner_inner(args):
     # since we record one v for each iter, and the optimizer will end if the global minimum is found, the length of the vs
     # represents how many iterations it took to find the global minimum
     v = len(my_optimizer["config"]["callback"].vs)
-    errprint("Run #", run_number, ": ", v, sep='')
+    j.errprint("Run #", run_number, ": ", v, sep='')
     return v
 
 def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
@@ -422,7 +424,7 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
     mkdir_p(test_dir)
     result_dir = path.join(solver_dir, "results")
 
-    errprint("Running test: ", test["name"], "...", sep='')
+    j.errprint("Running test: ", test["name"], "...", sep='')
 
     pool = mp.Pool(solved_vs_iterations_subproc_count)
 
@@ -434,9 +436,9 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
                  repeat(optimizer_name),
                  repeat(extra_optimizer_config)))
 
-    errprint("Done running test.")
+    j.errprint("Done running test.")
 
-    errprint("Parsing experiment data... ", end='')
+    j.errprint("Parsing experiment data... ", end='')
 
     # data_points is just a list of ints, that say how long it took for that run to finish
     def alive_vs_t(lifetimes):
@@ -450,7 +452,7 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
 
     alives_vs_t = alive_vs_t(data_points)
 
-    errprint("Done.")
+    j.errprint("Done.")
 
     return alives_vs_t
 
@@ -474,7 +476,7 @@ def parse_solved_vs_iterations_data_for_one_optimizer(data_dir, runs_count):
     test_names = map(project("name"), tests)
 
     d = dict(zipmap(lambda test_name: with_file(
-            map_c(compose(to_fraction, int)), # make a func that takes a seq, conv each elm to int and frac
+            j.map_c(j.compose(to_fraction, int)), # make a func that takes a seq, conv each elm to int and frac
             path_to_data(test_name)), # for each test name we get the path to the data file
         test_names))
 
@@ -532,7 +534,7 @@ def solved_vs_iterations_plots_pro(path_to_data,
         ax.set_ylim(0, 1)
         ax.plot(sa_data[test["name"]], label="sa", color=(0, 0, 1))
         for (size, dm_data) in functions_by_stepsize:
-            errprint("Plotting for size", size)
+            j.errprint("Plotting for size", size)
             ax.plot(dm_data[test["name"]], label="dm %f" % size, color=(size/1.2, 0.5, 0.5))
         #ax.legend()
         fig.savefig(path.join(plot_dir, test["name"] + ".eps"))
