@@ -25,8 +25,8 @@ poll_names = ["function_value", "best_minimum", "step_size"] # the names of the 
 
 sampler_defaults = {"dimensions":5, "range":(-100, 100)}
 experiment_defaults = {"runs":500, "success_threshold":0.001}
-dm_defaults = {"max_iterations":1000, "stepscale_constant":0.1}
-sa_defaults = {"niter":1000}
+dm_defaults = {"max_iterations":500, "stepscale_constant":0.1}
+sa_defaults = {"niter":500}
 
 plots_config = {"individual_color":"0.6", "average_color":"blue"}
 
