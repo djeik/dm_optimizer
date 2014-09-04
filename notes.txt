@@ -184,3 +184,14 @@ As for other figures, something to show the intuition of the algorithm would be 
 We would have a paragraph explaining the intuition alongside this diagram, and a more rigorous explanation. It's dead simple so it won't take too much space. We would also talk about how we draw this intuition from the Difference Map.
 We would talk about the properties of the algorithm, namely determinism, and we would need to do a literature search for other deterministic local search-based solvers, in order to compare the features of our method with those ones.
 Then we would present our comparison figures (against SA and other methods), like fraction solved versus time, and something or other to do with function evaluations.
+
+09-02
+=====
+Need to test Simon's original method on the other objective functions from the test suite, especially in high dimensions, to see if it works well on them.
+
+A way to visualize the iterate would be great: a plot of the basins of attraction (can compute a little grid with vector fields or something) with the trajectory of the iterate shown with labels of which basin it the reference or something like that.
+
+09-04
+=====
+So my success vs iterations jobs got killed because they were taking too long...
+I guess I need to start them again with more time.
