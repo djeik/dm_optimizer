@@ -38,7 +38,7 @@ def main(args):
         solver_dir = j.mkdir_p(path.join(experiment_dir, solver))
 
         for test in good_tests:
-            sp.call(["Qmsub", "-n", "1", "-h", "14",
+            sp.call(["Qmsub", "-n", "1", "-h", "48",
                      "./run_success_after_n_iters_vs_dimensions.py",
                      "--solver", solver,
                      "--output-dir", solver_dir,

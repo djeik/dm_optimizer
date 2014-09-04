@@ -184,3 +184,8 @@ As for other figures, something to show the intuition of the algorithm would be 
 We would have a paragraph explaining the intuition alongside this diagram, and a more rigorous explanation. It's dead simple so it won't take too much space. We would also talk about how we draw this intuition from the Difference Map.
 We would talk about the properties of the algorithm, namely determinism, and we would need to do a literature search for other deterministic local search-based solvers, in order to compare the features of our method with those ones.
 Then we would present our comparison figures (against SA and other methods), like fraction solved versus time, and something or other to do with function evaluations.
+
+09-02
+=====
+Need to show how the iterate behaves. This would be a nice figure in the paper. Something that just shows how it travels as it discovers minima. This
+can be done fairly elegantly by drawing out the attraction basins of the minima and dotted lines between points where the iterate stops at.
