@@ -175,10 +175,19 @@ def conduct_experiment(exp_dir, test, optimizer,
     start_time = time()
     for i in xrange(runs):
         optimizer_config = optimizer["config_gen"]()
+        r = internal_optimizer(f, dimensions, range, optimizer_config)
         if is_dm(optimizer):
-            optimizer_config["logfile"] = open(path.join(logs_dir, str(i) + ".log"), 'a')
-        # each run needs to gen its own config since the callbacks are objects whose data cannot be shared among multiple runs
-        rs.append(internal_optimizer(f, dimensions, range, optimizer_config))
+            optimizer_config["logfile"] = open(
+                    path.join(logs_dir, str(i) + ".log"), 'a')
+            j.with_file(
+                    lambda h: map(
+                        lambda (y, x): print(
+                            *map(str, (y,) + x), sep='\t', file=h),
+                        r.lpos),
+                    path.join(logs_dir, str(i) + "-iterate.log"), 'w')
+        # each run needs to gen its own config since the callbacks are objects
+        # whose data cannot be shared among multiple runs
+        rs.append(r)
         if is_dm(optimizer):
             optimizer_config["logfile"].close()
     end_time = time()
