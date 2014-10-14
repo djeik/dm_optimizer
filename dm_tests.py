@@ -7,6 +7,7 @@ import sys
 import random
 import os
 import multiprocessing as mp
+import cPickle         as cp
 from time           import time
 from math           import sin
 from copy           import copy
@@ -180,11 +181,8 @@ def conduct_experiment(exp_dir, test, optimizer,
             optimizer_config["logfile"] = open(
                     path.join(logs_dir, str(i) + ".log"), 'a')
             j.with_file(
-                    lambda h: map(
-                        lambda (y, x): print(
-                            *map(str, (y,) + x), sep='\t', file=h),
-                        r.lpos),
-                    path.join(logs_dir, str(i) + "-iterate.log"), 'w')
+                    lambda h: cp.dump(dm.sanitize_result(r), h),
+                    path.join(logs_dir, str(i) + "-result.pickle"), 'w')
         # each run needs to gen its own config since the callbacks are objects
         # whose data cannot be shared among multiple runs
         rs.append(r)

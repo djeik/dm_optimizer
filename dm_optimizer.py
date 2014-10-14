@@ -313,6 +313,24 @@ class dm_optimizer:
         res.opt     = self
         return res
 
+def sanitize_result(res):
+    """ Clean up an OptimizeResult, so that it only contains picklable
+        objects. """
+    r = OptimizeResult()
+
+    def copyattr(s):
+        setattr(r, s, getattr(res, s))
+
+    def safecopyattr(s):
+        try:
+            copyattr(s)
+        except AttributeError:
+            pass # exception-swallowing!
+
+    map(safecopyattr, ["message", "status", "success", "nfev", "njev",
+        "lpos", "nit", "x", "fun"])
+    return r
+
 def minimize(f, x1, x2, **kwargs):
     """ Construct a dm_optimizer object and run its minimize method with the
         given initial points.  The result is packaged into a scipy
