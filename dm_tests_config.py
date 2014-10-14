@@ -30,6 +30,12 @@ sa_defaults = {"niter":500}
 
 plots_config = {"individual_color":"0.6", "average_color":"blue"}
 
+def get_test_by_name(tests, name):
+    for test in tests:
+        if test["name"] == name:
+            return test
+    raise ValueError("no test with name ``%s''" % name)
+
 class solver_callback(object):
     def __init__(self, optimum=float("nan"), experiment_settings=experiment_defaults):
         self.vs = []

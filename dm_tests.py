@@ -220,8 +220,8 @@ def calculate_averages(statistics): # [[[a]]] -> [[a]]
     return avgs
 
 def write_experiment_data(exp_dir, complete_experiment):
-    """ Expects a tuple in the form (name, averages, all runs), and writes out
-        all the data for this experiment into the given directory. """
+    """ Expects a tuple in the form (name, averages, all runs), and writes
+        out all the data for this experiment into the given directory. """
     for (name, average_vs_t, data) in complete_experiment:
         with open(exp_dir + "/" + name + ".txt", 'w') as f:
             for (i, run_i) in enumerate(data):
@@ -255,8 +255,8 @@ def experiment_task(args):
     if is_dm(optimizer):
         start_time = time()
         # extract the vs list from each result; it contains those data that
-        # fluctuate over time. We transpose this list of lists to line up all
-        # the data for a given iteration
+        # fluctuate over time. We transpose this list of lists to line up
+        # all the data for a given iteration
         vs = map(lambda r: copy(r.opt.callback.vs), rs)
 
         maxlen        = reduce(max, imap(len, vs), 0)
