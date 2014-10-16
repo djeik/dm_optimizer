@@ -193,7 +193,12 @@ A way to visualize the iterate would be great: a plot of the basins of attractio
 
 Need to show how the iterate behaves. This would be a nice figure in the paper. Something that just shows how it travels as it discovers minima. This
 can be done fairly elegantly by drawing out the attraction basins of the minima and dotted lines between points where the iterate stops at.
+
 09-04
 =====
 So my success vs iterations jobs got killed because they were taking too long...
 I guess I need to start them again with more time.
+
+10-16
+=====
+Sort of depressing talk with Simon. Anyway, seems like a problem is the tolerance used for discriminating the minima.
