@@ -2,16 +2,21 @@
 
 from __future__ import print_function
 
+import sys
+
 import dm_tests        as dmt
 import dm_tests_config as dmtc
 import cPickle         as cp
 import deap.benchmarks as bench
 import multiprocessing as mp
+import numpy           as np
 
 from os        import path
 from datetime  import datetime
 from glob      import iglob
 from itertools import repeat
+
+from matplotlib import pyplot as plt
 
 from dm_utils import unwrap_bench
 
@@ -26,7 +31,7 @@ def iget_optimize_results(dir_path):
         lazily unpickles files of the form 'N-iterate.pickle'.
         """
     for p in iglob(path.join(dir_path, "*-result.pickle")):
-        yield cp.load(p)
+        yield jt.with_file(cp.load, p)
 
 def is_successful(res, test_info, experiment_settings):
     if not hasattr(res, "fun"):
@@ -45,16 +50,19 @@ def plot_iterate(plot_dir, plot_path, lpos, test):
 
     print("Begin plotting:", test["name"], file=sys.stderr)
     f      = np.vectorize(nary2binary(eval(test["function"])))
-    xs, ys = jt.splat(jt.supply(np.linspace, {"num":500}))(test["range"])
-    X, Y   = np.meshgrid(xs, ys)
+    xs     = jt.splat(jt.supply(np.linspace, {"num":500}))(
+            test["range"] or dmtc.sampler_defaults["range"])
+    X, Y   = np.meshgrid(xs, xs)
     Z      = f(X, Y)
 
     fig = plt.figure()
     fig.suptitle(test["name"])
-    ax  = fig.subplot(1, 1, 1)
+    ax  = fig.add_subplot(1, 1, 1)
     ax.contourf(X, Y, Z)
-    ax.plot(*zip(*map(jt.project_c(1), lpos)))
-    fig.savefig(plot_path)
+    ax.plot(*zip(*map(jt.snd, lpos)))
+
+    fig.savefig(path.join(plot_dir, plot_path))
+    plt.close(fig)
 
     print("End plotting:", test["name"], file=sys.stderr)
 
@@ -67,7 +75,7 @@ def main( (exp_dir_path, test) ):
     name, stats = dmt.experiment_task(
             (exp_dir, test, dmtc.optimizers["dm"], dmtc.poll_names) )
     plot_dir = jt.mkdir_p(path.join(exp_dir, name, "plots"))
-    rs = iget_optimize_results(path.join(exp_dir, name, "log"))
+    rs = iget_optimize_results(path.join(exp_dir, name, "logs"))
 
     for i, r in enumerate(rs): # for each OptimizeResult object
         if plot_criterion(r, test, dmtc.experiment_defaults):
