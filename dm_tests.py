@@ -591,10 +591,12 @@ def solved_vs_iterations_plots_pro(path_to_data,
     # we have data per stepsize stored in all-dm, in folders named with the
     # stepsize.
     path_to_stepsizes = path.join(path_to_data, "dm")
-    stepsizes = imap(
+    stepsizes = map(
             lambda s: (float(s),
                        path.join(path_to_stepsizes, s, "dm", "results")),
             os.listdir(path_to_stepsizes))
+
+    maxsize = max(imap(j.fst, stepsizes))
 
     # make the directory where we'll save the plots
     plot_dir = path.join(path_to_data, "plots")
@@ -637,7 +639,7 @@ def solved_vs_iterations_plots_pro(path_to_data,
         for (size, dm_data) in functions_by_stepsize:
             j.errprint("Plotting for size", size)
             ax.plot(dm_data[test["name"]], label="dm %f" % size,
-                    color=(size/1.2, 0.5, 0.5))
+                    color=(size/maxsize, 0.5, 0.5))
         fig.savefig(path.join(plot_dir, test["name"] + ".eps"))
         plt.close(fig) # close the figure to save memory
 
