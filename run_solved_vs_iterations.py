@@ -29,6 +29,7 @@ def main(args):
             i += 1
         else:
             print("Unrecognized argument:", args[i])
+            return
         i += 1
 
     dmt.solved_vs_iterations(out_dir, extra_settings={"dm":{"stepscale_constant":step_scale}})
