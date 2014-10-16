@@ -19,6 +19,7 @@ from itertools import repeat
 from matplotlib import pyplot as plt
 
 from dm_utils import unwrap_bench
+from dm_tests import simonf2
 
 import jerrington_tools as jt
 
