@@ -310,6 +310,7 @@ class dm_optimizer:
         res.njev    = self.njev
         res.nfev    = self.nfev
         res.lpos    = self.lpos
+        res.valsi   = map(lambda v: v.unbox, self.valsi)
         res.opt     = self
         return res
 
@@ -328,7 +329,7 @@ def sanitize_result(res):
             pass # exception-swallowing!
 
     map(safecopyattr, ["message", "status", "success", "nfev", "njev",
-        "lpos", "nit", "x", "fun"])
+        "lpos", "valsi", "nit", "x", "fun"])
     return r
 
 def minimize(f, x1, x2, **kwargs):
