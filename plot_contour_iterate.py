@@ -53,8 +53,10 @@ def plot_iterate(plot_dir, plot_path, lpos, test):
         return lambda x, y: f([x, y])
 
     f      = np.vectorize(nary2binary(eval(test["function"])))
-    xs     = jt.splat(jt.supply(np.linspace, {"num":500}))(
-            test["range"] or dmtc.sampler_defaults["range"])
+    xs     = jt.splat(jt.supply(
+            np.linspace,
+            {"num":jt.compose(dmtc.get_sample_count, dmtc.get_range_size)(test)}))(
+                test["range"] or dmtc.sampler_defaults["range"])
     X, Y   = np.meshgrid(xs, xs)
     Z      = f(X, Y)
 
