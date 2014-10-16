@@ -35,6 +35,9 @@ def iget_optimize_results(dir_path):
         yield jt.with_file(cp.load, p)
 
 def is_successful(res, test_info, experiment_settings):
+    """ A possible plotting criterion: whether the given optimization run found
+        the global optimum.
+        """
     if not hasattr(res, "fun"):
         return False
 
@@ -68,7 +71,8 @@ def main( (exp_dir_path, test) ):
     exp_dir = jt.mkdir_p(exp_dir_path)
 
     # we could use a constant function for True to plot everything
-    plot_criterion = is_successful
+    # or we can use is_successful to plot only runs that found the optimum
+    plot_criterion = jt.const(True)
 
     name, stats = dmt.experiment_task(
             (exp_dir, test, dmtc.optimizers["dm"], dmtc.poll_names) )
@@ -97,6 +101,6 @@ if __name__ == "__main__":
 
     exp_dir = make_experiment_dir()
 
-    pool = mp.Pool(4)
+    pool = mp.Pool(12)
 
     pool.map(main, zip(repeat(exp_dir), my_tests))
