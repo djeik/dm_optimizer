@@ -310,7 +310,7 @@ class dm_optimizer:
         res.njev    = self.njev
         res.nfev    = self.nfev
         res.lpos    = self.lpos
-        res.valsi   = map(lambda v: v.unbox, self.valsi)
+        res.valsi   = map(lambda v: v.unbox(), self.valsi)
         res.opt     = self
         return res
 
