@@ -48,7 +48,6 @@ def plot_iterate(plot_dir, plot_path, lpos, test):
             vectorization can be applied properly. """
         return lambda x, y: f([x, y])
 
-    print("Begin plotting:", test["name"], file=sys.stderr)
     f      = np.vectorize(nary2binary(eval(test["function"])))
     xs     = jt.splat(jt.supply(np.linspace, {"num":500}))(
             test["range"] or dmtc.sampler_defaults["range"])
@@ -64,8 +63,6 @@ def plot_iterate(plot_dir, plot_path, lpos, test):
     fig.savefig(path.join(plot_dir, plot_path))
     plt.close(fig)
 
-    print("End plotting:", test["name"], file=sys.stderr)
-
 def main( (exp_dir_path, test) ):
     exp_dir = jt.mkdir_p(exp_dir_path)
 
@@ -77,11 +74,13 @@ def main( (exp_dir_path, test) ):
     plot_dir = jt.mkdir_p(path.join(exp_dir, name, "plots"))
     rs = iget_optimize_results(path.join(exp_dir, name, "logs"))
 
+    print("Begin plotting:", test["name"])
     for i, r in enumerate(rs): # for each OptimizeResult object
         if plot_criterion(r, test, dmtc.experiment_defaults):
             plot_iterate(
                 plot_dir, "".join([name, '-', str(i), ".pdf"]),
                     r.lpos, test)
+    print("End plotting:", test["name"])
 
 if __name__ == "__main__":
     # we make a function that takes a dict, a key, and a value, and produces a
