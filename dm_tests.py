@@ -22,7 +22,6 @@ import numpy as np
 from numpy.linalg   import norm
 from scipy.optimize import basinhopping
 import deap.benchmarks as bench # various test functions
-from matplotlib.backends.backend_pdf import PdfPages
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
@@ -640,6 +639,7 @@ def solved_vs_iterations_plots_pro(path_to_data,
             ax.plot(dm_data[test["name"]], label="dm %f" % size,
                     color=(size/1.2, 0.5, 0.5))
         fig.savefig(path.join(plot_dir, test["name"] + ".eps"))
+        plt.close(fig) # close the figure to save memory
 
 def solved_vs_iterations_plots(data_dir,
         iterations_count=iterations_config["end"],
