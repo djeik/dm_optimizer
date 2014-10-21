@@ -176,7 +176,7 @@ class dm_optimizer:
             that is to be added to the iterate.
             """
         return steptaking_strategy(
-                value_box.from_yx(self.fv, self.pmin),
+                self.current_minimum,
                 destination)
 
     ###### GET BEST MINIMUM STRATEGIES ######
@@ -242,7 +242,7 @@ class dm_optimizer:
             random.
             """
         for m in self.vals:
-            if distinctness_strategy(self.pmin, m.x):
+            if distinctness_strategy(self.current_minimum.x, m.x):
                 return m
         return failure_strategy(self.vals)
 
