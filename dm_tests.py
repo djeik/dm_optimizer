@@ -446,14 +446,13 @@ def safe_set_iteration_count(optimizer, iterations_count):
         raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
 
 def solved_vs_iterations_inner_inner(args):
-    run_number, test, test_dir, optimizer_name, extra_optimizer_config = args
+    run_number, test, optimizer_name, extra_optimizer_config = args
 
     my_optimizer = optimizer_config_gen(
             dict(optimizers[optimizer_name]), test["optimum"],
             extra_optimizer_config)
     safe_set_iteration_count(my_optimizer, iterations_config["end"])
 
-    output_dir = path.join(test_dir, str(run_number))
     experiment_output = my_optimizer["optimizer"](
             eval(test["function"]), test["dimensions"],
             test["range"] or sampler_defaults["range"],
@@ -506,7 +505,6 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
             solved_vs_iterations_inner_inner,
             izip(xrange(experiment_settings["runs"]),
                  repeat(test),
-                 repeat(test_dir),
                  repeat(optimizer_name),
                  repeat(extra_optimizer_config)))
 
