@@ -386,12 +386,6 @@ class dm_optimizer:
                 self.valsi.append(self.current_minimum)
 
                 map(lambda x: self.logmsg(2, x.unbox()), self.vals[-3:])
-
-                # Most step-taking procedures are designed to avoid this
-                # situation, but we leave this as a precaution.
-                if norm(self.step) < self.tolerance:
-                    res.message.append("Fixed point found.")
-                    break
             else:
                 res.message.append("Maximum number of iterations reached.")
 
