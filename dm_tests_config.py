@@ -30,7 +30,7 @@ sa_defaults = {"niter":250}
 
 plots_config = {"individual_color":"0.6", "average_color":"blue"}
 
-contour_resolution = 1.0 / 16 # units per sample
+contour_resolution = 1.0 / 8 # units per sample
 
 def get_sample_count(units):
     """ For a given number of units, calculate the number of samples that should be taken along an interval.
