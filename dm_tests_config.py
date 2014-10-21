@@ -24,7 +24,7 @@ tests = map(lambda xs: dict(zip(
 poll_names = ["function_value", "best_minimum", "step_size"] # the names of the things extracted from the optimizer internal state
 
 sampler_defaults = {"dimensions":5, "range":(-100, 100)}
-experiment_defaults = {"runs":100, "success_threshold":0.001}
+experiment_defaults = {"runs":100, "success_threshold":0.001, "terminate_on_optimum":True}
 dm_defaults = {"max_iterations":250, "stepscale_constant":0.1, "tolerance":0.0001}
 sa_defaults = {"niter":250}
 
@@ -63,9 +63,15 @@ class dm_callback(solver_callback):
         super(dm_callback, self).__init__(*args, **kwargs)
 
     def __call__(self, solver):
-        self.vs.append( (solver.current_minimum.y, solver.vals[0].y, norm(solver.step)) )
-        if (solver.vals[0].y - self.optimum)**2 <= self.experiment_settings["success_threshold"]**2:
-            return True
+        self.vs.append( (
+            solver.current_minimum.y,
+            solver.vals[0].y,
+            norm(solver.step) ) )
+
+        if self.experiment_settings["terminate_on_optimum"]:
+            if (solver.vals[0].y - self.optimum)**2 \
+                    <= self.experiment_settings["success_threshold"]**2:
+                return True
 
 class sa_callback(solver_callback):
     def __init__(self, *args, **kwargs):
