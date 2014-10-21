@@ -39,8 +39,12 @@ def get_sample_count(units):
     return units / contour_resolution
 
 def get_range_size(test):
-    """ For a given test, get the size of its test range. """
-    return test["range"][1] - test["range"][0]
+    """ For a given test, get the size of its test range.
+        If the test's range is None (i.e. no specific range)
+        then the sampler's default range is used.
+        """
+    r = test["range"] or sampler_defaults["range"]
+    return r[1] - r[0]
 
 def get_test_by_name(tests, name):
     for test in tests:
