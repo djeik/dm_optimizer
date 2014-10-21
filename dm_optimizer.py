@@ -174,41 +174,6 @@ class dm_optimizer:
             """
         return self.step_toward(self.get_best_minimum())
 
-    def fv_after_step_from(self, origin, step):
-        return self.evalf(origin + step)
-
-    def fv_after_step_from_iterate(self, step):
-        """ Evaluate the score of the objective function after
-            hypothetically taking the given step from the iterate. """
-        return self.fv_after_step_from(self.nx1, step)
-
-    def fv_after_step_from_minimum(self, step):
-        """ Evaluate the score of the objective function after
-            hypothetically taking the given step from the minimum. """
-        return self.fv_after_step_from(self.pmin, step)
-
-    def all_possible_steps(self):
-        return map(lambda x: self.step_toward(x), self.vals)
-
-    def best_of_steps(self, steps):
-        return min(steps, key=self.fv_after_step_from_minimum)
-
-    def best_possible_step(self):
-        return self.best_of_steps(self.all_possible_steps())
-
-    def average_minima_spread(self):
-        """ For each minimum, calculate its average distance to all the other
-            minima, and average these averages.  This gives a measure of how
-            much of the search space was explored.
-            """
-        totals = []
-        for (i, mini) in enumerate(islice(self.vals, 0, len(self.vals)-1)):
-            norms = map(
-                    lambda minj: norm(mini.x - minj.x),
-                    islice(self.vals, i+1))
-            totals.append(sum(norms) / len(norms))
-        return sum(totals) / len(totals)
-
     def take_step(self, step):
         self.nx1 += step
         self.step = step
