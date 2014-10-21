@@ -56,7 +56,7 @@ class solver_callback(object):
     def __init__(self, optimum=float("nan"), experiment_settings=experiment_defaults):
         self.vs = []
         self.optimum = optimum
-        self.experiment_settings = experiment_defaults
+        self.experiment_settings = experiment_settings
 
 class dm_callback(solver_callback):
     def __init__(self, *args, **kwargs):
