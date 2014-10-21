@@ -171,6 +171,23 @@ class dm_optimizer:
                 destination)
 
     ###### GET BEST MINIMUM STRATEGIES ######
+    @staticmethod
+    def _distance_ratio(p1, p2, p3):
+        """ Calculates the distance between the p1 and p2 over the distance
+            between p2 and p3.
+            """
+        u = norm(p2 - p1)
+        v = norm(p3 - p2)
+        return u / v
+
+    def _distance_ratio_distinctness_strategy(self, p1, p2):
+        """ Determine whether two points are distinct from the point of view of
+            the iterate by taking the distance from the iterate to p1 over the
+            distance from p1 to p2.
+            """
+        r = dm_optimizer._distance_ratio(self.nx1, p1, p2)
+        return r >= 2 # TODO change into a variable and not a constant
+
     def _epsilon_threshold_distinctness_strategy(self, p1, p2):
         """ Determine whether two points are distinct from the point of view of
             the iterate by checking that the distance between the two points is
