@@ -194,7 +194,7 @@ class dm_optimizer:
             the iterate by taking the distance from the iterate to p1 over the
             distance from p1 to p2.
             """
-        r = dm_optimizer._distance_ratio(self.nx1, p1, p2)
+        r = dm_optimizer._distance_ratio(self.iterate, p1, p2)
         return r >= 2 # TODO change into a variable and not a constant
 
     def _epsilon_threshold_distinctness_strategy(self, p1, p2):
@@ -260,7 +260,7 @@ class dm_optimizer:
         """ Add the given value to the iterate, and set the step attribute to
             that value.
             """
-        self.nx1 += step
+        self.iterate += step
         self.step = step
 
     def minimize(self, x0, x1):
@@ -296,8 +296,8 @@ class dm_optimizer:
         self.vals.add(self.current_minimum)
         self.valsi.append(self.current_minimum)
 
-        self.nx1 = x1
-        self.lpos = [(self.evalf(self.nx1), self.nx1)]
+        self.iterate = x1
+        self.lpos = [(self.evalf(self.iterate), self.iterate)]
 
         # prepare the optimization result
         res         = OptimizeResult()
@@ -310,10 +310,10 @@ class dm_optimizer:
         # we can consider the number of failures. See the except block below.
         try:
             for self.iteration in xrange(1, self.max_iterations + 1):
-                self.logmsg(2, "Guess point for this iteration:", self.nx1)
+                self.logmsg(2, "Guess point for this iteration:", self.iterate)
 
                 # Perform a local minimization at the location of the iterate.
-                self.current_minimum = self.local_min(self.nx1)
+                self.current_minimum = self.local_min(self.iterate)
 
                 self.logmsg(6, "Minimum for this iteration f",
                         self.current_minimum.x, " = ", self.current_minimum.y,
@@ -322,7 +322,7 @@ class dm_optimizer:
                 # Add the current position of the iterate to the list of past
                 # positions, since the next step is to move the iterate.
                 self.lpos.append(
-                        (self.evalf(self.nx1), copy(self.nx1)))
+                        (self.evalf(self.iterate), copy(self.iterate)))
 
                 # If an iteration hook / callback is installed, we run it now.
                 if self.callback is not None:
