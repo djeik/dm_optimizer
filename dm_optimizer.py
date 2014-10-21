@@ -226,18 +226,18 @@ class dm_optimizer:
                     the SciPy's documentation of this class.
             """
         # Ensure that our lists are empty.
-        self.vals                       = sl.SortedList()
-        self.valsi                      = []
-        self.lpos                       = []
+        self.vals  = sl.SortedList()
+        self.valsi = []
+        self.lpos  = []
 
         # and that our counters are zero
-        self.nfev       = 0
-        self.njev       = 0
-        self.nhev       = 0
-        self.iteration  = 0
+        self.nfev      = 0
+        self.njev      = 0
+        self.nhev      = 0
+        self.iteration = 0
 
         # and the some other things are given zero initial values
-        self.step       = []
+        self.step = []
 
         # Get the first minimum
         x0min = self.local_min(x0)
@@ -247,15 +247,19 @@ class dm_optimizer:
         self.valsi.append(value_box( (f0, x0min) ))
 
         self.nx1 = x1
-        self.fv = f0
+        self.fv  = f0
         self.pmin = x0min
         self.lpos = [(self.evalf(self.nx1), self.nx1)]
 
         # prepare the optimization result
-        res = OptimizeResult()
+        res         = OptimizeResult()
         res.message = []
 
+        # The main optimizer loop
         self.logmsg(2, "Entering loop.")
+
+        # We bracket the whole optimizer loop in an exception handler, so that
+        # we can consider the number of failures. See the except block below.
         try:
             for self.iteration in xrange(1, self.max_iterations + 1):
                 self.logmsg(2, "Guess point for this iteration:", self.nx1)
@@ -265,17 +269,28 @@ class dm_optimizer:
                 self.logmsg(6, "Minimum for this iteration f", self.pmin,
                         " = ", self.fv, sep='')
 
-                # add the new position to the list of past positions
+                # Add the current position of the iterate to the list of past
+                # positions, since the next step is to move the iterate.
                 self.lpos.append(
                         (self.evalf(self.nx1), copy(self.nx1)))
 
+                # If an iteration hook / callback is installed, we run it now.
                 if self.callback is not None:
+                    # Callbacks can terminate the optimizer if they return True.
                     if self.callback(self):
                         res.message.append(
                                 "Callback function requested termination.")
                         break
 
+                # Run the step-taking procedure.
+                # The step-taking procedure is wrapped in an exception handler,
+                # since it is possible that the step-taker request termination
+                # of the optimizer via an exception.
                 try:
+                    # The current step-taking strategy is the best-minimum (aka
+                    # anchoring) fixed step-scale strategy, that will move the
+                    # iterate towards the best local minimum discovered so far,
+                    # scaling the step by a constant factor.
                     self.take_step(self.step_to_best_minimum())
                 except BestMinimumException as e:
                     res.message.append(str(e))
@@ -283,34 +298,61 @@ class dm_optimizer:
 
                 self.logmsg(2, "Took step ", self.step)
 
+                # Record the current local minimum into the sorted list of past
+                # minima. The best past minimum will be at index 0. We use
+                # value_box objects to enforce the ordering on the y-component
+                # only.
                 self.vals.add(value_box( (self.fv, copy(self.pmin)) ))
+
+                # Record the current local minimum into the list of past minima
+                # by time. This list presents the minima in the order that they
+                # were discovered. This list is useful for making plots, whereas
+                # the sorted by score list is useful for step-taking algorithms.
                 self.valsi.append(value_box( (self.fv, copy(self.pmin)) ))
+
                 map(lambda x: self.logmsg(2, x.unbox()), self.vals[-3:])
 
+                # Most step-taking procedures are designed to avoid this
+                # situation, but we leave this as a precaution.
                 if norm(self.step) < self.tolerance:
                     res.message.append("Fixed point found.")
                     break
             else:
                 res.message.append("Maximum number of iterations reached.")
 
+        # If an exception occurs, then we would like to log the exception before
+        # reraising it to the caller.
         except Exception as e:
             self.logmsg(-1, "An error occurred while optimizing:", e)
             raise e
 
-        # we reach this point if no exceptions have been raised and
-        # max_iterations has been exhausted
-        self.lpos.append(min(self.vals, key=lambda v: v.y).unbox())
-        self.fv, self.pmin = self.lpos[-1]
+        # we reach this point if no exceptions have been raised and one of the
+        # following criteria are met:
+        # 1) max_iterations has been exhausted
+        # 2) The callback requested termination of the optimizer.
+        # 3) The step length fell below the tolerance.
+        # 4) The step-taking procedure requested termination (or failed)
 
-        res.nit     = self.iteration
-        res.success = True
-        res.status  = 1
-        res.x       = self.pmin
-        res.fun     = self.fv
-        res.njev    = self.njev
-        res.nfev    = self.nfev
-        res.lpos    = self.lpos
+        # The final position is simply taken to be the best minimum found.
+        self.fv, self.pmin = min(self.vals, key=lambda v: v.y).unbox()
+
+        # Prepare the OptimizeResult object
+        res.nit     = self.iteration # Number of iterations
+        res.success = True # Whether the optimizer completed successfully
+        res.status  = 1 # The exit code of the optimizer
+        res.x       = self.pmin # The value of x at the optimum
+        res.fun     = self.fv   # The score (y value) at the optimum
+        res.nfev    = self.nfev # The number of function evaluations
+        res.njev    = self.njev # The number of evaluations of the Jacobian
+        res.lpos    = self.lpos # The list of positions of the iterate
+
+        # The past minimum, in order of discovery
         res.valsi   = map(lambda v: v.unbox(), self.valsi)
+
+        # The optimizer itself, in order to extract any other information.
+        # If the OptimizeResult needs to be pickled, then having the optimizer
+        # inside is undesirable, since it contains unpicklable objects. In that
+        # case, pass the result through the sanitize_result utility function.
         res.opt     = self
         return res
 
