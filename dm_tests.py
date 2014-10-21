@@ -573,7 +573,7 @@ def parse_solved_vs_iterations_data_for_one_optimizer(data_dir, runs_count):
 
     test_names = map(project("name"), tests)
 
-    d = dict(zipmap(lambda test_name: with_file(
+    d = dict(zipmap(lambda test_name: j.with_file(
             # make a function that takes a sequence, converting each element to
             # integer and then to a fraction
             j.map_c(j.compose(to_fraction, int)),
@@ -592,7 +592,7 @@ def parse_solved_vs_iterations_data(data_dir, runs_count):
 
     data = dict(map(
         lambda test: (test["name"], dict(map(
-            lambda optimizer: (optimizer, with_file(
+            lambda optimizer: (optimizer, j.with_file(
                 lambda f: map(
                     lambda x: (runs_count - int(x)) / float(runs_count),
                     f),

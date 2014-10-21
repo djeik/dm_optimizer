@@ -31,7 +31,13 @@ def ipad_lists(padding, matrix):
         vector.extend(repeat(padding, maxlen - len(vector)))
         yield vector
 
-imap_p = lambda p, t, f, xs: imap(lambda x: t(x) if p(x) else f(x), xs)
+def imap_p(pred, true_f, false_f, seq):
+    """ Lazily map a a predicate over a list, such that if the predicate is
+        satisfied by an element x, then t(x) is appended called, else f(x) is
+        called, where t and f are unary functions of the type of element in the
+        original list.
+        """
+    return imap(lambda x: (true_f if pred(x) else false_f)(x), seq)
 
 def pad_lists(*args):
     return list(ipad_lists(*args))
@@ -115,11 +121,6 @@ def ndiv(numerator, denominator, epsilon=1e-7):
         if denominator == 0:
             return 0;
     return numerator / float(denominator)
-
-def with_file(f, path, mode='r'):
-    """ Run a function on a file handle, using a with-statement. Useful in lambdas. """
-    with open(path, mode) as handle:
-        return f(handle)
 
 def zipmap(f, seq):
     """ Map a function over a sequence and zip that sequence with the results of the applications. """
