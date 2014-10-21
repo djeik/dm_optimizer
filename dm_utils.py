@@ -88,14 +88,26 @@ def ndiv(numerator, denominator, epsilon=1e-7):
     return numerator / float(denominator)
 
 def is_dm(optimizer):
+    """ Determine whether the given optimizer is the DM optimizer. """
     return optimizer["tag"] == "dm"
 
 def normalize(v, tolerance=1e-8):
+    """ Normalize the given vector. If its norm is below the tolerance (default 10^-8), then
+        it cannot be properly normalized without introducing too much numerical error, so
+        an exception is raised.
+        """
     if norm(v) < tolerance:
         raise ValueError("Vector too small to properly normalize.")
     return v / norm(v)
 
 def ndiv(numerator, denominator, epsilon=1e-7):
+    """ Perform a "safe" division.
+
+        If the denominator is a float and smaller than epsilon (default 10^-7),
+        then the result is zero, rather than a very large number, or infinity, or an exception.
+        If the denominator is an int and equal to zero, then the result is
+        zero, rather than an exception.
+        """
     if isinstance(denominator, float):
         if denominator**2 < epsilon**2:
             return 0;
