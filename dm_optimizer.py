@@ -141,7 +141,7 @@ class dm_optimizer:
             self.njev += res.njev
         if 'nhev' in res.keys():
             self.nhev += res.nhev
-        return res.x
+        return res.x, res.fun
 
     def calculate_step_scale(self, destination):
         """ Calculate the step scale to use in the direction of a given
@@ -240,8 +240,7 @@ class dm_optimizer:
         self.step = []
 
         # Get the first minimum
-        x0min = self.local_min(x0)
-        f0 = self.evalf(x0min)
+        x0min, f0 = self.local_min(x0)
 
         self.vals.add(value_box( (f0, x0min) ))
         self.valsi.append(value_box( (f0, x0min) ))
@@ -263,9 +262,10 @@ class dm_optimizer:
         try:
             for self.iteration in xrange(1, self.max_iterations + 1):
                 self.logmsg(2, "Guess point for this iteration:", self.nx1)
-                self.pmin = self.local_min(self.nx1)
-                # the function value at the local minimum for this iteration
-                self.fv = self.evalf(self.pmin)
+
+                # Perform a local minimization at the location of the iterate.
+                self.pmin, self.fv = self.local_min(self.nx1)
+
                 self.logmsg(6, "Minimum for this iteration f", self.pmin,
                         " = ", self.fv, sep='')
 
