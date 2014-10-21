@@ -44,7 +44,7 @@ def is_successful(res, test_info, experiment_settings):
     return (res.fun - test_info["optimum"]) ** 2 <= \
             experiment_settings["success_threshold"]**2
 
-def plot_iterate(plot_dir, plot_path, lpos, test):
+def plot_iterate(plot_dir, plot_path, lpos, valsi, test):
     """ Plot the iterate positions from the given list on top of a contour
         plot of the objective function from the given test. """
     def nary2binary(f):
@@ -60,11 +60,22 @@ def plot_iterate(plot_dir, plot_path, lpos, test):
     X, Y   = np.meshgrid(xs, xs)
     Z      = f(X, Y)
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10, 10), dpi=300)
     fig.suptitle(test["name"])
     ax  = fig.add_subplot(1, 1, 1)
     ax.contourf(X, Y, Z)
-    ax.plot(*zip(*map(jt.snd, lpos)))
+
+    iterate_x, iterate_y = zip(*map(jt.snd, lpos))
+    minimum_x, minimum_y = zip(*map(jt.snd, valsi))
+
+    iterate_color = np.linspace(0, 1, len(iterate_x))
+    minimum_color = np.linspace(0, 1, len(minimum_x))
+
+    for i in xrange(len(iterate_x) - 1):
+        ax.plot(iterate_x[i:i+2], iterate_y[i:i+2], color=(0, 0.5, iterate_color[i]))
+
+    for i in xrange(len(minimum_x) - 1):
+        ax.plot(minimum_x[i:i+2], minimum_y[i:i+2], color=(iterate_color[i], 0, 0.5))
 
     fig.savefig(path.join(plot_dir, plot_path))
     plt.close(fig)
@@ -86,7 +97,7 @@ def main( (exp_dir_path, test) ):
         if plot_criterion(r, test, dmtc.experiment_defaults):
             plot_iterate(
                 plot_dir, "".join([name, '-', str(i), ".pdf"]),
-                    r.lpos, test)
+                    r.lpos, r.valsi, test)
     print("End plotting:", test["name"])
 
 if __name__ == "__main__":
