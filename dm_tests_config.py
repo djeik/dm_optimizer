@@ -63,7 +63,7 @@ class dm_callback(solver_callback):
         super(dm_callback, self).__init__(*args, **kwargs)
 
     def __call__(self, solver):
-        self.vs.append( (solver.fv, solver.vals[0].y, norm(solver.step)) )
+        self.vs.append( (solver.current_minimum.y, solver.vals[0].y, norm(solver.step)) )
         if (solver.vals[0].y - self.optimum)**2 <= self.experiment_settings["success_threshold"]**2:
             return True
 

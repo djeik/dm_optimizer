@@ -25,7 +25,14 @@ class BestMinimumException(Exception):
 class value_box:
     """ A silly class that represents points (y, x) compared on the basis of
         their y-components only. """
+
+    @staticmethod
+    def from_yx(y, x):
+        """ Construct a value box from a scalar y and a vector x. """
+        return value_box( (y, x) )
+
     def __init__(self, (y, x)):
+        """ Construct a value_box from a tuple (y, x). """
         self.y = y
         self.x = x
 
@@ -131,7 +138,9 @@ class dm_optimizer:
                     for constraint in self.constraints if not constraint(x)])
 
     def local_min(self, x):
-        """ Find the local minimum nearest to the given point. """
+        """ Find the local minimum nearest to the given point.
+            The return value is a value_box.
+            """
         res = sopt.minimize(self.fun, x, **self.minimizer_kwargs)
         # it is unnecessary to manually increase self.nfev since self.fun
         # already does this for us.  still, we must manually increase
@@ -141,7 +150,7 @@ class dm_optimizer:
             self.njev += res.njev
         if 'nhev' in res.keys():
             self.nhev += res.nhev
-        return res.x, res.fun
+        return value_box.from_yx(res.fun, res.x)
 
     ###### STEPTAKING STRATEGIES ######
     def _constant_factor_reversing_steptake_strategy(self, origin, destination):
@@ -281,14 +290,13 @@ class dm_optimizer:
         self.step = []
 
         # Get the first minimum
-        x0min, f0 = self.local_min(x0)
+        #x0min, f0 = self.local_min(x0)
+        self.current_minimum = self.local_min(x0)
 
-        self.vals.add(value_box( (f0, x0min) ))
-        self.valsi.append(value_box( (f0, x0min) ))
+        self.vals.add(self.current_minimum)
+        self.valsi.append(self.current_minimum)
 
         self.nx1 = x1
-        self.fv  = f0
-        self.pmin = x0min
         self.lpos = [(self.evalf(self.nx1), self.nx1)]
 
         # prepare the optimization result
@@ -305,10 +313,11 @@ class dm_optimizer:
                 self.logmsg(2, "Guess point for this iteration:", self.nx1)
 
                 # Perform a local minimization at the location of the iterate.
-                self.pmin, self.fv = self.local_min(self.nx1)
+                self.current_minimum = self.local_min(self.nx1)
 
-                self.logmsg(6, "Minimum for this iteration f", self.pmin,
-                        " = ", self.fv, sep='')
+                self.logmsg(6, "Minimum for this iteration f",
+                        self.current_minimum.x, " = ", self.current_minimum.y,
+                        sep='')
 
                 # Add the current position of the iterate to the list of past
                 # positions, since the next step is to move the iterate.
@@ -343,13 +352,13 @@ class dm_optimizer:
                 # minima. The best past minimum will be at index 0. We use
                 # value_box objects to enforce the ordering on the y-component
                 # only.
-                self.vals.add(value_box( (self.fv, copy(self.pmin)) ))
+                self.vals.add(self.current_minimum)
 
                 # Record the current local minimum into the list of past minima
                 # by time. This list presents the minima in the order that they
                 # were discovered. This list is useful for making plots, whereas
                 # the sorted by score list is useful for step-taking algorithms.
-                self.valsi.append(value_box( (self.fv, copy(self.pmin)) ))
+                self.valsi.append(self.current_minimum)
 
                 map(lambda x: self.logmsg(2, x.unbox()), self.vals[-3:])
 
@@ -375,19 +384,20 @@ class dm_optimizer:
         # 4) The step-taking procedure requested termination (or failed)
 
         # The final position is simply taken to be the best minimum found.
-        self.fv, self.pmin = min(self.vals, key=lambda v: v.y).unbox()
+        # value_box is compared on y, so a key is not necessary for min
+        self.current_minimum = min(self.vals)
 
         # Prepare the OptimizeResult object
         res.nit     = self.iteration # Number of iterations
         res.success = True # Whether the optimizer completed successfully
         res.status  = 1 # The exit code of the optimizer
-        res.x       = self.pmin # The value of x at the optimum
-        res.fun     = self.fv   # The score (y value) at the optimum
+        res.x       = self.current_minimum.x # The value of x at the optimum
+        res.fun     = self.current_minimum.y # The value of y at the optimum
         res.nfev    = self.nfev # The number of function evaluations
         res.njev    = self.njev # The number of evaluations of the Jacobian
         res.lpos    = self.lpos # The list of positions of the iterate
 
-        # The past minimum, in order of discovery
+        # The past minima, in order of discovery, represented as tuples.
         res.valsi   = map(lambda v: v.unbox(), self.valsi)
 
         # The optimizer itself, in order to extract any other information.
