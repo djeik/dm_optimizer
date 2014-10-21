@@ -211,21 +211,21 @@ class dm_optimizer:
     ### END DISTINCTNESS STRATEGIES ###
 
     ### FAILURE STRATEGIES ###
-    def _worst_minimum_failure_strategy(self, minima):
+    def _worst_minimum_failure_strategy(self, local, minima):
         """ A failure strategy for the `get_best_minimum` method.
             This strategy returns the worst minimum from the list, in terms of
             score.
             """
         return minima[-1]
 
-    def _best_minimum_failure_strategy(self, minima):
+    def _best_minimum_failure_strategy(self, local, minima):
         """ A failure strategy for the `get_best_minimum` method.
             This strategy returns the best minimum form the list, in terms of
             score.
             """
         return minima[0]
 
-    def _exception_failure_strategy(self, minima):
+    def _exception_failure_strategy(self, local, minima):
         """ A failure strategy for the `get_best_minimum` method.
             This strategy simply raises a BestMinimumException.
             The minima given as arguments are therefore ignored.
@@ -240,21 +240,26 @@ class dm_optimizer:
             distinctness strategy. If no minima meet is distinctness criterion,
             then the given failure strategy is invoked.
 
-            The distinctness strategy is a decision procedure taking two points
-            and determining whether they are distinct (True) or not (False).
-            The x coordinate of the current local minimum is supplied as the
-            first argument, and the x coordinate of the each other minimum is
-            supplied as the second argument in turn.
+            The distinctness strategy is a decision procedure taking two
+            value_box objects and determining whether they are distinct (True)
+            or not (False) in the search space. The current local minimum is
+            supplied as the first argument, and a past minimum is supplied as
+            the second argument, but this should not be relied on: distinctness
+            strategies should be reflexive, obeying the following law.
 
-            The failure_strategy is a unary callable, given the entire list of
-            minima, sorted in ascending order of score. Possible strategies
-            include simply taking the best or worst minimum, or picking one at
-            random.
+                D(x, y) == D(y, x) for all x, y
+                    where D is a distinctness strategy
+
+            The failure_strategy is a binary callable, given the current minimum
+            and the entire list of past minima, sorted in ascending order of
+            score. Possible strategies include simply taking the best or worst
+            minimum by score, picking one at random, or choosing one according
+            to its distance from the current minimum.
             """
         for m in self.vals:
             if distinctness_strategy(self.current_minimum, m):
                 return m
-        return failure_strategy(self.vals)
+        return failure_strategy(self.current_minimum, self.vals)
 
     def step_to_best_minimum(self):
         """ Calculate a step towards the best past minimum. For what "best"
