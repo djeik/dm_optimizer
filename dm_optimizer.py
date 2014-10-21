@@ -252,9 +252,11 @@ class dm_optimizer:
             that the step is merely calculated, not taken. For that, pass the
             result of this method to `take_step`.
             """
-        return self.step_toward(self.get_best_minimum(
-            self._epsilon_threshold_distinctness_strategy, # parameterize !
-            self._exception_failure_strategy))
+        return self.step_toward(
+                self.get_best_minimum(
+                    self._epsilon_threshold_distinctness_strategy, # parameterize !
+                    self._exception_failure_strategy),
+                self._constant_factor_reversing_steptake_strategy)
 
     def take_step(self, step):
         """ Add the given value to the iterate, and set the step attribute to
