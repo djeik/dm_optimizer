@@ -445,23 +445,41 @@ def safe_set_iteration_count(optimizer, iterations_count):
     else:
         raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
 
-def solved_vs_iterations_inner_inner(args):
-    run_number, test, optimizer_name, extra_optimizer_config = args
+def run_test(test, optimizer_name, extra_optimizer_config={}):
+    """ Run the given test, an entry from the tests list in dm_tests_config, on
+        the given optimizer (as a string), with the given extra configuration.
 
+        The optimizer will be configured by optimizer_config_gen from
+        dm_tests_config, using any defaults for that particular optimizer first,
+        and then applying any entries from the extra configuration given here
+        as a parameter. This means that in case of conflict, extra_optimizer_config
+        wins.
+
+        This will fail if the deap.benchmarks is not imported as bench, and the
+        unwrap_bench function is not globally visible.
+        """ # TODO maybe use a local import of bench and unwrap_bench ?
     my_optimizer = optimizer_config_gen(
             dict(optimizers[optimizer_name]), test["optimum"],
             extra_optimizer_config)
     safe_set_iteration_count(my_optimizer, iterations_config["end"])
 
-    experiment_output = my_optimizer["optimizer"](
+    result = my_optimizer["optimizer"](
             eval(test["function"]), test["dimensions"],
             test["range"] or sampler_defaults["range"],
             my_optimizer["config"])
 
+    return result
+
+def solved_vs_iterations_inner_inner(args):
+    run_number, test, optimizer_name, extra_optimizer_config = args
+
+    r = run_test(test, optimizer_name, extra_optimizer_config)
+    my_optimizer = r.opt
+
     # since we record one v for each iter, and the optimizer will end if the
     # global minimum is found, the length of the vs represents how many
     # iterations it took to find the global minimum
-    v = len(my_optimizer["config"]["callback"].vs)
+    v = len(my_optimizer.callback.vs)
     j.errprint("Run #", run_number, ": ", v, sep='')
     return v
 
