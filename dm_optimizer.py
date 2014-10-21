@@ -254,7 +254,7 @@ class dm_optimizer:
             """
         return self.step_toward(
                 self.get_best_minimum(
-                    self._epsilon_threshold_distinctness_strategy, # parameterize !
+                    self._distance_ratio_distinctness_strategy, # parameterize !
                     self._exception_failure_strategy),
                 self._constant_factor_reversing_steptake_strategy)
 
