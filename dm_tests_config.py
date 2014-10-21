@@ -27,6 +27,7 @@ sampler_defaults = {"dimensions":5, "range":(-100, 100)}
 experiment_defaults = {"runs":100, "success_threshold":0.001, "terminate_on_optimum":True}
 dm_defaults = {"max_iterations":250, "stepscale_constant":0.1, "tolerance":0.0001}
 sa_defaults = {"niter":250}
+iterations_config = {"end":1000}
 
 plots_config = {"individual_color":"0.6", "average_color":"blue"}
 
@@ -103,7 +104,5 @@ def optimizer_config_gen(optimizer, optimum=float("nan"), extra_config={}):
     for (k, v) in extra_config.items():
         optimizer["config"][k] = v
     return optimizer
-
-iterations_config = {"start":25, "end":1000, "step":25}
 
 solved_vs_iterations_subproc_count = 4
