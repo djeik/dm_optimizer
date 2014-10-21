@@ -225,6 +225,14 @@ class dm_optimizer:
             """
         return minima[0]
 
+    def _furthest_minimum_failure_strategy(self, local, minima):
+        """ A failure strategy for the `get_best_minimum` method.
+            This strategy returns the past minimum that is the furthest away
+            from the local minimum, according to their location in the search
+            space, without paying attention to the score of the minima.
+            """
+        return max(minima, key=lambda m: norm(m.x - local.x))
+
     def _exception_failure_strategy(self, local, minima):
         """ A failure strategy for the `get_best_minimum` method.
             This strategy simply raises a BestMinimumException.
