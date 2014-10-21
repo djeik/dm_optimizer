@@ -143,28 +143,82 @@ class dm_optimizer:
             self.nhev += res.nhev
         return res.x, res.fun
 
-    def calculate_step_scale(self, destination):
-        """ Calculate the step scale to use in the direction of a given
-            destination in the search space. """
-        return self.stepscale_constant
-
-    def step_toward(self, destination):
-        """ Calculate a step toward a given destination using the standard
-            stepscale calculation method.  If the destination's
-            function-value is less good than the current one, the direction
-            is reversed.
+    ###### STEPTAKING STRATEGIES ######
+    def _constant_factor_reversing_steptake_strategy(self, origin, destination):
+        """ Calculate a step between the two points represented as
+            value_box objects by taking the direction to be the one towards
+            decreasing values of y, and multiplying by a fixed scale constant
+            (self.stepscale_constant)
             """
-        stepdir = (1 if destination.y <= self.fv else -1) * \
-                (destination.x - self.pmin)
-        return self.calculate_step_scale(destination) * stepdir
+        stepdir = (1 if destination.y <= origin.y else -1) * \
+                (destination.x - origin.x)
+        return self.stepscale_constant * stepdir
+    ###### END STEPTAKING STRATEGIES ######
 
-    def get_best_minimum(self):
-        """ Get the best past minimum that is at least a certain distance
-            away from the current minimum, stored in pmin. """
-        for m in self.vals:
-            if norm(self.step_toward(m)) >= self.tolerance:
-                return m
+    def step_toward(self, destination, steptaking_strategy):
+        """ Calculate a step from the current local minimum to the given
+            destination point using the given steptaking strategy. The current
+            local minimum is supplied as the first argument to the steptaking
+            strategy.
+
+            A steptaking strategy is a binary callable taking an origin and a
+            destination, both as value_box objects. The returned value must be
+            a vector, in the same number of dimensions as the search space,
+            that is to be added to the iterate.
+            """
+        return steptaking_strategy(
+                value_box.from_yx(self.fv, self.pmin),
+                destination)
+
+    ###### GET BEST MINIMUM STRATEGIES ######
+    def _epsilon_threshold_distinctness_strategy(self, p1, p2):
+        """ Determine whether two points are distinct from the point of view of
+            the iterate by checking that the distance between the two points is
+            greater than a fixed threshold called epsilon. This epsilon is
+            simply the tolerance (self.tolerance).
+            """
+        return norm(p2 - p1) >= self.tolerance
+
+    def _worst_minimum_failure_strategy(self, minima):
+        """ A failure strategy for the `get_best_minimum` method.
+            This strategy returns the worst minimum from the list.
+            """
+        return minima[-1]
+
+    def _best_minimum_failure_strategy(self, minima):
+        """ A failure strategy for the `get_best_minimum` method.
+            This strategy returns the best minimum form the list.
+            """
+        return minima[0]
+
+    def _exception_failure_strategy(self, minima):
+        """ A failure strategy for the `get_best_minimum` method.
+            This strategy simply raises a BestMinimumException.
+            The minima given as arguments are therefore ignored.
+            """
         raise BestMinimumException("There are no past minima.")
+    ###### END OF GET BEST MINIMUM STRATEGIES ######
+
+    def get_best_minimum(self, distinctness_strategy, failure_strategy):
+        """ Get the best distinct past minimum, according to the given
+            distinctness strategy. If no minima meet is distinctness criterion,
+            then the given failure strategy is invoked.
+
+            The distinctness strategy is a decision procedure taking two points
+            and determining whether they are distinct (True) or not (False).
+            The x coordinate of the current local minimum is supplied as the
+            first argument, and the x coordinate of the each other minimum is
+            supplied as the second argument in turn.
+
+            The failure_strategy is a unary callable, given the entire list of
+            minima, sorted in ascending order of score. Possible strategies
+            include simply taking the best or worst minimum, or picking one at
+            random.
+            """
+        for m in self.vals:
+            if distinctness_strategy(self.pmin, m.x):
+                return m
+        return failure_strategy(self.vals)
 
     def step_to_best_minimum(self):
         """ Calculate a step towards the best past minimum. For what "best"
@@ -172,9 +226,14 @@ class dm_optimizer:
             that the step is merely calculated, not taken. For that, pass the
             result of this method to `take_step`.
             """
-        return self.step_toward(self.get_best_minimum())
+        return self.step_toward(self.get_best_minimum(
+            self._epsilon_threshold_distinctness_strategy, # parameterize !
+            self._exception_failure_strategy))
 
     def take_step(self, step):
+        """ Add the given value to the iterate, and set the step attribute to
+            that value.
+            """
         self.nx1 += step
         self.step = step
 
