@@ -128,13 +128,6 @@ def zipmap(f, seq):
 def rebase_path(base_file, relative_file):
     return path.join(path.dirname(base_file), relative_file)
 
-def mkdir_p(dir):
-    if not path.exists(dir):
-        os.makedirs(dir)
-        return True
-    else:
-        return False
-
 def compose(f, g):
     return lambda *args, **kwargs: f(g(*args, **kwargs))
 

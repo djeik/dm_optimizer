@@ -161,7 +161,7 @@ def conduct_experiment(exp_dir, test, optimizer,
 
     if is_dm(optimizer):
         logs_dir = path.join(exp_dir, "logs")
-        mkdir_p(logs_dir)
+        j.mkdir_p(logs_dir)
 
     # construct the objective function from the string passed into the
     # subprocess
@@ -239,7 +239,7 @@ def experiment_task(args):
     j.errprint("Begin experiment:", test["name"])
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
-    mkdir_p(exp_dir)
+    j.mkdir_p(exp_dir)
 
     start_time = time()
     # Perform the experiment, rs is the actual OptimizeResult objects
@@ -392,7 +392,7 @@ def generate_all_dm_plots(edir):
 
     for function in function_dirs:
         plot_dir = path.join(edir, function) # where to save the plot
-        mkdir_p(plot_dir)
+        j.mkdir_p(plot_dir)
         for poll in poll_names:
             poll_pp = poll.replace("_", " ")
             data_path = path.join(dmdir, function, poll + ".txt")
@@ -508,11 +508,11 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
             A list whose value at index `i` is the number of unfinished runs
             still going at iteration i.
         """
-    mkdir_p(solver_dir)
+    j.mkdir_p(solver_dir)
 
-    #test_dir is date/optimizer/
+    #solver_dir is date/optimizer/
     test_dir = path.join(solver_dir, "data", test["name"])
-    mkdir_p(test_dir)
+    j.mkdir_p(test_dir)
     result_dir = path.join(solver_dir, "results")
 
     j.errprint("Running test: ", test["name"], "...", sep='')
@@ -616,7 +616,7 @@ def solved_vs_iterations_plots_pro(path_to_data,
 
     # make the directory where we'll save the plots
     plot_dir = path.join(path_to_data, "plots")
-    mkdir_p(plot_dir)
+    j.mkdir_p(plot_dir)
 
     # dict like D[stepsize][function_name] : list representing fraction
     # completed by time
@@ -664,7 +664,7 @@ def solved_vs_iterations_plots(data_dir,
         runs_count=experiment_defaults["runs"]):
     data = parse_solved_vs_iterations_data(data_dir, runs_count)
 
-    mkdir_p(path.join(data_dir, "solved_vs_iterations"))
+    j.mkdir_p(path.join(data_dir, "solved_vs_iterations"))
 
     for (func_name, each_optimizer) in data.items():
         fig = plt.figure()
