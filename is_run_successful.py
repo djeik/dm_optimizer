@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+""" A little script to determine from an OptimizeResult pickle whether that optimization run
+    was successful by checking that the final function value from that run is less than
+    the default success_threshold in difference with the desired optimum for that objective function.
+"""
+
 from __future__ import print_function
 
 from sys import argv as args, exit
