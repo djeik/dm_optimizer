@@ -27,9 +27,10 @@ from os import path
 
 from itertools import imap
 
-import dm_tests        as dmt
-import dm_tests_config as dmtc
-import dm_utils        as dmu
+import dm_tests         as dmt
+import dm_tests_config  as dmtc
+import dm_utils         as dmu
+import jerrington_tools as jt
 
 """ Curryable version of a function defined by
         lambda x, y: x == y
@@ -79,21 +80,25 @@ if __name__ == "__main__":
     if solver is None or test_name is None:
         print("Missing solver name or test name.", file=stderr)
 
+    # Construct the paths we'll be using.
+    solver_dir = path.join(out_dir, solver)
+    solver_results_dir = path.join(solver_dir, "results")
+
     extra_settings = {"dm":{"stepscale_constant":step_scale}}
     extra_settings = extra_settings[solver] if solver in extra_settings else {}
-    solver_dir = path.join(out_dir, solver)
+    test_result_path = path.join(solver_results_dir, test_name + ".csv")
     test = filter(lambda t: t["name"] == test_name, dmtc.tests)[0]
+
+    # make the output directory
+    jt.mkdir_p(solver_results_dir)
 
     alives_vs_t = dmt.solved_vs_iterations_inner(solver_dir, solver, test, extra_settings)
 
-    solver_results_dir = path.join(solver_dir, "results")
-    dmu.mkdir_p(solver_results_dir)
-    test_result_path = path.join(solver_results_dir, test_name + ".csv")
 
-    dmu.with_file(
+    jt.with_file(
             lambda f: [dmu.print_csv(count, file=f) for count in alives_vs_t],
             test_result_path, 'w')
 
-    dmu.with_file(
+    jt.with_file(
             lambda f: print(args[1:], file=f),
             path.join(solver_results_dir, "invocation-" + test_name + ".txt"), 'w')
