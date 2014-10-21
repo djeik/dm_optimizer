@@ -179,17 +179,18 @@ class dm_optimizer:
                 self.current_minimum,
                 destination)
 
-    ###### GET BEST MINIMUM STRATEGIES ######
     @staticmethod
     def _distance_ratio(p1, p2, p3):
         """ Calculates the distance between the p1 and p2 over the distance
-            between p2 and p3.
+            between p2 and p3. This is a helper function for the distance
+            ratio distinctness strategy.
             """
         u = norm(p2 - p1)
         v = norm(p3 - p2)
         return u / v
 
     def _distance_ratio_distinctness_strategy(self, p1, p2):
+    ### DISTINCTNESS STRATEGIES ###
         """ Determine whether two points are distinct from the point of view of
             the iterate by taking the distance from the iterate to p1 over the
             distance from p1 to p2.
@@ -202,18 +203,25 @@ class dm_optimizer:
             the iterate by checking that the distance between the two points is
             greater than a fixed threshold called epsilon. This epsilon is
             simply the tolerance (self.tolerance).
+            This strategy is fundamentally maladaptive, since it uses a
+            predetermined constant threshold, which must be determined per
+            objective function.
             """
         return norm(p2 - p1) >= self.tolerance
+    ### END DISTINCTNESS STRATEGIES ###
 
+    ### FAILURE STRATEGIES ###
     def _worst_minimum_failure_strategy(self, minima):
         """ A failure strategy for the `get_best_minimum` method.
-            This strategy returns the worst minimum from the list.
+            This strategy returns the worst minimum from the list, in terms of
+            score.
             """
         return minima[-1]
 
     def _best_minimum_failure_strategy(self, minima):
         """ A failure strategy for the `get_best_minimum` method.
-            This strategy returns the best minimum form the list.
+            This strategy returns the best minimum form the list, in terms of
+            score.
             """
         return minima[0]
 
@@ -221,9 +229,11 @@ class dm_optimizer:
         """ A failure strategy for the `get_best_minimum` method.
             This strategy simply raises a BestMinimumException.
             The minima given as arguments are therefore ignored.
+            This will typically cause the termination of the optimizer, except
+            in the case of an overarching exception-swallowing strategy.
             """
         raise BestMinimumException("There are no past minima.")
-    ###### END OF GET BEST MINIMUM STRATEGIES ######
+    ### END FAILURE_STRATEGIES ###
 
     def get_best_minimum(self, distinctness_strategy, failure_strategy):
         """ Get the best distinct past minimum, according to the given
