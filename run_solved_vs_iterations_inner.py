@@ -1,5 +1,24 @@
 #!/usr/bin/env python
 
+""" run_solved_vs_iteration_inner -- generate the fraction of runs solved versus time data.
+    usage: ./run_solved_vs_iterations_inner.py [(-o|--output-dir) <output directory>]
+             (-s|--step-scale) <step scale> --solver <solver> (-t|--test) <test>
+
+        Supported solvers: "sa" (Simulated Annealing) and "dm" (Difference Map)
+            The solvers are configured via the dm_tests_config.py file.
+            Ideally, make a new branch for your special test, edit dm_tests_config.py, and
+            commit your changes, before running your test.
+
+        Supported tests: These are the difference objective functions. For a complete list,
+            see dm_tests_config.py
+
+        Step scale: this only applies to the Difference Map solver, operating with the
+            fixed step scale strategy.
+
+        Output directory (optional): where to store the generated data. If no directory
+            is given, then "results/<the current date and time in ISO format>" is used.
+    """
+
 from __future__ import print_function
 from sys import argv as args
 from sys import exit, stderr
