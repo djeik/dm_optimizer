@@ -5,6 +5,7 @@ from __future__ import print_function
 import sys
 
 import dm_tests        as dmt
+import dm_utils        as dmu
 import dm_tests_config as dmtc
 import cPickle         as cp
 import deap.benchmarks as bench
@@ -22,10 +23,6 @@ from dm_utils import unwrap_bench
 from dm_tests import simonf2
 
 import jerrington_tools as jt
-
-def make_experiment_dir():
-    """ Create a directory `results/<datetime>` and return its path. """
-    return jt.mkdir_p(path.join("results", datetime.now().isoformat()))
 
 def iget_optimize_results(dir_path):
     """ Given a path to the log directory for a given test, this function
@@ -112,7 +109,7 @@ if __name__ == "__main__":
     # 2, and save the resulting list of dicts.
     my_tests = map(lambda d: replace_value(d, "dimensions", 2), dmtc.tests)
 
-    exp_dir = make_experiment_dir()
+    exp_dir = dmu.make_experiment_dir("contour-plots")
 
     pool = mp.Pool(12)
 

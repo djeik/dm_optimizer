@@ -12,6 +12,9 @@ import numpy        as np
 from scipy.optimize import basinhopping
 from itertools      import repeat, imap, chain, islice, izip
 from os             import path
+from datetime       import datetime
+
+import jerrington_tools as jt
 
 # deap's benchmarking functions return the values as 1-tuples
 # so we need to unpack element 0 which is the actual function-value.
@@ -48,6 +51,10 @@ errprint = mkfprint(sys.stderr)
 # Construct a function that takes arbitrarily many positional and keyword arguments, but ignores them, always returning the same value.
 const = lambda x: lambda *y, **kwargs: x
 transpose = lambda x: zip(*x)
+
+def make_experiment_dir(tag=""):
+    """ Create a directory `results/[<tag>/]<datetime>` and return its path. """
+    return jt.mkdir_p(path.join("results", tag, datetime.now().isoformat()))
 
 def randomr_guess(dim, r=(-1,1)):
     return np.array([random.uniform(*rr) for rr in repeat(r, dim)])
