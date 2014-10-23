@@ -123,7 +123,10 @@ if __name__ == "__main__":
     # 2, and save the resulting list of dicts.
     my_tests = map(lambda d: replace_value(d, "dimensions", 2), dmtc.tests)
 
-    exp_dir = dmu.make_experiment_dir("contour-plots")
+    if len(args) == 2:
+        exp_dir = args[1]
+    else:
+        exp_dir = dmu.make_experiment_dir("contour-plots")
 
     pool = mp.Pool(12)
 
