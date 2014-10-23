@@ -441,7 +441,7 @@ def safe_set_iteration_count(optimizer, iterations_count):
     else:
         raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
 
-def run_test(test, optimizer_name, extra_optimizer_config={}):
+def run_single_test(test, optimizer_name, extra_optimizer_config={}):
     """ Run the given test, an entry from the tests list in dm_tests_config, on
         the given optimizer (as a string), with the given extra configuration.
 
@@ -469,7 +469,7 @@ def run_test(test, optimizer_name, extra_optimizer_config={}):
 def solved_vs_iterations_inner_inner(args):
     run_number, test, optimizer_name, extra_optimizer_config = args
 
-    r = run_test(test, optimizer_name, extra_optimizer_config)
+    r = run_single_test(test, optimizer_name, extra_optimizer_config)
     my_optimizer = r.opt
 
     # since we record one v for each iter, and the optimizer will end if the
