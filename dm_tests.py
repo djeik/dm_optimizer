@@ -403,7 +403,7 @@ def generate_all_dm_plots(edir):
             ax.plot(xrange(1, len(average) + 1), average,
                     color=plots_config["average_color"])
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
-            fig.clear()
+            plt.close(fig)
 
 # PIPELINE
 def dm_plot_3d(edir, test_all_2d=False, show=False):
