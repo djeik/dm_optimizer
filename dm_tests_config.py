@@ -105,4 +105,4 @@ def optimizer_config_gen(optimizer, optimum=float("nan"), extra_config={}):
         optimizer["config"][k] = v
     return optimizer
 
-solved_vs_iterations_subproc_count = 4
+mp_subproc_count = 4

@@ -517,7 +517,7 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
 
     j.errprint("Running test: ", test["name"], "...", sep='')
 
-    pool = mp.Pool(solved_vs_iterations_subproc_count)
+    pool = mp.Pool(mp_subproc_count)
 
     data_points = pool.map(
             solved_vs_iterations_inner_inner,
