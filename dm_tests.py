@@ -279,8 +279,7 @@ def experiment_task(args):
             (success_rate, time_avg, nfev_avg, ndiv(nfev_avg, success_rate),
                 failures))
 
-def conduct_all_experiments_inner(edir, optimizer, names=poll_names,
-        subproc_count=4):
+def conduct_all_experiments_inner(edir, optimizer, names=poll_names):
     """ Inner function called by conduct_all_experiments that runs a given
         number of subprocesses to run each of the test objective functions
         listed in dm_tests_config.py, with a given set of experiment settings,
@@ -289,7 +288,7 @@ def conduct_all_experiments_inner(edir, optimizer, names=poll_names,
         folder with the name of the test in the "edir" directory, where any
         information relevant to the function will be saved.
         """
-    pool = mp.Pool(subproc_count)
+    pool = mp.Pool(mp_subproc_count)
 
     results = pool.map(experiment_task,
             izip(repeat(edir), tests, repeat(optimizer), repeat(names)))
