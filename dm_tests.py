@@ -236,7 +236,7 @@ def write_experiment_messages(exp_dir, rs):
 
 def experiment_task(args):
     edir, test, optimizer, names = args
-    j.errprint("Begin experiment:", test["name"])
+    j.errprint(test["name"], ": begin experiment.", sep='')
     # prepare the experiment directory
     exp_dir = edir + "/" + test["name"]
     j.mkdir_p(exp_dir)
@@ -252,7 +252,6 @@ def experiment_task(args):
     # if the given optimizer is dm, we know how to inspect its internals and
     # fish out useful information.
     if is_dm(optimizer):
-        start_time = time()
         # extract the vs list from each result; it contains those data that
         # fluctuate over time. We transpose this list of lists to line up
         # all the data for a given iteration
@@ -271,12 +270,9 @@ def experiment_task(args):
 
         # print the test-specific data to its own directory.
         write_experiment_data(exp_dir, complete_data)
-        end_time = time()
-        j.errprint(test["name"] + ":",
-                end_time - start_time, "seconds spent writing.")
 
     write_experiment_messages(exp_dir, rs)
-    j.errprint("End experiment:", test["name"])
+    j.errprint(test["name"], ": end experiment.", sep='')
     # the return value will get appended to the all_statistics of the master
     # process
     return (test["name"],
@@ -323,7 +319,7 @@ def conduct_all_experiments(edir, optimizer,
         print("A pipeline is running, with output to this folder.\n" +
               "DO NOT DELETE IT.\n" +
               "If the pipeline has stopped and this file is still present, "
-              " then the pipeline probably crashed.",
+              "then the pipeline probably crashed.",
               file=f)
 
     start_time = time()
@@ -515,7 +511,7 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
     j.mkdir_p(test_dir)
     result_dir = path.join(solver_dir, "results")
 
-    j.errprint("Running test: ", test["name"], "...", sep='')
+    j.errprint(test["name"], ": begin test.", sep='')
 
     pool = mp.Pool(mp_subproc_count)
 
@@ -526,7 +522,7 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
                  repeat(optimizer_name),
                  repeat(extra_optimizer_config)))
 
-    j.errprint("Done running test.")
+    j.errprint(test["name"], ": end test.", sep='')
 
     j.errprint("Parsing experiment data... ", end='')
 
