@@ -95,7 +95,7 @@ class dm_optimizer:
     def __init__(self, fun, max_iterations=2500, target=None, constraints=[],
             nonsatisfaction_penalty=0, tolerance=0.000001, verbosity=0,
             logfile=sys.stderr, callback=None, minimizer_kwargs={},
-            stepscale_constant=0.5):
+            stepscale_constant=0.5, minimum_distance_ratio=0.5):
         self._fun                       = fun
         self.max_iterations             = max_iterations
         self.constraints                = constraints
@@ -106,6 +106,7 @@ class dm_optimizer:
         self.minimizer_kwargs           = minimizer_kwargs
         self.callback                   = callback
         self.stepscale_constant         = stepscale_constant
+        self.minimum_distance_ratio     = minimum_distance_ratio
 
     def logmsg(self, priority, *args, **kwargs):
         """ Forward all arguments to print if the given priority is less than
@@ -196,7 +197,7 @@ class dm_optimizer:
             distance from p1 to p2.
             """
         r = dm_optimizer._distance_ratio(self.iterate, v1.x, v2.x)
-        return r >= 2 # TODO change into a variable and not a constant
+        return r >= self.minimum_distance_ratio
 
     def _epsilon_threshold_distinctness_strategy(self, v1, v2):
         """ Determine whether two points are distinct from the point of view of

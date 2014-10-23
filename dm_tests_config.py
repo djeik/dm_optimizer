@@ -25,7 +25,7 @@ poll_names = ["function_value", "best_minimum", "step_size"] # the names of the 
 
 sampler_defaults = {"dimensions":5, "range":(-100, 100)}
 experiment_defaults = {"runs":100, "success_threshold":0.001, "terminate_on_optimum":True}
-dm_defaults = {"max_iterations":250, "stepscale_constant":0.1, "tolerance":0.0001}
+dm_defaults = {"max_iterations":250, "stepscale_constant":0.1, "tolerance":0.000001, "minimum_distance_ratio":0.5}
 sa_defaults = {"niter":250}
 iterations_config = {"end":1000}
 
