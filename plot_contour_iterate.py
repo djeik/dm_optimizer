@@ -41,41 +41,27 @@ def is_successful(res, test_info, experiment_settings):
     return (res.fun - test_info["optimum"]) ** 2 <= \
             experiment_settings["success_threshold"]**2
 
-def plot_iterate(plot_dir, plot_path, lpos, valsi, test):
+def plot_iterate(ax, lpos, valsi, test):
     """ Plot the iterate positions from the given list on top of a contour
         plot of the objective function from the given test. """
-    def nary2binary(f):
-        """ Convert an n-ary function into a binary function, so that numpy
-            vectorization can be applied properly. """
-        return lambda x, y: f([x, y])
-
-    f      = np.vectorize(nary2binary(eval(test["function"])))
-    xs     = jt.splat(jt.supply(
-            np.linspace,
-            {"num":jt.compose(dmtc.get_sample_count, dmtc.get_range_size)(test)}))(
-                test["range"] or dmtc.sampler_defaults["range"])
-    X, Y   = np.meshgrid(xs, xs)
-    Z      = f(X, Y)
-
-    fig = plt.figure(figsize=(10, 10), dpi=300)
-    fig.suptitle(test["name"])
-    ax  = fig.add_subplot(1, 1, 1)
-    ax.contourf(X, Y, Z)
-
     iterate_x, iterate_y = zip(*map(jt.snd, lpos))
     minimum_x, minimum_y = zip(*map(jt.snd, valsi))
 
     iterate_color = np.linspace(0, 1, len(iterate_x))
     minimum_color = np.linspace(0, 1, len(minimum_x))
 
+
     for i in xrange(len(iterate_x) - 1):
-        ax.plot(iterate_x[i:i+2], iterate_y[i:i+2], color=(0, 0.5, iterate_color[i]))
+        ax.plot(
+            iterate_x[i:i+2],
+            iterate_y[i:i+2],
+            color=(0, 0.5, iterate_color[i]))
 
     for i in xrange(len(minimum_x) - 1):
-        ax.plot(minimum_x[i:i+2], minimum_y[i:i+2], color=(iterate_color[i], 0, 0.5))
-
-    fig.savefig(path.join(plot_dir, plot_path))
-    plt.close(fig)
+        ax.plot(
+            minimum_x[i:i+2],
+            minimum_y[i:i+2],
+            color=(iterate_color[i], 0, 0.5))
 
 def main( (exp_dir_path, test) ):
     exp_dir = jt.mkdir_p(exp_dir_path)
@@ -89,13 +75,41 @@ def main( (exp_dir_path, test) ):
     plot_dir = jt.mkdir_p(path.join(exp_dir, name, "plots"))
     rs = iget_optimize_results(path.join(exp_dir, name, "logs"))
 
-    print("Begin plotting:", test["name"])
+    print(test["name"], ": begin computing contours.", sep='')
+    # Create the points to plot for the function contours
+    f      = np.vectorize(dmu.nary2binary(eval(test["function"])))
+    xs     = jt.splat(jt.supply(
+            np.linspace,
+            {"num":jt.compose(dmtc.get_sample_count, dmtc.get_range_size)(test)}))(
+                test["range"] or dmtc.sampler_defaults["range"])
+    X, Y   = np.meshgrid(xs, xs)
+    Z      = f(X, Y)
+    print(test["name"], ": end computing contours.", sep='')
+
+    # Create the fiture
+    fig = plt.figure(figsize=(10, 10), dpi=300)
+    fig.suptitle(test["name"])
+    ax  = fig.add_subplot(1, 1, 1)
+
+    print(test["name"], ": begin plotting contours.", sep='')
+    # Plot the function contours
+    ax.contourf(X, Y, Z)
+    print(test["name"], ": end plotting contours.", sep='')
+
+    print(test["name"], ": begin plotting iterate and minima.", sep='')
     for i, r in enumerate(rs): # for each OptimizeResult object
         if plot_criterion(r, test, dmtc.experiment_defaults):
-            plot_iterate(
-                plot_dir, "".join([name, '-', str(i), ".pdf"]),
-                    r.lpos, r.valsi, test)
-    print("End plotting:", test["name"])
+            # Plot the iterate and minima, save the figure, and remove the lines plotted
+
+            plot_iterate(ax, r.lpos, r.valsi, test)
+            plot_name = "".join([name, '-', str(i), ".pdf"])
+            fig.savefig(path.join(plot_dir, plot_name))
+
+            # Remove all the lines we've put onto the plot
+            while ax.lines:
+                ax.lines.pop(0)
+
+    print(test["name"], ": end plotting iterate and minima.", sep='')
 
 if __name__ == "__main__":
     # we make a function that takes a dict, a key, and a value, and produces a

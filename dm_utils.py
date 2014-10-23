@@ -52,6 +52,11 @@ errprint = mkfprint(sys.stderr)
 const = lambda x: lambda *y, **kwargs: x
 transpose = lambda x: zip(*x)
 
+def nary2binary(f):
+    """ Convert an n-ary function into a binary function, so that numpy
+        vectorization can be applied properly. """
+    return lambda x, y: f([x, y])
+
 def make_experiment_dir(tag=""):
     """ Create a directory `results/[<tag>/]<datetime>` and return its path. """
     return jt.mkdir_p(path.join("results", tag, datetime.now().isoformat()))
