@@ -22,6 +22,8 @@ from matplotlib import pyplot as plt
 from dm_utils import unwrap_bench
 from dm_tests import simonf2
 
+from sys import argv as args
+
 import jerrington_tools as jt
 
 def iget_optimize_results(dir_path):
@@ -61,7 +63,7 @@ def plot_iterate(ax, lpos, valsi, test):
         ax.plot(
             minimum_x[i:i+2],
             minimum_y[i:i+2],
-            color=(iterate_color[i], 0, 0.5))
+            color=(minimum_color[i], 0, 0.5))
 
 def main( (exp_dir_path, test) ):
     exp_dir = jt.mkdir_p(exp_dir_path)
