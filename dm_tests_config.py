@@ -3,6 +3,8 @@
 import dm_utils as dmu
 from numpy.linalg import norm
 
+mp_subproc_count = 4
+
 minimization = 1
 maximization = -1
 
@@ -101,5 +103,3 @@ def optimizer_config_gen(optimizer, optimum=float("nan"), extra_config={}):
     for (k, v) in extra_config.items():
         optimizer["config"][k] = v
     return optimizer
-
-mp_subproc_count = 12
