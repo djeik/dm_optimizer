@@ -10,16 +10,13 @@ tests = map(lambda xs: dict(zip(
         ["name",        "function",                        "optimization_type", "dimensions", "range",      "optimum"], xs)),
         [("ackley",     "unwrap_bench(bench.ackley)",      minimization,        9,            (-15, 30),     0),  # best
         ("bohachevsky", "unwrap_bench(bench.bohachevsky)", minimization,        7,            (-100, 100),   0),  # best
-        ("cigar",       "unwrap_bench(bench.cigar)",       minimization,        10,           None,          0),  # large
         ("griewank",    "unwrap_bench(bench.griewank)",    minimization,        2,            (-600, 600),   0),  # best
         ("h1",          "unwrap_bench(bench.h1)",          maximization,        4,            (-100, 100),   2),  # required
-        ("himmelblau",  "unwrap_bench(bench.himmelblau)",  minimization,        4,            (-6, 6),       0),  # required
         ("rastrigin",   "unwrap_bench(bench.rastrigin)",   minimization,        6,            (-5.12, 5.12), 0),  # best
         ("rosenbrock",  "unwrap_bench(bench.rosenbrock)",  minimization,        7,            None,          0),  # large, but slow
         ("schaffer",    "unwrap_bench(bench.schaffer)",    minimization,        4,            (-100, 100),   0),  # best
         ("schwefel",    "unwrap_bench(bench.schwefel)",    minimization,        4,            (-500, 500),   0),  # best
-        ("simonf2",     "simonf2",                         minimization,        2,            (0,    200),   0),  # required
-        ("sphere",      "unwrap_bench(bench.sphere)",      minimization,        10,           None,          0)]) # large
+        ("simonf2",     "simonf2",                         minimization,        2,            (0,    200),   0)])  # required
 
 poll_names = ["function_value", "best_minimum", "step_size"] # the names of the things extracted from the optimizer internal state
 
