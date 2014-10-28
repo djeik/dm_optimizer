@@ -170,18 +170,27 @@ class dm_optimizer:
             destination, scaled by the percent difference between the values of
             y.
             """
-        # If the origin cost is too close to zero, then the scale will get
-        # weird. So we fall back to a constant stepscale in that case.
-        if origin.y**2 < self.tolerance**2:
+        def fallback():
             self.logmsg(1, "falling back to constant factor reversing "
                     "steptake strategy.")
             return self._constant_factor_reversing_steptake_strategy(
                     origin,
                     destination)
 
+        # If the origin cost is too close to zero, then the scale will get
+        # weird. So we fall back to a constant stepscale in that case.
+        if origin.y**2 < self.tolerance**2:
+            self.logmsg(1, "origin score too close to zero")
+            fallback()
+
         scale = (origin.y - destination.y) / origin.y
+
         direction = destination.x - origin.x
-        return scale * direction
+        step = scale * direction
+
+        if norm(step)**2 < self.tolerance**2:
+            self.logmsg(1, "step too small")
+            fallback()
     ###### END STEPTAKING STRATEGIES ######
 
     def step_toward(self, destination, steptaking_strategy):
