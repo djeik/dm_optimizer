@@ -207,7 +207,7 @@ class dm_optimizer:
             """
         u = norm(p2 - p1)
         v = norm(p3 - p2)
-        return u / v
+        return (u, v)
 
     ### DISTINCTNESS STRATEGIES ###
     def _distance_ratio_distinctness_strategy(self, v1, v2):
@@ -215,8 +215,8 @@ class dm_optimizer:
             the iterate by taking the distance from the iterate to p1 over the
             distance from p1 to p2.
             """
-        r = dm_optimizer._distance_ratio(self.iterate, v1.x, v2.x)
-        return r >= self.minimum_distance_ratio
+        u, v = dm_optimizer._distance_ratio(self.iterate, v1.x, v2.x)
+        return u >= v * self.minimum_distance_ratio
 
     def _epsilon_threshold_distinctness_strategy(self, v1, v2):
         """ Determine whether two points are distinct from the point of view of
