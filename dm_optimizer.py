@@ -287,6 +287,7 @@ class dm_optimizer:
         for m in self.vals:
             if distinctness_strategy(self.current_minimum, m):
                 return m
+        self.logmsg(2, "invoking failure strategy:", failure_strategy.__name__)
         return failure_strategy(self.current_minimum, self.vals)
 
     def step_to_best_minimum(self):
@@ -355,6 +356,7 @@ class dm_optimizer:
         # we can consider the number of failures. See the except block below.
         try:
             for self.iteration in xrange(1, self.max_iterations + 1):
+                self.logmsg(1, "ITERATION:", self.iteration)
                 self.logmsg(2, "Guess point for this iteration:", self.iterate)
 
                 # Perform a local minimization at the location of the iterate.
@@ -382,10 +384,6 @@ class dm_optimizer:
                 # since it is possible that the step-taker request termination
                 # of the optimizer via an exception.
                 try:
-                    # The current step-taking strategy is the best-minimum (aka
-                    # anchoring) fixed step-scale strategy, that will move the
-                    # iterate towards the best local minimum discovered so far,
-                    # scaling the step by a constant factor.
                     self.take_step(self.step_to_best_minimum())
                 except BestMinimumException as e:
                     res.message.append(str(e))
