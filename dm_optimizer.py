@@ -163,6 +163,25 @@ class dm_optimizer:
         stepdir = (1 if destination.y <= origin.y else -1) * \
                 (destination.x - origin.x)
         return self.stepscale_constant * stepdir
+
+    def _adaptive_steptake_strategy(self, origin, destination):
+        """ Calculate a step between the two points represented as value_box
+            objects by taking the vector between then, oriented towards the
+            destination, scaled by the percent difference between the values of
+            y.
+            """
+        # If the origin cost is too close to zero, then the scale will get
+        # weird. So we fall back to a constant stepscale in that case.
+        if origin.y**2 < self.tolerance**2:
+            self.logmsg(1, "falling back to constant factor reversing "
+                    "steptake strategy.")
+            return self._constant_factor_reversing_steptake_strategy(
+                    origin,
+                    destination)
+
+        scale = (origin.y - destination.y) / origin.y
+        direction = destination.x - origin.x
+        return scale * direction
     ###### END STEPTAKING STRATEGIES ######
 
     def step_toward(self, destination, steptaking_strategy):
