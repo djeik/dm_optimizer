@@ -191,6 +191,8 @@ class dm_optimizer:
         if norm(step)**2 < self.tolerance**2:
             self.logmsg(1, "step too small")
             fallback()
+
+        return step
     ###### END STEPTAKING STRATEGIES ######
 
     def step_toward(self, destination, steptaking_strategy):
