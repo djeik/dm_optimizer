@@ -422,7 +422,7 @@ class dm_optimizer:
 
         # The final position is simply taken to be the best minimum found.
         # value_box is compared on y, so a key is not necessary for min
-        self.current_minimum = min(self.vals)
+        self.current_minimum = self.vals[0]
 
         # Prepare the OptimizeResult object
         res.nit     = self.iteration # Number of iterations
