@@ -310,7 +310,7 @@ class dm_optimizer:
         return self.step_toward(
                 self.get_best_minimum(
                     self._distance_ratio_distinctness_strategy, # parameterize !
-                    self._furthest_minimum_failure_strategy),
+                    self._best_minimum_failure_strategy),
                 self._constant_factor_reversing_steptake_strategy)
 
     def take_step(self, step):
