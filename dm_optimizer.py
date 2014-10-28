@@ -299,7 +299,7 @@ class dm_optimizer:
                 self.get_best_minimum(
                     self._distance_ratio_distinctness_strategy, # parameterize !
                     self._furthest_minimum_failure_strategy),
-                self._constant_factor_reversing_steptake_strategy)
+                self._adaptive_steptake_strategy)
 
     def take_step(self, step):
         """ Add the given value to the iterate, and set the step attribute to
