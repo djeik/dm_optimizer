@@ -23,8 +23,8 @@ tests = map(lambda xs: dict(zip(
 poll_names = ["function_value", "best_minimum", "step_size"] # the names of the things extracted from the optimizer internal state
 
 sampler_defaults = {"dimensions":5, "range":(-100, 100)}
-experiment_defaults = {"runs":100, "success_threshold":0.001, "terminate_on_optimum":True}
-dm_defaults = {"max_iterations":250, "stepscale_constant":0.1, "tolerance":0.000001, "minimum_distance_ratio":1.5}
+experiment_defaults = {"runs":100, "success_threshold":0.001, "terminate_on_optimum":False}
+dm_defaults = {"max_iterations":250, "stepscale_constant":0.1, "tolerance":0.000001, "minimum_distance_ratio":3.0}
 sa_defaults = {"niter":250}
 iterations_config = {"end":1000}
 
