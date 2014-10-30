@@ -21,7 +21,6 @@ from matplotlib     import cm
 import numpy as np
 from numpy.linalg   import norm
 from scipy.optimize import basinhopping
-import deap.benchmarks as bench # various test functions
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
@@ -34,27 +33,16 @@ from dm_utils        import *
 
 import jerrington_tools as j
 
+import test_functions
+
 # Force line buffered output regardless of the type of device connected to
 # stdout This is necessary to avoid block buffering that becomes enabled by
 # default by the C library's stdio if it detects that a terminal is connected
 # to stdout.
 sys.stdout = os.fdopen(sys.__stdout__.fileno(), 'w', 1)
 
-def simon_f1(xy):
-    """ A test function crafted by Simon. It's minimum value is zero at the
-        origin.  It is only defined for two dimensions.
-        """
-    x, y = xy
-    return 0.2 * (x**2 + y**2) / 2 + 10 * sin(x+y)**2 + \
-            10 * sin(100 * (x - y))**2
-
-def simonf2(xs):
-    """ A variation on Simon's function. To prevent "origin-bias", which can be
-        a problem with optimizers, we simply shift over the function, so that the
-        minimum is now at (100, 100).
-        """
-    xy = xs - np.array([100, 100])
-    return simon_f1(xy)
+def get_test_function(name):
+    return getattr(test_functions, name)
 
 def plotf_3d(f, xyzs_, start=np.array([-1,-1]), end=np.array([1,1]),
         smoothness=1.0, autobound=True, autosmooth=True):
@@ -165,7 +153,7 @@ def conduct_experiment(exp_dir, test, optimizer,
 
     # construct the objective function from the string passed into the
     # subprocess
-    f_ = eval(test["function"]) # extract the function from the string
+    f_ = getattr(test_functions, test["function"]) # extract the function from the string
     optimization_type = test["optimization_type"] # a speedup
     f  = lambda x: optimization_type * f_(x) # handle maximization
 
@@ -290,8 +278,9 @@ def conduct_all_experiments_inner(edir, optimizer, names=poll_names):
         """
     pool = mp.Pool(mp_subproc_count)
 
-    results = pool.map(experiment_task,
-            izip(repeat(edir), tests, repeat(optimizer), repeat(names)))
+    results = pool.map(
+            experiment_task, izip(repeat(edir), test_functions.tests_list,
+                repeat(optimizer), repeat(names)))
 
     # collect the results of the subprocesses
     all_statistics  = [result[1] for result in results]
@@ -405,32 +394,9 @@ def generate_all_dm_plots(edir):
             fig.savefig(path.join(plot_dir, poll + ".pdf"))
             plt.close(fig)
 
-# PIPELINE
-def dm_plot_3d(edir, test_all_2d=False, show=False):
-    # get all those functions whose domains are 2D, or everything if
-    # test_all_2d is true.
-    tests_2d = filter(lambda fe: test_all_2d or fe["dimensions"] == 2, tests)
-
-    opts = dict(dm_defaults)
-    opts["verbosity"] = 0
-
-    for test in tests_2d:
-        f = eval(test["function"])
-        while True:
-            res = randomr_dm(f, 2, test["range"], opts)
-            if res.success: # TODO THIS IS SO SKETCHY ...
-                j.errprint("Completed", test["name"])
-                break
-        fig = plotf_3d(f, res.opt.lpos)
-        if show:
-            plt.show()
-
-        fig.savefig(path.join(edir, test["name"] + ".pdf"))
-
 def safe_set_iteration_count(optimizer, iterations_count):
-    """ For the given optimizer, generate a new configuration dictionary with
-        the number of iterations set to the given value. The new dictionary is
-        returned.
+    """ Set the number of iterations in the configuration dictionary of the
+        given optimizer to the given amount.
         """
     is_optimizer = lambda x: optimizer["tag"] == x
     if is_optimizer("dm"):
@@ -441,8 +407,9 @@ def safe_set_iteration_count(optimizer, iterations_count):
         raise ValueError("Unrecognized optimizer: %s." % optimizer["tag"])
 
 def run_single_test(test, optimizer_name, extra_optimizer_config={}):
-    """ Run the given test, an entry from the tests list in dm_tests_config, on
-        the given optimizer (as a string), with the given extra configuration.
+    """ Run the given test, an entry from tests_list in the test_functions
+        module, on the given optimizer (as a string), with the given extra
+        configuration.
 
         The optimizer will be configured by optimizer_config_gen from
         dm_tests_config, using any defaults for that particular optimizer first,
@@ -459,8 +426,8 @@ def run_single_test(test, optimizer_name, extra_optimizer_config={}):
     safe_set_iteration_count(my_optimizer, iterations_config["end"])
 
     result = my_optimizer["optimizer"](
-            eval(test["function"]), test["dimensions"],
-            test["range"] or sampler_defaults["range"],
+            get_test_function(test["function"]), test["dimensions"],
+            test["range"] or test_functions.SAMPLER_DEFAULT["range"],
             my_optimizer["config"])
 
     return result
@@ -495,7 +462,7 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
                 `optimizers` dict declared in the dm_tests_config module.
             test (dict):
                 the test to run the optimizer on. This should be an entry from
-                the `tests` list declared in the dm_tests_config module.
+                the `tests_list` declared in the test_functions module.
             extra_optimizer_config (dict):
                 extra configuration dict to pass to the solver.
 
@@ -545,7 +512,7 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
 
 def parse_solved_vs_iterations_data_for_one_optimizer(data_dir, runs_count):
     """ Return a dict associating each objective function in
-        dm_tests_config.tests to a list that represents the fraction of solved
+        test_functions.tests_list to a list that represents the fraction of solved
         runs versus time.
 
         Arguments:
@@ -566,7 +533,7 @@ def parse_solved_vs_iterations_data_for_one_optimizer(data_dir, runs_count):
     path_to_data = lambda func_name: path.join(data_dir, func_name + ".csv")
     to_fraction = lambda x: (runs_count - x) / float(runs_count)
 
-    test_names = map(project("name"), tests)
+    test_names = map(project("name"), test_functions.tests_list)
 
     d = dict(zipmap(lambda test_name: j.with_file(
             # make a function that takes a sequence, converting each element to
@@ -576,7 +543,8 @@ def parse_solved_vs_iterations_data_for_one_optimizer(data_dir, runs_count):
             path_to_data(test_name)),
         test_names))
 
-    assert(len(d.keys()) == len(test_names) and len(test_names) == len(tests))
+    assert(len(d.keys()) == len(test_names) and
+            len(test_names) == len(test_functions.tests_list))
 
     return d
 
@@ -593,7 +561,8 @@ def parse_solved_vs_iterations_data(data_dir, runs_count):
                     f),
                 path_to_data(optimizer, test["name"]))),
             optimizer_names))),
-        tests)) # :: Map FunctionName ([FractionSolved1], [FractionSolved2])
+        test_functions.tests_list))
+        # :: Map FunctionName ([FractionSolved1], [FractionSolved2])
     return data
 
 def solved_vs_iterations_plots_pro(path_to_data,
@@ -629,7 +598,7 @@ def solved_vs_iterations_plots_pro(path_to_data,
     sa_data = parse_solved_vs_iterations_data_for_one_optimizer(
             simulated_annealing_path, runs_count)
 
-    for test in tests:
+    for test in test_functions.tests_list:
         if not (test["name"] in sa_data and all(
                 imap(
                     lambda d: test["name"] in d,
