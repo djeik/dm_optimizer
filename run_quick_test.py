@@ -13,6 +13,8 @@ import dm_tests as dmt
 from sys import argv as args
 from sys import stderr, exit
 
+import test_functions
+
 if __name__ == "__main__":
     if len(args) < 3:
         p = lambda *args, **kwargs: print(*args, file=stderr, **kwargs)
@@ -20,5 +22,5 @@ if __name__ == "__main__":
         map(p, ["Insufficient arguments.",
             "usage: ./run_quick_test.py <test_name> <optimizer name>"])
         exit(1)
-    r = dmt.run_single_test(dmt.get_test_by_name(dmt.tests, args[1]), args[2])
+    r = dmt.run_single_test(test_functions.tests_dict[args[1]], args[2])
     print(r)

@@ -8,7 +8,6 @@ import dm_tests        as dmt
 import dm_utils        as dmu
 import dm_tests_config as dmtc
 import cPickle         as cp
-import deap.benchmarks as bench
 import multiprocessing as mp
 import numpy           as np
 
@@ -19,12 +18,11 @@ from itertools import repeat
 
 from matplotlib import pyplot as plt
 
-from dm_utils import unwrap_bench
-from dm_tests import simonf2
-
 from sys import argv as args
 
 import jerrington_tools as jt
+
+import test_functions
 
 def iget_optimize_results(dir_path):
     """ Given a path to the log directory for a given test, this function
@@ -79,12 +77,17 @@ def main( (exp_dir_path, test) ):
 
     print(test["name"], ": begin computing contours.", sep='')
     # Create the points to plot for the function contours
-    f      = np.vectorize(dmu.nary2binary(eval(test["function"])))
-    xs     = jt.splat(jt.supply(
-            np.linspace,
-            {"num":jt.compose(dmtc.get_sample_count, dmtc.get_range_size)(test)}))(
-                test["range"] or dmtc.sampler_defaults["range"])
-    X, Y   = np.meshgrid(xs, xs)
+    f      = np.vectorize(
+            dmu.nary2binary(getattr(test_functions, test["function"])))
+    xs1, xs2 = map(
+            lambda r: jt.splat(jt.supply(
+                np.linspace,
+                {"num":jt.compose(dmtc.get_sample_count, r)(test)}))(
+                test["range"] or list(repeat(
+                    test_functions.SAMPLER_DEFAULTS["range"],
+                    test["dimensions"] or test_function.SAMPLER_DEFAULTS["dimensions"]))),
+            dmtc.get_range_sizes(test))
+    X, Y   = np.meshgrid(xs1, ys1)
     Z      = f(X, Y)
     print(test["name"], ": end computing contours.", sep='')
 
@@ -114,16 +117,10 @@ def main( (exp_dir_path, test) ):
     print(test["name"], ": end plotting iterate and minima.", sep='')
 
 if __name__ == "__main__":
-    # we make a function that takes a dict, a key, and a value, and produces a
-    # new dict in which that key has been set to the given value.
-    def replace_value(d, k, v):
-        d_ = dict(d)
-        d_[k] = v
-        return d_
-
-    # We use this new function to set the `dimensions` entry for each test to
-    # 2, and save the resulting list of dicts.
-    my_tests = map(lambda d: replace_value(d, "dimensions", 2), dmtc.tests)
+    # Get all the functions defined for 2 dimensions.
+    my_tests = filter(
+            lambda t: t["dimensions"] == 2,
+            test_functions.tests_list)
 
     if len(args) == 2:
         exp_dir = args[1]
@@ -132,4 +129,4 @@ if __name__ == "__main__":
 
     pool = mp.Pool(12)
 
-    pool.map(main, zip(repeat(exp_dir), my_tests))
+    map(main, zip(repeat(exp_dir), my_tests))

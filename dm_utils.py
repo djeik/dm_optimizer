@@ -61,14 +61,16 @@ def make_experiment_dir(tag=""):
     """ Create a directory `results/[<tag>/]<datetime>` and return its path. """
     return jt.mkdir_p(path.join("results", tag, datetime.now().isoformat()))
 
-def randomr_guess(dim, r=(-1,1)):
-    return np.array([random.uniform(*rr) for rr in repeat(r, dim)])
+def randomr_guess(rs):
+    return np.array([random.uniform(*rr) for rr in rs])
 
-def randomr_dm(f, d, range, dm_args):
-    return dm.minimize(f, randomr_guess(d, range), randomr_guess(d, range), **dm_args)
+def randomr_dm(f, d, ranges, dm_args):
+    if d != len(ranges):
+        raise ValueError("dimension does not match number of ranges given")
+    return dm.minimize(f, randomr_guess(ranges), randomr_guess(ranges), **dm_args)
 
-def randomr_sa(f, d, range, sa_args):
-    r = basinhopping(f, randomr_guess(d, range), **sa_args)
+def randomr_sa(f, d, ranges, sa_args):
+    r = basinhopping(f, randomr_guess(range), **sa_args)
     r.success = True # TODO this needs to be something that sucks less.
     return r
 

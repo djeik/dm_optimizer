@@ -44,9 +44,11 @@
 
 """
 
-import dm_utils as dmu
+import numpy            as np
+import dm_utils         as dmu
 import jerrington_tools as jt
-import deap.benchmarks as bench
+import deap.benchmarks  as bench
+import sys
 
 from itertools import imap, repeat
 
@@ -62,11 +64,9 @@ MAXIMIZATION = -1.0
 # This will create the unwrapped versions of the DEAP functions, and assign
 # them in the current module.
 
-map(jt.splat(jt.uncurry2(jt.curry3(setattr)(__name__))),
-    jt.zipimap(
-        lambda x: dmu.unwrap_bench(getattr(bench, x)),
-        ["ackley", "bohachevsky", "griewank", "h1", "rastrigin",
-            "rosenbrock", "schaffer", "schwefel"]))
+for fun in ["ackley", "bohachevsky", "griewank", "h1", "rastrigin",
+        "rosenbrock", "schaffer", "schwefel"]:
+    setattr(sys.modules[__name__], fun, dmu.unwrap_bench(getattr(bench, fun)))
 
 def _list_repeat(n, t):
     return list(repeat(t, n))
@@ -170,6 +170,7 @@ def braninRCOS(xs):
 
 _braninRCOS_test = ("braninRCOS",
     "braninRCOS",
+    MINIMIZATION,
     2,
     [(-5, 10), (0, 15)],
     0.397887)
@@ -187,6 +188,7 @@ def easom(xs):
 _easom_test = ("easom",
     "easom",
     MINIMIZATION,
+    2,
     _list_repeat(2, (-10, 10)),
     -1.0)
 
@@ -215,8 +217,8 @@ def goldsteinprice(xs):
 
 _goldsteinprice_test = ("goldsteinprice",
     "goldsteinprice",
-    2,
     MINIMIZATION,
+    2,
     _list_repeat(2, (-2, 2)),
     3.0)
 
@@ -234,8 +236,8 @@ def schubert(xs):
 
 _schubert_test = ("schubert",
     "schubert",
-    2,
     MINIMIZATION,
+    2,
     _list_repeat(2, (-10, 10)),
     -186.7309)
 
@@ -250,8 +252,8 @@ def dejoung(xs):
 
 _dejoung_test = ("dejoung",
     "dejoung",
-    3,
     MINIMIZATION,
+    3,
     _list_repeat(3, (-5, 5)),
     0.0)
 
@@ -271,8 +273,8 @@ def colville(xs):
 
 _colville_test = ("colville",
     "colville",
-    4,
     MINIMIZATION,
+    4,
     None,
     0)
 
@@ -287,8 +289,8 @@ def dixon(xs):
 
 _dixon_test = ("dixon",
     "dixon",
-    10,
     MINIMIZATION,
+    10,
     None,
     0)
 
@@ -303,8 +305,8 @@ def _zakharov_n(n):
 def _zakharov_n_test(n):
     """ Construct a test entry for the Zakharov function of ``n'' variables.
         """
-    return ("zakharov" + str(n), "_".join(["zakharov", str(n)]), n,
-            MINIMIZATION, _list_repeat(n, (-5, 10)), 0)
+    return ("zakharov" + str(n), "_".join(["zakharov", str(n)]), MINIMIZATION,
+            n, _list_repeat(n, (-5, 10)), 0)
 
 zakharov_2  = _zakharov_n(2)
 zakharov_5  = _zakharov_n(5)
@@ -345,7 +347,7 @@ tests_list = map(
             zip(["name", "function", "optimization_type",
                     "dimensions", "range", "optimum"],
                 xs)),
-        tests)
+        _tests)
 
 # Convert the list into a dictionary, indexed by the name of the function.
 tests_dict = dict(map(
