@@ -425,9 +425,14 @@ def run_single_test(test, optimizer_name, extra_optimizer_config={}):
             extra_optimizer_config)
     safe_set_iteration_count(my_optimizer, iterations_config["end"])
 
+    d = test["dimensions"] or test_functions.SAMPLER_DEFAULTS["dimensions"]
+    r = test["range"] or list(
+            repeat(test_functions.SAMPLER_DEFAULTS["range"], d))
+
     result = my_optimizer["optimizer"](
-            get_test_function(test["function"]), test["dimensions"],
-            test["range"] or test_functions.SAMPLER_DEFAULT["range"],
+            get_test_function(test["function"]),
+            d,
+            r,
             my_optimizer["config"])
 
     return result
