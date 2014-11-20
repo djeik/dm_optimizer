@@ -98,7 +98,7 @@ _h1_test = ("h1",
     "h1",
     MAXIMIZATION,
     4,
-    [(-100, 100)],
+    _list_repeat(4, (-100, 100)),
     2)
 
 _rastrigin_test = ("rastrigin",
