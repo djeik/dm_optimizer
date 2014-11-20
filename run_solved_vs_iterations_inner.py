@@ -1,24 +1,5 @@
 #!/usr/bin/env python
 
-""" run_solved_vs_iteration_inner -- generate the fraction of runs solved versus time data.
-    usage: ./run_solved_vs_iterations_inner.py [(-o|--output-dir) <output directory>]
-             (-s|--step-scale) <step scale> --solver <solver> (-t|--test) <test>
-
-        Supported solvers: "sa" (Simulated Annealing) and "dm" (Difference Map)
-            The solvers are configured via the dm_tests_config.py file.
-            Ideally, make a new branch for your special test, edit dm_tests_config.py, and
-            commit your changes, before running your test.
-
-        Supported tests: These are the difference objective functions. For a complete list,
-            see dm_tests_config.py
-
-        Step scale: this only applies to the Difference Map solver, operating with the
-            fixed step scale strategy.
-
-        Output directory (optional): where to store the generated data. If no directory
-            is given, then "results/<the current date and time in ISO format>" is used.
-    """
-
 from __future__ import print_function
 from sys import argv as args
 from sys import exit, stderr
@@ -31,6 +12,27 @@ import dm_tests         as dmt
 import dm_tests_config  as dmtc
 import dm_utils         as dmu
 import jerrington_tools as jt
+
+USAGE = ['run_solved_vs_iteration_inner -- generate the fraction of runs solved versus time data.',
+'usage: ./run_solved_vs_iterations_inner.py [(-o|--output-dir) <output directory>]',
+'        (-s|--step-scale) <step scale> --solver <solver> (-t|--test) <test>',
+'   Supported solvers: "sa" (Simulated Annealing) and "dm" (Difference Map)',
+'       The solvers are configured via the dm_tests_config.py file.',
+'       Ideally, make a new branch for your special test, edit dm_tests_config.py, and',
+'       commit your changes, before running your test.',
+'   Supported tests: These are the difference objective functions. For a complete list,',
+'       see dm_tests_config.py',
+'   Step scale: this only applies to the Difference Map solver, operating with the',
+'       fixed step scale strategy.',
+'   Output directory (optional): where to store the generated data. If no directory',
+'       is given, then "results/<the current date and time in ISO format>" is used.']
+
+def show_usage():
+    map(lambda m: print(m, file=stderr), USAGE)
+
+def show_usage_die():
+    show_usage()
+    exit(1)
 
 """ Curryable version of a function defined by
         lambda x, y: x == y
@@ -72,6 +74,8 @@ if __name__ == "__main__":
         elif e(["-t", "--test"]):
             test_name = n()
             i += 1
+        elif e(["-h", "--help"]):
+            show_usage_die()
         else:
             print("Unrecognized argument:", args[i])
             exit(1)
@@ -79,6 +83,7 @@ if __name__ == "__main__":
 
     if solver is None or test_name is None:
         print("Missing solver name or test name.", file=stderr)
+        show_usage_die()
 
     # Construct the paths we'll be using.
     solver_dir = path.join(out_dir, solver)
