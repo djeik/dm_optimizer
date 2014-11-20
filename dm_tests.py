@@ -473,8 +473,6 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
     j.mkdir_p(solver_dir)
 
     #solver_dir is date/optimizer/
-    test_dir = path.join(solver_dir, "data", test["name"])
-    j.mkdir_p(test_dir)
     result_dir = path.join(solver_dir, "results")
 
     j.errprint(test["name"], ": begin test.", sep='')
@@ -509,6 +507,17 @@ def solved_vs_iterations_inner(solver_dir, optimizer_name, test,
     j.errprint("Done.")
 
     return alives_vs_t
+
+def solved_vs_iterations(solver_dir, optimizer_name, extra_optimizer_config,
+        experiment_settings=experiment_defaults):
+    """ Run the given optimizer on all the tests from the test_functions
+        module, to generate a `fraction of successful runs versus time` plot
+        for each of them. """
+    j.mkdir_p(solver_dir)
+
+    for test in test_functions.tests_list:
+        solved_vs_iterations_inner(solver_dir, optimizer_name, test,
+                extra_optimizer_config, experiment_settings)
 
 def parse_solved_vs_iterations_data_for_one_optimizer(data_dir, runs_count):
     """ Return a dict associating each objective function in
