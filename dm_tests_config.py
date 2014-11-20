@@ -20,8 +20,8 @@ contour_resolution = 1.0 / 8 # units per sample
 
 def get_sample_count(units):
     """ For a given number of units, calculate the number of samples that
-        should be taken along an interval.  This function is used particularly
-        when plotting the countours of an objective function. These functions
+        should be taken along an interval. This function is used particularly
+        when plotting the contours of an objective function. These functions
         are extremely bumpy, so high resolutions are needed to make good plots.
         """
     return units / contour_resolution
