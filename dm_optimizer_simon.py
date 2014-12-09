@@ -36,8 +36,21 @@ def elog(priority, *args, **kwargs):
         """
     log(priority, *args, file=sys.stderr, **kwargs)
 
+def dm(fun, niter, tol, dim=2, firsttargetratio=0.9, scal=0.05):
+    def newtarget(minima, best_minimum):
+        """ Create a new target value, either initially to start the
+            optimization, or later if the target is beaten.
+            """
+        return best[0] + scal * (best[0] - min(m[0] for m in minima))
 
-def dm(fun, niter, tol, dim=2, firsttargetratio=0.9):
+    def refreshtarget(minima):
+        """ Prevent the target from becoming stale.
+            Called after adding the current local minimum to the list of
+            minima.
+            """
+        best, second_best = heapq.nsmallest(2, minima, key=lambda m: m[0])
+        return best[0] + scal * (best[0] - second_best[0])
+
     log = elog # log to standard error.
 
     x0, x1 = np.random.sample(dim), np.random.sample(dim)
