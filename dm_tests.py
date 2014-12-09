@@ -518,11 +518,17 @@ def solved_vs_iterations(solver_dir, optimizer_name, extra_optimizer_config,
     """ Run the given optimizer on all the tests from the test_functions
         module, to generate a `fraction of successful runs versus time` plot
         for each of them. """
-    j.mkdir_p(solver_dir)
+    solver_results_dir = j.mkdir_p(path.join(solver_dir, optimizer_name))
 
     for test in test_functions.tests_list:
-        solved_vs_iterations_inner(solver_dir, optimizer_name, test,
+        test_result_path = path.join(solver_results_dir, test["name"] + ".csv")
+
+        alives_vs_t = solved_vs_iterations_inner(solver_dir, optimizer_name, test,
                 extra_optimizer_config, experiment_settings)
+
+        jt.with_file(
+                lambda f: [dmu.print_csv(count, file=f) for count in alives_vs_t],
+                test_result_path, 'w')
 
 def parse_solved_vs_iterations_data_for_one_optimizer(data_dir, runs_count):
     """ Return a dict associating each objective function in
