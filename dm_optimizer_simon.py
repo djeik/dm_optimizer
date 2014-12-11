@@ -36,8 +36,9 @@ def elog(priority, *args, **kwargs):
         """
     log(priority, *args, file=sys.stderr, **kwargs)
 
-def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05):
-    def newtarget(minima, best_minimum):
+def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
+        pseudo=1e-4, refresh_rate=10):
+    def newtarget(minima, best):
         """ Create a new target value, either initially to start the
             optimization, or later if the target is beaten.
             """
@@ -58,7 +59,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05):
     log(INFO, "starting positions: \n\tx0 = ", x0, "\n\tx1 =", x1, sep='')
 
     opt_result = opt.minimize(fun, x0)
-    local_min = (opt_result.fun, opt_result.x)
+    local_min = opt_result.fun, opt_result.x
     minima = [ ( fun(x0), x0 ), local_min ]
 
     target = firsttargetratio * local_min[0]
@@ -76,8 +77,8 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05):
         opt_result = opt.minimize(fun, iterate)
         local_min = (opt_result.fun, opt_result.x)
 
-        log(INFO, "found local minimum: \n\tx = ", local_min.x,
-                "\n\ty =", local_min.fun, sep='')
+        log(INFO, "found local minimum: \n\tx = ", local_min[1],
+                "\n\ty =", local_min[0], sep='')
 
         delta = local_min[0] - target
 
@@ -90,9 +91,9 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05):
         # Get the two past minima that are closest to the current local
         # minimum. We will choose just one based on tolerances.
         nearest = heapq.nsmallest(2, minima,
-                key=lambda m: np.linalg.norm(m.x - local_min[1]))
+                key=lambda m: np.linalg.norm(m[1] - local_min[1]))
 
-        if (nearest[0][1] - local_min[1])**2 < tol**2:
+        if np.linalg.norm(nearest[0][1] - local_min[1])**2 < tol**2:
             # If the nearest minimum is *too* close, then take the second
             # nearest one instead.
             nearest = nearest[1]
@@ -112,7 +113,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05):
         if (delta - delta_near)**2 < pseudo**2:
             step = (-delta / pseudo) * (local_min[1] - nearest[1])
         else:
-            -delta / (delta - delta_near) * (local_min[1] - nearest[1])
+            step = -delta / (delta - delta_near) * (local_min[1] - nearest[1])
 
         log(INFO, "calculated step: \n\tdx =", step)
 
