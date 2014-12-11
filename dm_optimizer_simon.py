@@ -36,6 +36,10 @@ def elog(priority, *args, **kwargs):
         """
     log(priority, *args, file=sys.stderr, **kwargs)
 
+def bh(fun, niter, dim=2):
+    x1 = np.random.sample(dim)
+    return dict(opt.basinhopping(fun, x1))
+
 def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
         pseudo=1e-4, refresh_rate=10):
     def newtarget(minima, best):
