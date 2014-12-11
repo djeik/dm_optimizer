@@ -71,6 +71,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
 
     log(DEBUG, "beginning optimization loop")
 
+    i = 0
     for i in xrange(niter):
         log(DEBUG, "iteration", i)
 
@@ -125,13 +126,16 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
         if np.linalg.norm(step) < tol:
             log(INFO, "found fixed point: \n\tx = ", local_min[1],
                     "\n\tx_near = ", nearest[1], sep='')
-            res = opt.OptimizeResult()
-            res.x = local_min[1]
-            res.fun = local_min[0]
-            res.status = 0
-            res.success = True
-            res.message = [ "Fixed point found" ]
-            return res
+            return {
+                "x": local_min[1],
+                "fun": local_min[0],
+                "status": 0,
+                "success": True,
+                "niter": i,
+                "message": [ "Fixed point found" ],
+                "iterate_positions": list(iterate_positions),
+                "minima": list(minima)
+            }
 
         if i % refresh_rate == 0:
             oldtarget = target
@@ -141,11 +145,14 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
                 log(INFO, "refreshed target: \n\tt =", target)
 
     (y, x) = min(minima, key=lambda m: m[0])
-    res = opt.OptimizeResult()
-    res.x = x
-    res.fun = y
-    res.message = [ "the requested number of iterations completed successfully" ]
-    res.success = True
-    res.status = 1
 
-    return res
+    return {
+        "x": x,
+        "fun": y,
+        "messages": ["the requested number of iterations completed successfully"],
+        "success": True,
+        "iterate": list(iterate_positions),
+        "minima": list(minima),
+        "niter": i,
+        "status": 1
+    }
