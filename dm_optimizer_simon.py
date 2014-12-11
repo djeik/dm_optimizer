@@ -36,7 +36,7 @@ def elog(priority, *args, **kwargs):
         """
     log(priority, *args, file=sys.stderr, **kwargs)
 
-def dm(fun, niter, tol, dim=2, firsttargetratio=0.9, scal=0.05):
+def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05):
     def newtarget(minima, best_minimum):
         """ Create a new target value, either initially to start the
             optimization, or later if the target is beaten.
@@ -87,56 +87,64 @@ def dm(fun, niter, tol, dim=2, firsttargetratio=0.9, scal=0.05):
             log(INFO, "target updated to: \n\ty =", target)
             delta = local_min[0] - target
 
-            # Get the two past minima that are closest to the current local
-            # minimum. We will choose just one based on tolerances.
-            nearest = heapq.nsmallest(2, minima,
-                    key=lambda m: np.linalg.norm(m.x - local_min[1]))
+        # Get the two past minima that are closest to the current local
+        # minimum. We will choose just one based on tolerances.
+        nearest = heapq.nsmallest(2, minima,
+                key=lambda m: np.linalg.norm(m.x - local_min[1]))
 
-            if (nearest[0][1] - local_min[1])**2 < tol**2:
-                # If the nearest minimum is *too* close, then take the second
-                # nearest one instead.
-                nearest = nearest[1]
-                log(DEBUG, "selecting second nearest past minimum instead of "
-                        "true nearest")
-            else:
-                # Otherwise we take the true nearest minimum as the one on
-                # which to perform the next computations.
-                nearest = nearest[0]
+        if (nearest[0][1] - local_min[1])**2 < tol**2:
+            # If the nearest minimum is *too* close, then take the second
+            # nearest one instead.
+            nearest = nearest[1]
+            log(DEBUG, "selecting second nearest past minimum instead of "
+                    "true nearest")
+        else:
+            # Otherwise we take the true nearest minimum as the one on
+            # which to perform the next computations.
+            nearest = nearest[0]
 
-            log(DEBUG, "nearest past minimum: \n\tx = ", nearest[1],
-                    "\n\ty =", nearest[0], sep='')
+        log(DEBUG, "nearest past minimum: \n\tx = ", nearest[1],
+                "\n\ty =", nearest[0], sep='')
 
-            # the distance to the target from the nearest past local minimum
-            delta_near = nearest[0] - target
+        # the distance to the target from the nearest past local minimum
+        delta_near = nearest[0] - target
 
-            if (delta - delta_near)**2 < pseudo**2:
-                step = (-delta / pseudo) * (local_min[1] - nearest[1])
-            else:
-                -delta / (delta - delta_near) * (local_min[1] - nearest[1])
+        if (delta - delta_near)**2 < pseudo**2:
+            step = (-delta / pseudo) * (local_min[1] - nearest[1])
+        else:
+            -delta / (delta - delta_near) * (local_min[1] - nearest[1])
 
-            log(INFO, "calculated step: \n\tdx =", step)
+        log(INFO, "calculated step: \n\tdx =", step)
 
-            iterate = iterate + step
+        iterate = iterate + step
 
-            minima.append(local_min)
-            iterate_positions.append(iterate)
+        minima.append(local_min)
+        iterate_positions.append(iterate)
 
-            if np.linalg.norm(step) < tol:
-                log(INFO, "found fixed point: \n\tx = ", local_min[1],
-                        "\n\tx_near = ", nearest[1], sep='')
-                res = opt.OptimizeResult()
-                res.x = local_min[1]
-                res.fun = local_min[0]
-                res.status = 1
-                res.success = True
-                res.message = [ "Fixed point found" ]
-                return res
+        if np.linalg.norm(step) < tol:
+            log(INFO, "found fixed point: \n\tx = ", local_min[1],
+                    "\n\tx_near = ", nearest[1], sep='')
+            res = opt.OptimizeResult()
+            res.x = local_min[1]
+            res.fun = local_min[0]
+            res.status = 0
+            res.success = True
+            res.message = [ "Fixed point found" ]
+            return res
 
-            if i % refresh_rate == 0:
-                oldtarget = target
-                target = refreshtarget(minima)
+        if i % refresh_rate == 0:
+            oldtarget = target
+            target = refreshtarget(minima)
 
-                if ((oldtarget - target) / target)**2 > 0.1**2: # TODO const
-                    log(INFO, "refreshed target: \n\tt =", target)
+            if ((oldtarget - target) / target)**2 > 0.1**2: # TODO const
+                log(INFO, "refreshed target: \n\tt =", target)
 
-        return min(minima, key=lambda m: m[0])
+    (y, x) = min(minima, key=lambda m: m[0])
+    res = opt.OptimizeResult()
+    res.x = x
+    res.fun = y
+    res.message = [ "the requested number of iterations completed successfully" ]
+    res.success = True
+    res.status = 1
+
+    return res
