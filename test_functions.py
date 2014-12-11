@@ -10,12 +10,27 @@
 
     The complete list of functions is the following.
 
-    < write test functions here >
+    ackley, bohachevsky, braninRCOS, colville, dejoung, dixon, easom,
+    goldsteinprice, griewank, h1, rastrigin, rosenbrock, schwefel, schubert,
+    shaffer, simonf2, zakharov_2, zakharov_5, zakharov_10
 
-    A list of the functions is provided with the name "tests". Each entry in the
-    list is a tuple of the following form.
+    A list of the functions is provided with the name "tests_list". Each entry
+    in the list is a dictionary of the form
 
-        (name, function name, sign, dimensions, ranges, optimal value)
+        "name": the human-readable name of the test function.
+        "function": the name of the function such that `getattr(tf,
+            function_name)` returns the callable to compute the function, where
+            tf is an alias for this module.
+        "optimization_type": the sign of the function, which is really the optimization
+            type, provided by the constants MAXIMIZATION and MINIMIZATION in this
+            module.
+        "dimensions": the number of dimensions to evaluate this function in.
+        "range": (misnomer) the range of values from which to draw input
+            values, for each dimensions. e.g. ranges[0] gives a tuple (min,
+            max) between which values should be chosen for that variable. This
+            is a misnomer because this is the *domain* of the function, not the
+            *range*.
+        "optimum": the optimal value that can be found.
 
     Whereas the name is simply a human-readable form of the function name
     (without spaces, and usually all lowercase), the function name is such that
