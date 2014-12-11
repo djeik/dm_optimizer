@@ -60,8 +60,6 @@
 """
 
 import numpy            as np
-import dm_utils         as dmu
-import jerrington_tools as jt
 import deap.benchmarks  as bench
 import sys
 
@@ -79,9 +77,12 @@ MAXIMIZATION = -1.0
 # This will create the unwrapped versions of the DEAP functions, and assign
 # them in the current module.
 
+def _unwrap_bench(f):
+    return lambda x: f(x)[0]
+
 for fun in ["ackley", "bohachevsky", "griewank", "h1", "rastrigin",
         "rosenbrock", "schaffer", "schwefel"]:
-    setattr(sys.modules[__name__], fun, dmu.unwrap_bench(getattr(bench, fun)))
+    setattr(sys.modules[__name__], fun, _unwrap_bench(getattr(bench, fun)))
 
 def _list_repeat(n, t):
     return list(repeat(t, n))
