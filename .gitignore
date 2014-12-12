@@ -7,3 +7,4 @@ jerrington_tools.py
 bin/
 lib/
 include/
+venv/
