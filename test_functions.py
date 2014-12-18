@@ -61,6 +61,7 @@
 
 import numpy            as np
 import deap.benchmarks  as bench
+import operator         as op
 import sys
 
 from itertools import imap, repeat
