@@ -151,7 +151,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
             oldtarget = target
             target = refreshtarget(minima)
 
-            if ((oldtarget - target) / target)**2 > 0.1**2: # TODO const
+            if target != 0 and ((oldtarget - target) / target)**2 > 0.1**2: # TODO const
                 log(INFO, "refreshed target: \n\tt =", target)
 
     (y, x) = min(minima, key=lambda m: m[0])
