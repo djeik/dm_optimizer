@@ -68,6 +68,8 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
     local_min = opt_result.fun, opt_result.x
     minima = [ ( fun(x0), x0 ), local_min ]
 
+    nfev = 1 + opt_result.nfev
+
     target = firsttargetratio * local_min[0]
 
     log(INFO, "target initialized to: \n\ty =", target)
@@ -82,6 +84,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
         log(DEBUG, "iteration", i)
 
         opt_result = opt.minimize(fun, iterate)
+        nfev += opt_result.nfev
         local_min = (opt_result.fun, opt_result.x)
 
         log(INFO, "found local minimum: \n\tx = ", local_min[1],
@@ -138,6 +141,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
                 "status": 0,
                 "success": True,
                 "niter": i,
+                "nfev": nfev,
                 "message": [ "Fixed point found" ],
                 "iterate": list(list(ip) for ip in iterate_positions),
                 "minima": list(map(lambda (a, b): (a, list(b)), minima)),
@@ -159,6 +163,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
         "success": True,
         "iterate": list(list(ip) for ip in iterate_positions),
         "minima": list(map(lambda (a, b): (a, list(b)), minima)),
+        "nfev": nfev,
         "niter": i,
         "status": 1
     }
