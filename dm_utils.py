@@ -16,6 +16,11 @@ from datetime       import datetime
 
 import jerrington_tools as jt
 
+def random_vector(dim=2, length=1):
+    """ Construct a vector in a random direction with the given length. """
+    ran_unit_ = np.random.sample(dim) - 0.5;
+    return ran_unit_ / np.linalg.norm(ran_unit_) * length
+
 # deap's benchmarking functions return the values as 1-tuples
 # so we need to unpack element 0 which is the actual function-value.
 def unwrap_bench(f):

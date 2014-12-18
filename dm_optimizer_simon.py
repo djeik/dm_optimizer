@@ -8,6 +8,9 @@ import numpy as np
 import scipy as sp
 import scipy.optimize as opt
 
+from itertools import repeat
+from dm_utils import random_vector
+
 # Different verbosity settings.
 QUIET = (None, -1)
 ERROR = ("ERROR", 0)
@@ -36,14 +39,14 @@ def elog(priority, *args, **kwargs):
         """
     log(priority, *args, file=sys.stderr, **kwargs)
 
-def bh(fun, niter, dim=2):
-    x1 = np.random.sample(dim)
+def bh(fun, niter, dim=2, distance=1):
+    x1 = random_vector(dim, distance)
     r = opt.basinhopping(fun, x1)
     r.x = list(r.x)
     return dict(r)
 
 def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
-        pseudo=1e-4, refresh_rate=10):
+        pseudo=1e-4, refresh_rate=10, distance=1):
     def newtarget(minima, best):
         """ Create a new target value, either initially to start the
             optimization, or later if the target is beaten.
@@ -60,7 +63,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
 
     log = elog # log to standard error.
 
-    x0, x1 = np.random.sample(dim), np.random.sample(dim)
+    x0, x1 = random_vector(dim, distance), random_vector(dim, distance)
 
     log(INFO, "starting positions: \n\tx0 = ", x0, "\n\tx1 =", x1, sep='')
 
