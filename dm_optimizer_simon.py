@@ -46,20 +46,23 @@ def bh(fun, niter, dim=2, distance=1):
     return dict(r)
 
 def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
-        pseudo=1e-4, refresh_rate=10, distance=1):
+        pseudo=1e-4, refresh_rate=10, distance=1, initial_target=None):
+    if initial_target is None:
+        def refreshtarget(minima):
+            """ Prevent the target from becoming stale.
+                Called after adding the current local minimum to the list of
+                minima.
+                """
+            best, second_best = heapq.nsmallest(2, minima, key=lambda m: m[0])
+            return best[0] + scal * (best[0] - second_best[0])
+    else:
+        refreshtarget = lambda *args, **kwargs: initial_target
+
     def newtarget(minima, best):
         """ Create a new target value, either initially to start the
             optimization, or later if the target is beaten.
             """
         return best[0] + scal * (best[0] - min(m[0] for m in minima))
-
-    def refreshtarget(minima):
-        """ Prevent the target from becoming stale.
-            Called after adding the current local minimum to the list of
-            minima.
-            """
-        best, second_best = heapq.nsmallest(2, minima, key=lambda m: m[0])
-        return best[0] + scal * (best[0] - second_best[0])
 
     log = elog # log to standard error.
 
@@ -73,14 +76,20 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
 
     nfev = 1 + opt_result.nfev
 
-    target = firsttargetratio * local_min[0]
+    if initial_target is None:
+        target = firsttargetratio * local_min[0]
+    else:
+        target = initial_target
 
-    log(INFO, "target initialized to: \n\ty =", target)
+    log(INFO, "target initialized to: \n\ty =", target,
+            "" if initial_target is None else "(set by user)")
 
     iterate = x1
     iterate_positions = [ x1 ]
 
     log(DEBUG, "beginning optimization loop")
+
+    messages = []
 
     i = 0
     for i in xrange(niter):
@@ -97,6 +106,11 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
 
         if delta < 0:
             # then we have beaten the target, and need to create a new one.
+            # unless we're operating in fixed-target mode, in which case we can
+            # die.
+            if initial_target is not None:
+                messages.append("fixed target beaten")
+                break
             target = newtarget(minima, local_min)
             log(INFO, "target updated to: \n\ty =", target)
             delta = local_min[0] - target
@@ -138,31 +152,22 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
         if np.linalg.norm(step) < tol:
             log(INFO, "found fixed point: \n\tx = ", local_min[1],
                     "\n\tx_near = ", nearest[1], sep='')
-            return {
-                "x": list(local_min[1]),
-                "fun": local_min[0],
-                "status": 0,
-                "success": True,
-                "niter": i,
-                "nfev": nfev,
-                "message": [ "Fixed point found" ],
-                "iterate": list(list(ip) for ip in iterate_positions),
-                "minima": list(map(lambda (a, b): (a, list(b)), minima)),
-            }
+            messages.append("found fixed point")
+            break # we can die happy
 
         if i % refresh_rate == 0:
             oldtarget = target
             target = refreshtarget(minima)
 
-            if target != 0 and ((oldtarget - target) / target)**2 > 0.1**2: # TODO const
-                log(INFO, "refreshed target: \n\tt =", target)
-
     (y, x) = min(minima, key=lambda m: m[0])
+
+    if i == niter:
+        messages.append("the requested number of iterations completed successfully")
 
     return {
         "x": list(x),
         "fun": y,
-        "messages": ["the requested number of iterations completed successfully"],
+        "messages": messages,
         "success": True,
         "iterate": list(list(ip) for ip in iterate_positions),
         "minima": list(map(lambda (a, b): (a, list(b)), minima)),
