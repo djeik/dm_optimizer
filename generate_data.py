@@ -83,6 +83,7 @@ def main(experiment_dir):
 
 if __name__ == "__main__":
     experiment_dir = None
+    experiment_dir_suffix = None
 
     i = 1
     while i < len(sys.argv):
@@ -91,10 +92,16 @@ if __name__ == "__main__":
         if arg == '-o':
             experiment_dir = n()
             i += 1
+        elif arg == '--suffix':
+            experiment_dir_suffix = n()
+            i += 1
         i += 1
 
     experiment_dir = experiment_dir or \
             jt.mkdir_p(path.join(
                 DEFAULT_RESULTS_DIR, str(datetime.now())))
+
+    if experiment_dir_suffix is not None:
+        experiment_dir += "-" + experiment_dir_suffix
 
     main(experiment_dir)
