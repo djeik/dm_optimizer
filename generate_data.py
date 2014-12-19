@@ -58,12 +58,16 @@ def do_test(args):
                         dist)
             else:
                 summary = {
-                        "average_time": average_time,
-                        "solver": solver_name,
-                        "test": test["name"],
-                        "niter": niter,
-                        "distance": dist,
-                        "run_count": RUNS_COUNT,
+                        "statistics": {
+                            "average_time": average_time
+                        },
+                        "settings": {
+                            "solver": solver_name,
+                            "test": test["name"],
+                            "niter": niter,
+                            "distance": dist,
+                            "run_count": RUNS_COUNT,
+                        },
                         "run_data": results
                 }
                 with open(path.join(dist_dir, "result"), 'w') as f:
