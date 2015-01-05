@@ -90,6 +90,12 @@ def do_test(kwargs):
     print("end", test["name"], sep='\t', file=sys.stderr)
 
 def main(kwargs):
+    """ Required keywords:
+            'experiment_dir' (path),
+            'solvers' (dict with keys 'name' and 'options' (options is passed
+                 as-is to the solver function),
+            'tests' (list of test dicts from the test_functions module)
+    """
     experiment_dir = kwargs["experiment_dir"]
 
     for solver in kwargs["solvers"]:
@@ -100,7 +106,6 @@ def main(kwargs):
                 "experiment_dir": experiment_dir,
                 "solver": solver
             }, kwargs["tests"]))
-
 
 if __name__ == "__main__":
     experiment_dir = None
