@@ -46,7 +46,7 @@ def statistics(input_path, force=False):
 
     # calculate average solution found
     if force or "average_solution" not in stats:
-        elog("Calculating average solution.",
+        elog(1, "Calculating average solution.",
                 "(forced)" if force and "average_solution" in stats else "")
         stats["average_solution"] = sum(d["fun"] for d in run_data) / len(run_data)
 
