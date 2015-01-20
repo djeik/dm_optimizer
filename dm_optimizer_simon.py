@@ -46,7 +46,9 @@ def bh(fun, niter, dim=2, distance=1):
     return dict(r)
 
 def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
-        pseudo=1e-4, refresh_rate=10, distance=1, initial_target=None):
+        pseudo=1e-4, refresh_rate=None, distance=1, initial_target=None,
+        startpoints=None):
+
     if initial_target is None:
         def refreshtarget(minima):
             """ Prevent the target from becoming stale.
@@ -56,6 +58,8 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
             best, second_best = heapq.nsmallest(2, minima, key=lambda m: m[0])
             return best[0] + scal * (best[0] - second_best[0])
     else:
+        # If we're operating in fixed target mode, then refreshtarget should
+        # just do nothing, i.e. just keep on returning the initial target.
         refreshtarget = lambda *args, **kwargs: initial_target
 
     def newtarget(minima, best):
@@ -66,7 +70,14 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
 
     log = elog # log to standard error.
 
-    x0, x1 = random_vector(dim, distance), random_vector(dim, distance)
+    if startpoints is None:
+        x0, x1 = random_vector(dim, distance), random_vector(dim, distance)
+    else:
+        if any(len(s) != dim for s in startpoints):
+            raise ValueError("the dimension of at least one of the given "
+                    "starting points does not match the problem dimension %d."
+                    % (dim,))
+        x0, x1 = startpoints
 
     log(INFO, "starting positions: \n\tx0 = ", x0, "\n\tx1 =", x1, sep='')
 
