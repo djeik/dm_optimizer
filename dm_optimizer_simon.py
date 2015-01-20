@@ -48,6 +48,73 @@ def bh(fun, niter, dim=2, distance=1):
 def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
         pseudo=1e-4, refresh_rate=None, distance=1, initial_target=None,
         startpoints=None):
+    """ Find the global minimum of a function using the Difference Map
+        algorithm.
+
+        Arguments:
+            fun (callable)
+                The objective function to minimize.
+
+            niter (int)
+                The number of iterations to solve over.
+
+            tol (float, default: 1e-8)
+                The tolerance for distinguishing nearby minima and.
+
+            dim (int, default: 2)
+                The dimensions of the search space. This is the size of the
+                input to `fun`.
+
+            first_target_ratio (float, default: 0.9)
+                The first local minimum is scaled by this value to yield the
+                initial target for the solver.
+
+            scal (float, default: 0.05)
+                Used to scale the target during target updates. Smaller values
+                result in a greedier optimizer.
+
+            pseudo (float, default: 1e-4)
+                Lower bound on how similar in function value the nearest local
+                minimum can be to the current local minimum. If they are too
+                similar, the calculated step will cause the iterate to jump too
+                far away.
+
+            refresh_rate (int, default: None)
+                How frequently to refresh the target, as a number of
+                iterations. With its default value None, a refresh rate is
+                calculated from the number of iterations so that the target is
+                refreshed 15 times.
+
+            distance (float, default: 1.0)
+                Starting points are taken this distance away from the origin
+                when the `startpoints` parameter is None.
+
+            initial_target (float, default: None)
+                When not None, the target value will remain fixed at the given
+                value and optimization will terminate if a local minimum whose
+                value is lower than this target is found.
+
+            startpoints (2-tuple of arrays of length `dim`, default: None)
+                The first of these two arrays is a guess for where the global
+                minimum is and the second is the starting location of the
+                iterate.
+
+        Return:
+            A dictionary with various data concerning the optimization is
+            produced.
+
+                   x: the minimizing argument
+                 fun: the global minimum
+            messages: notices about the optimization
+             success: whether the optimization completed
+             iterate: list of all the positions of the iterate
+              minima: list of all the local minima discovered
+                nfev: total number of function evaluations
+               niter: number of iterations elapsed before terminating
+              status: a numeric code representing the type of termination
+
+            This dictionary is serializable to JSON as is.
+            """
 
     if initial_target is None:
         def refreshtarget(minima):
