@@ -173,6 +173,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
     log(DEBUG, "beginning optimization loop")
 
     messages = []
+    steps = []
 
     i = 0
     for i in xrange(niter):
@@ -228,6 +229,7 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
         log(INFO, "calculated step: \n\tdx =", step)
 
         iterate = iterate + step
+        steps.append(list(step))
 
         minima.append(local_min)
         iterate_positions.append(iterate)
@@ -256,5 +258,6 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
         "minima": list(map(lambda (a, b): (a, list(b)), minima)),
         "nfev": nfev,
         "niter": i,
-        "status": 1
+        "status": 1,
+        "steps": steps
     }
