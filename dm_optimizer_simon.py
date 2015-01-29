@@ -135,6 +135,11 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
             """
         return best[0] + scal * (best[0] - min(m[0] for m in minima))
 
+    if refresh_rate is None:
+        refresh_rate = niter // 15
+        if refresh_rate == 0:
+            refresh_rate = 1000000 # TODO make this not stupid.
+
     log = elog # log to standard error.
 
     if startpoints is None:
