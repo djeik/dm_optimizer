@@ -1,5 +1,14 @@
-The preferred way to run a quick (ish) test of the optimizer is to make any changes to the configuration in dm_tests_config.py, commit those changes to git and then run run_reproducible_pipeline.py on the interesting steps. The steps are listed in .pipeline. Please read the documentation of Reproducible to see how run_reproducible_pipeline.py can be invoked.
+Difference Map Optimizer
+========================
 
-All scripts beginning with "submit" are meant to be run on Abacus. They will in turn invoke the Qmsub utility to schedule a job on the cluster. 
+DMO is a reasearch project aimed at developing a new method for the
+unconstrained global minimization of multivariate scalar functions. It is based
+on the Divide and Concur method for solving high-dimensional constraint
+satisfaction problems, which is itself using the Difference Map method.
 
-WARNING: If the code of dm_tests.py (or other modules that get imported therefrom) is changed while tests are running BAD THINGS WILL HAPPEN. VERY BAD THINGS. This doesn't always happen though. It depends on what you change, when you save your changes, and whether those changes include syntax errors ;). The problem is that dm_tests uses multiprocessing, which causes the script to be reloaded from disk when a new instance of the python interpreter is spawned to run the subprocess. Because of this, the usual faculty of linux whereby an executable can be replaced during execution is not available to us. It is advisable, therefore, that if you want to make some changes while a test is running, then you should simply copy all the code to another folder / clone the repo.
+In brief, DMO is an iterative method, performing a local minimization of the
+objective function at each step. The landscape of discovered minima is used to
+determine the next location at which a minimization should take place.
+
+The project is still in the research phase, and not ready for use. My goal is
+to release it as a package in both Mathematica and Python.
