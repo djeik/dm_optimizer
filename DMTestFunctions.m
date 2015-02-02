@@ -8,4 +8,7 @@ griewankN[v_List /; And @@ Map[NumberQ, v]] :=
         a
     ];
 
+rosenbrockN[v_List /; And @@ Map[NumberQ, v]] :=
+    Sum[(1 - v[[i]])^2 + 100 (v[[i+1]] - v[[i]]^2)^2, {i, 1, Length[v] - 1}];
+
 EndPackage[];
