@@ -14,4 +14,7 @@ rosenbrockN[v_List /; And @@ Map[NumberQ, v]] :=
 schwefelN[v_List /; And @@ Map[NumberQ, v]] :=
     418.9828872724339 Length[v] - Sum[v[[i]] Sin[Sqrt[Abs[v[[i]]]]], {i, 1, Length[v]}];
 
+schafferN[v_List /; And @@ Map[NumberQ, v]] :=
+    Sum[(v[[i]]^2 + v[[i+1]]^2)^0.25 (Sin[50 (v[[i]]^2 + v[[i+1]]^2)^0.10]^2 + 1), {i, 1, Length[v] - 1}];
+
 EndPackage[];
