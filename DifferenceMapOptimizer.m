@@ -6,13 +6,6 @@ DifferenceMapOptimizer::usage = "Optimize a given expression of some given varia
 
 Begin["Private`"];
 
-(* Convenience function for printing things out depending on how verbose we want to be, governed by a global verbosity level. *)
-verbosity = 0; (* By default, we don't want to see any messages except errors, whose priority levels should be negative. *)
-
-PrintLog[priority_, messages__] :=
-    If[priority <= verbosity,
-        Print[messages]];
-
 pseudo = 0.0001;
 firsttargetratio = 0.9;
 scal = 0.05; (* The greediness in updating target *)
@@ -23,7 +16,14 @@ the minimum distance between neighboring minima to be considered distinct. *)
 DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
     Module[{x0, x1, val1, iterate, sol1, localMinimum, delta, target, nnear, near,
             deltan, fnear, step, dim, iterationNumber, maxit, bestMinimum, pastMinima, lpos,
-            steps, messages},
+            steps, messages, verboseLevel},
+        (* Convenience function for printing things out depending on how verbose we want to be, governed by a global verbosity level. *)
+        verboseLevel = OptionValue[verbosity]; (* By default, we don't want to see any messages except errors, whose priority levels should be negative. *)
+
+        PrintLog[priority_, messages__] :=
+            If[priority <= verboseLevel,
+                Write[Streams["stderr"], messages]];
+
         (* Solutions produced by FindMinimum are of the form {functionValue,
         variableAssociation}, where the variableAssociation is a list like
         {x[[1]] -> 3, x[[2]] -> 5, etc.}
@@ -149,7 +149,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
     ]; (* End of downvars function *)
 
 (* Set up the default arguments for the downvars function. *)
-Options[DifferenceMapOptimizer] = {startpoint -> Automatic, refreshrate -> 10};
+Options[DifferenceMapOptimizer] = {startpoint -> Automatic, refreshrate -> 10, verbosity -> 0};
 
 End[];
 

@@ -12,4 +12,6 @@ tol = "tolerance" /. settings;
 dim = Length[startpoints[[1]]];
 vars = Table[xx[i], {i, 1, dim}];
 
-Export["!cat", DifferenceMapOptimizer[griewankN @ vars, vars, niter, tol,  startpoint -> startpoints], "JSON"];
+result = DifferenceMapOptimizer[griewankN @ vars, vars, niter, tol,  startpoint -> startpoints, verbosity -> 0]
+
+Export["!cat", result, "JSON"];
