@@ -15,7 +15,7 @@ depends on variables vars. The search will run for niter generations, tol is
 the minimum distance between neighboring minima to be considered distinct. *)
 DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
     Module[{x0, x1, val1, iterate, sol1, localMinimum, delta, target, nnear, near,
-            deltan, fnear, step, dim, iterationNumber, maxit, bestMinimum, pastMinima, lpos,
+            deltan, fnear, step, dim, iterationNumber, maxit, bestMinima, pastMinima, lpos,
             steps, messages, verboseLevel},
         (* Convenience function for printing things out depending on how verbose we want to be, governed by a global verbosity level. *)
         verboseLevel = OptionValue[verbosity]; (* By default, we don't want to see any messages except errors, whose priority levels should be negative. *)
@@ -137,12 +137,12 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         ]
 
         (* Return the best value so far *)
-        bestMinimum = pastMinima[[Ordering[pastMinima[[1 ;;, 1]], 1]]][[1]];
+        bestMinima = Sort[pastMinima, #1[[1]] < #2[[1]] &][[{1, 2}]];
         Return[{
             "iterate" -> lpos,
             "minima" -> pastMinima,
-            "x" -> bestMinimum[[2]],
-            "fun" -> bestMinimum[[1]],
+            "x" -> bestMinima[[2]],
+            "fun" -> bestMinima[[1]],
             "steps" -> steps,
             "messages" -> messages
         }];
