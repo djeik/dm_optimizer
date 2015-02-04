@@ -136,6 +136,8 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             PrintLog[1, "Returning best value; requested number of iterations completed."];
         ]
 
+        pastMinima; (* a nasty hack to force pastMinima to be fully evaluated. *)
+
         (* Return the best value so far *)
         bestMinima = Sort[pastMinima, #1[[1]] < #2[[1]] &][[{1, 2}]];
         Return[{
