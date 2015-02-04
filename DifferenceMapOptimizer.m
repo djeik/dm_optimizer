@@ -15,7 +15,7 @@ depends on variables vars. The search will run for niter generations, tol is
 the minimum distance between neighboring minima to be considered distinct. *)
 DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
     Module[{x0, x1, val1, iterate, sol1, localMinimum, delta, target, nnear, near,
-            deltan, fnear, step, dim, iterationNumber, maxit, bestMinima, pastMinima, lpos,
+            deltan, fnear, step, dim, iterationNumber, maxit, bestMinima, pastMinima, iteratePositions,
             steps, messages, verboseLevel},
         (* Convenience function for printing things out depending on how verbose we want to be, governed by a global verbosity level. *)
         verboseLevel = OptionValue[verbosity]; (* By default, we don't want to see any messages except errors, whose priority levels should be negative. *)
@@ -72,7 +72,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         PrintLog[3, "Initial target value: ", target];
 
         iterate = x1;
-        lpos = {iterate};
+        iteratePositions = {iterate};
         For[iterationNumber = 1, iterationNumber <= iterationCount, iterationNumber++,
             PrintLog[3, "Iteration #", iterationNumber];
             PrintLog[3, expr, " ", Table[{vars[[i]], iterate[[i]]}, {i, 1, dim}]];
@@ -112,7 +112,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
             AppendTo[steps, step]; (* Keep track of steps taken by the iterate. *)
             AppendTo[pastMinima, localMinimum]; (* Keep track of previously discovered local minima. *)
-            AppendTo[lpos, iterate]; (* Keep track of the iterate position over time. *)
+            AppendTo[iteratePositions, iterate]; (* Keep track of the iterate position over time. *)
 
             If[Norm[step]<tol,
                 AppendTo[messages, "Fixed-point found."];
@@ -139,7 +139,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         (* Return the best value so far *)
         bestMinima = Sort[pastMinima, #1[[1]] < #2[[1]] &][[{1, 2}]];
         Return[{
-            "iterate" -> lpos,
+            "iterate" -> iteratePositions,
             "minima" -> pastMinima,
             "x" -> bestMinima[[2]],
             "fun" -> bestMinima[[1]],
