@@ -145,10 +145,11 @@ def dm(fun, niter, tol=1e-8, dim=2, firsttargetratio=0.9, scal=0.05,
     if startpoints is None:
         x0, x1 = random_vector(dim, distance), random_vector(dim, distance)
     else:
-        if any(len(s) != dim for s in startpoints):
-            raise ValueError("the dimension of at least one of the given "
-                    "starting points does not match the problem dimension %d."
-                    % (dim,))
+        for s in startpoints:
+            if len(s) != dim:
+                raise ValueError("the dimension of the starting point ``%s'' "
+                        "does not match the dimension of the problem, %d."
+                        % (str(s), dim))
         x0, x1 = startpoints
 
     log(INFO, "starting positions: \n\tx0 = ", x0, "\n\tx1 =", x1, sep='')
