@@ -2,7 +2,8 @@
 
 BeginPackage["DifferenceMapOptimizer`"];
 
-DifferenceMapOptimizer::usage = "Optimize a given expression of some given variables, for a given number of iterations using a given tolerance.";
+DifferenceMapOptimizer::usage = "Optimize a given expression of some given" <>
+        "variables, for a given number of iterations using a given tolerance.";
 
 Begin["Private`"];
 
@@ -14,11 +15,15 @@ scal = 0.05; (* The greediness in updating target *)
 depends on variables vars. The search will run for niter generations, tol is
 the minimum distance between neighboring minima to be considered distinct. *)
 DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
-    Module[{x0, x1, val1, iterate, sol1, localMinimum, delta, target, nnear, near,
-            deltan, fnear, step, dim, iterationNumber, maxit, bestMinimum, pastMinima, iteratePositions,
-            steps, messages, verboseLevel},
-        (* Convenience function for printing things out depending on how verbose we want to be, governed by a global verbosity level. *)
-        verboseLevel = OptionValue[verbosity]; (* By default, we don't want to see any messages except errors, whose priority levels should be negative. *)
+    Module[{x0, x1, val1, iterate, sol1, localMinimum, delta, target, nnear,
+            near, deltan, fnear, step, dim, iterationNumber, maxit,
+            bestMinimum, pastMinima, iteratePositions, steps, messages,
+            verboseLevel},
+        (* Convenience function for printing things out depending on how
+        verbose we want to be, governed by a global verbosity level. *)
+        verboseLevel = OptionValue[verbosity];
+        (* By default, we don't want to see any messages except errors, whose
+        priority levels should be negative. *)
 
         PrintLog[priority_, messages__] :=
             If[priority <= verboseLevel,
@@ -28,7 +33,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         variableAssociation}, where the variableAssociation is a list like
         {x[[1]] -> 3, x[[2]] -> 5, etc.}
         solToVec converts this association into a vector like {3, 5, etc.}
-        *)
+        based on the variables to optimize on passed in through `vars`. *)
         solToVec[sol_] :=
             {sol[[1]], vars /. sol[[2]]};
 
@@ -52,20 +57,24 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         steps = {};
         messages = {};
 
-        PrintLog[3, "Dimensions: ", dim, "; variables: ", vars, "; iterations: ", iterationCount];
+        PrintLog[3, "Dimensions: ", dim, "; variables: ", vars,
+            "; iterations: ", iterationCount];
 
         (* Fetch the startpoint option, and if it's set to Automatic, use a
-        rewrite-rule to make some random vectors. *)
-        {x0, x1} = OptionValue[startpoint] /. Automatic -> Table[RandomReal[2, dim], {i, 2}];
+        rewrite-rule to make some random vectors in the range [0, 2). *)
+        {x0, x1} = OptionValue[startpoint] /.
+            Automatic -> Table[RandomReal[2, dim], {i, 2}];
 
         val1 = Quiet[
-            FindMinimum[expr, Table[{vars[[i]], x0[[i]]}, {i, 1, dim}], MaxIterations -> maxit]
+            FindMinimum[expr, Table[{vars[[i]], x0[[i]]}, {i, 1, dim}],
+                MaxIterations -> maxit]
         ];
 
         PrintLog[3, "Initial local minimum: ", val1];
 
-        (* Set two past minima: one being the startpoint for the first local minimization, the
-         * other actually being the minimum found starting from there. *)
+        (* Set two past minima: one being the startpoint for the first local
+        minimization, the other actually being the minimum found starting
+        from there. *)
         pastMinima = {{N[expr /. vecToRep[vars, x0]], x0}, solToVec[val1]};
         PrintLog[2, pastMinima];
         target = firsttargetratio * val1[[1]];
@@ -73,17 +82,21 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
         iterate = x1;
         iteratePositions = {iterate};
-        For[iterationNumber = 1, iterationNumber <= iterationCount, iterationNumber++,
+        For[iterationNumber = 1, iterationNumber <= iterationCount,
+                iterationNumber++,
             PrintLog[3, "Iteration #", iterationNumber];
-            PrintLog[3, expr, " ", Table[{vars[[i]], iterate[[i]]}, {i, 1, dim}]];
+            PrintLog[3, expr, " ",
+                Table[{vars[[i]], iterate[[i]]}, {i, 1, dim}]];
             PrintLog[2, "Iterate: ", iterate];
 
             localMinimum = Quiet[
-                FindMinimum[ReleaseHold[expr], Table[{vars[[i]], iterate[[i]]}, {i, 1, dim}], MaxIterations -> maxit]
+                FindMinimum[ReleaseHold[expr], Table[{vars[[i]], iterate[[i]]}, 
+                    {i, 1, dim}], MaxIterations -> maxit]
             ] // solToVec;
             PrintLog[2, localMinimum];
 
-            delta = localMinimum[[1]] - target; (* how far is the current local minimum from the target *)
+            (* how far is the current local minimum from the target *)
+            delta = localMinimum[[1]] - target;
 
             If [delta < 0, (* found solution, update target *)
                 target = newtarget[pastMinima[[1;;, 1]], localMinimum[[1]]];
@@ -92,7 +105,8 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
             near = Nearest[pastMinima[[1;;, 2]], localMinimum[[2]], 2];
 
-            (* If the true nearest one is too near, then take the second-nearest one. *)
+            (* If the true nearest one is too near, then take the
+            second-nearest one. *)
             If [Norm[(near[[1]] - localMinimum[[2]])] < tol,
                 nnear = near[[2]],
                 nnear = near[[1]]
@@ -101,22 +115,28 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             fnear = ReleaseHold[expr] /. vecToRep[vars, nnear];
             deltan = fnear - target;
 
-            PrintLog[2,"delta: ", delta, "; deltan: ", deltan, "; pmin: ", localMinimum[[2]], "; nnear: ", nnear, ";"];
+            PrintLog[2,"delta: ", delta, "; deltan: ", deltan,
+                "; pmin: ", localMinimum[[2]], "; nnear: ", nnear, ";"];
             If[(delta - deltan)^2 < pseudo^2,
                 PrintLog[1,"Past minimum too close in y. Using pseudo."];
                 step =- (delta / pseudo) * (localMinimum[[2]] - nnear),
-                step =- (delta / (delta - deltan)) * (localMinimum[[2]] - nnear)
+                step =- (delta / (delta - deltan))
+                    * (localMinimum[[2]] - nnear)
             ];
 
             iterate = iterate + step; (* Take the step. *)
 
-            AppendTo[steps, step]; (* Keep track of steps taken by the iterate. *)
-            AppendTo[pastMinima, localMinimum]; (* Keep track of previously discovered local minima. *)
-            AppendTo[iteratePositions, iterate]; (* Keep track of the iterate position over time. *)
+            (* Keep track of steps taken by the iterate. *)
+            AppendTo[steps, step];
+            (* Keep track of previously discovered local minima. *)
+            AppendTo[pastMinima, localMinimum];
+            (* Keep track of the iterate position over time. *)
+            AppendTo[iteratePositions, iterate];
 
             If[Norm[step]<tol,
                 AppendTo[messages, "Fixed-point found."];
-                PrintLog[1,"Step size really small (fixed-point). Returning current value."];
+                PrintLog[1,"Step size really small (fixed-point). ",
+                    "Returning current value."];
                 Break[];
             ];
 
@@ -133,10 +153,12 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
         If[iterationNumber > iterationCount,
             AppendTo[messages, "Requested number of iterations completed."]
-            PrintLog[1, "Returning best value; requested number of iterations completed."];
+            PrintLog[1, "Returning best value: ",
+                "requested number of iterations completed."];
         ]
 
-        pastMinima; (* a nasty hack to force pastMinima to be fully evaluated. *)
+        (* a nasty hack to force pastMinima to be fully evaluated. *)
+        pastMinima;
 
         (* Return the best value so far *)
         bestMinimum = Sort[pastMinima, #1[[1]] < #2[[1]] &][[1]];
@@ -148,10 +170,14 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             "steps" -> steps,
             "messages" -> messages
         }];
-    ]; (* End of downvars function *)
+    ]; (* End of DifferenceMapOptimizer function *)
 
 (* Set up the default arguments for the downvars function. *)
-Options[DifferenceMapOptimizer] = {startpoint -> Automatic, refreshrate -> 10, verbosity -> 0};
+Options[DifferenceMapOptimizer] = {
+        startpoint -> Automatic,
+        refreshrate -> 10,
+        verbosity -> 0
+};
 
 End[];
 
