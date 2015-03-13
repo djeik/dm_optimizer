@@ -18,7 +18,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
     Module[{x0, x1, val1, iterate, sol1, localMinimum, delta, target, nnear,
             near, deltan, fnear, step, dim, iterationNumber, maxit,
             bestMinimum, pastMinima, iteratePositions, steps, messages,
-            verboseLevel},
+            verboseLevel, nfev},
         (* Convenience function for printing things out depending on how
         verbose we want to be, governed by a global verbosity level. *)
         verboseLevel = OptionValue[verbosity];
@@ -56,6 +56,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         dim = Length[vars];
         steps = {};
         messages = {};
+        nfev = 0;
 
         PrintLog[3, "Dimensions: ", dim, "; variables: ", vars,
             "; iterations: ", iterationCount];
@@ -67,7 +68,8 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
         val1 = Quiet[
             FindMinimum[expr, Table[{vars[[i]], x0[[i]]}, {i, 1, dim}],
-                MaxIterations -> maxit]
+                MaxIterations -> maxit,
+                EvaluationMonitor -> Hold[nfev = nfev + 1]]
         ];
 
         PrintLog[3, "Initial local minimum: ", val1];
@@ -91,7 +93,8 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
             localMinimum = Quiet[
                 FindMinimum[ReleaseHold[expr], Table[{vars[[i]], iterate[[i]]}, 
-                    {i, 1, dim}], MaxIterations -> maxit]
+                    {i, 1, dim}], MaxIterations -> maxit,
+                    EvaluationMonitor -> Hold[nfev = nfev + 1]]
             ] // solToVec;
             PrintLog[2, localMinimum];
 
@@ -168,7 +171,8 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             "x" -> bestMinimum[[2]],
             "fun" -> bestMinimum[[1]],
             "steps" -> steps,
-            "messages" -> messages
+            "messages" -> messages,
+            "nfev" -> nfev
         }];
     ]; (* End of DifferenceMapOptimizer function *)
 
