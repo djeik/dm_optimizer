@@ -52,7 +52,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                 Return[vals[[best]] + scal * (vals[[best]] - vals[[second]])];
             ];
 
-        maxit = 20; (* Maximum number of iterations for the local minimizer. *)
+        maxit = 100; (* Maximum number of iterations for the local minimizer. *)
         dim = Length[vars];
         steps = {};
         messages = {};
@@ -71,6 +71,8 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                 MaxIterations -> maxit,
                 EvaluationMonitor -> Hold[nfev = nfev + 1]]
         ];
+
+        Print["first local minimum ", val1];
 
         PrintLog[3, "Initial local minimum: ", val1];
 
@@ -91,6 +93,8 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                 Table[{vars[[i]], iterate[[i]]}, {i, 1, dim}]];
             PrintLog[2, "Iterate: ", iterate];
 
+            (* localMinimum[[1]] is the minimum, localMinimum[[2]] is the arg
+            min. *)
             localMinimum = Quiet[
                 FindMinimum[ReleaseHold[expr], Table[{vars[[i]], iterate[[i]]}, 
                     {i, 1, dim}], MaxIterations -> maxit,
@@ -115,14 +119,22 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                 nnear = near[[1]]
             ];
 
+            (* Calculate the function-value of the nearest past minimum. *)
             fnear = ReleaseHold[expr] /. vecToRep[vars, nnear];
+            (* See how far away it is from the target. *)
             deltan = fnear - target;
 
             PrintLog[2,"delta: ", delta, "; deltan: ", deltan,
                 "; pmin: ", localMinimum[[2]], "; nnear: ", nnear, ";"];
+
+            (* If the past minimum is too close in y-value to the current past
+            minimum, then we're in a flat landscape; to avoid jumping too far
+            away, we use the pseudo value instead of the difference between
+            these deltas. *)
             If[(delta - deltan)^2 < pseudo^2,
                 PrintLog[1,"Past minimum too close in y. Using pseudo."];
-                step =- (delta / pseudo) * (localMinimum[[2]] - nnear),
+                step =- (delta / pseudo) 
+                    * (localMinimum[[2]] - nnear),
                 step =- (delta / (delta - deltan))
                     * (localMinimum[[2]] - nnear)
             ];

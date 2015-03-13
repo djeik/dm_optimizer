@@ -31,9 +31,12 @@ solvers = {
     {"dm", Module[{r = DifferenceMapOptimizer[
             #1 @ vars, vars, niter, tolerance, startpoint -> #2]}, r]&},
     {"sa",
-        Module[{r, t, nfev, fun = #1, shiftBy = #2},
+        (* shiftAmount takes just the first part of the second slot because the
+        passed in value is a pair of points, since DM requires a pair, whereas SA
+        requires just a single one. *)
+        Module[{r, t, nfev, fun = #1, shiftAmount = #2[[1]]},
             nfev = 0;
-            r = NMinimize[ShiftOverBy[shiftBy[[1]], fun][vars], vars,
+            r = NMinimize[ShiftOverBy[shiftAmount, fun][vars], vars,
                 EvaluationMonitor -> Hold[nfev = nfev + 1],
                 MaxIterations -> niter];
             { "fun" -> r[[1]], "x" -> vars /. r[[2]], "nfev" -> nfev
