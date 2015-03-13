@@ -23,10 +23,12 @@ if __name__ == '__main__':
                     float(len(function_runs))
             average_nfev = sum(r['nfev'] for r in function_runs) / \
                     float(len(function_runs))
+            min_solution = min(r['fun'] for r in function_runs)
             results[solver_name][function_name]['average_solution'] = \
                     average_solution
             results[solver_name][function_name]['average_nfev'] = \
                     average_nfev
+            results[solver_name][function_name]['min_solution'] = min_solution
 
     print json.dumps(results, indent=2)
 
