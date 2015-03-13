@@ -23,3 +23,5 @@ schafferN[v_List /; And @@ Map[NumberQ, v]] :=
         {i, 1, Length[v] - 1}];
 
 EndPackage[];
+
+(* vim: set filetype=mma: *)
