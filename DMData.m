@@ -18,7 +18,16 @@ niter = 100;
 (* Tolerance for distinguishing reals. *)
 tolerance = 10^-8;
 (* Do each function 50 times. *)
-runCount = 50;
+runCount = Environment["DM_RUNCOUNT"];
+If[runCount == $Failed, runCount = 50];
+
+(* Maximum number of iterations used internally by DM's local solver. *)
+innerNiter = Environment["DM_INNERNITER"];
+If[innerNiter === $Failed,
+    innerNiter = 100,
+    innerNiter = ParseNumber[innerNiter]
+];
+
 (* The range for sampling the first value values x_i *)
 range = {-250, 250};
 (* The distance that the second starting point is going to be from the first
@@ -29,7 +38,8 @@ vars = Table[xx[i], {i, 1, dim}];
 
 solvers = {
     {"dm", Module[{r = DifferenceMapOptimizer[
-            #1 @ vars, vars, niter, tolerance, startpoint -> #2]}, r]&},
+            #1 @ vars, vars, niter, tolerance, startpoint -> #2,
+            LocalMaxIterations -> innerNiter]}, r]&},
     {"sa",
         (* shiftAmount takes just the first part of the second slot because the
         passed in value is a pair of points, since DM requires a pair, whereas

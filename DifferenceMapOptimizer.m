@@ -52,7 +52,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                 Return[vals[[best]] + scal * (vals[[best]] - vals[[second]])];
             ];
 
-        maxit = 100; (* Maximum number of iterations for the local minimizer. *)
+        maxit = OptionValue[LocalMaxIterations];
         dim = Length[vars];
         steps = {};
         messages = {};
@@ -192,7 +192,8 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 Options[DifferenceMapOptimizer] = {
         startpoint -> Automatic,
         refreshrate -> 10,
-        verbosity -> 0
+        verbosity -> 0,
+        LocalMaxIterations -> 100
 };
 
 End[];
