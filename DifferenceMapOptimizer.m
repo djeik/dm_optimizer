@@ -72,8 +72,6 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                 EvaluationMonitor -> Hold[nfev = nfev + 1]]
         ];
 
-        Print["first local minimum ", val1];
-
         PrintLog[3, "Initial local minimum: ", val1];
 
         (* Set two past minima: one being the startpoint for the first local
@@ -188,7 +186,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         }];
     ]; (* End of DifferenceMapOptimizer function *)
 
-(* Set up the default arguments for the downvars function. *)
+(* Set up the default arguments for the DifferenceMapOptimizer function. *)
 Options[DifferenceMapOptimizer] = {
         startpoint -> Automatic,
         refreshrate -> 10,
