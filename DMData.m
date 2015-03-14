@@ -12,14 +12,32 @@ functions = {
 };
 
 (* Do everything with the same number of dimensions. *)
-dim = 4;
+dim = Environment["DM_DIMENSIONS"];
+If[dim === $Failed,
+    dim = 4,
+    dim = ParseNumber[dim]
+];
+
 (* Number of iterations for each optimization. *)
-niter = 100;
+niter = Environment["DM_NITER"];
+If[niter === $Failed,
+    niter = 100,
+    niter = ParseNumber[niter]
+];
+
 (* Tolerance for distinguishing reals. *)
-tolerance = 10^-8;
-(* Do each function 50 times. *)
+tolerance = Environment["DM_TOLERANCE"];
+If[tolerance === $Failed,
+    tolerance = 10^-8,
+    tolerance = ParseNumber[tolerance]
+];
+
+(* Number of times to run optimize each function. *)
 runCount = Environment["DM_RUNCOUNT"];
-If[runCount == $Failed, runCount = 50];
+If[runCount === $Failed,
+    runCount = 50,
+    runCount = ParseNumber[runCount]
+];
 
 (* Maximum number of iterations used internally by DM's local solver. *)
 innerNiter = Environment["DM_INNERNITER"];
@@ -29,11 +47,29 @@ If[innerNiter === $Failed,
 ];
 
 (* The range for sampling the first value values x_i *)
-range = {-250, 250};
+range = Environment["DM_RANGE"];
+If[range === $Failed,
+    range = {-1000, 1000},
+    range = ParseNumber /@ StringSplit[range, ","]
+];
+
 (* The distance that the second starting point is going to be from the first
 startpoint. *)
-secondPointDistance = 5;
-(* The names of the variables we're operating on (not really important) *)
+secondPointDistance = Environment["DM_STARTDISTANCE"];
+If[secondPointDistance === $Failed,
+    secondPointDistance = 5.0,
+    secondPointDistance = ParseNumber[secondPointDistance]
+];
+
+(* The solvers to collect data for. *)
+solversToDo = Environment["DM_SOLVERS"];
+If[solversToDo === $Failed,
+    solversToDo = {"dm", "sa"},
+    solversToDo = StringSplit[solversToDo, ","]
+];
+
+(* The names of the variables we're operating on (not really important),
+provided we're consistent.*)
 vars = Table[xx[i], {i, 1, dim}];
 
 solvers = {
@@ -86,7 +122,7 @@ results = MapThread[
         Write[Streams["stderr"], "### Solver: ", solverName];
         solverName -> resultsPerSolver[solver]
     ] &,
-    Transpose[solvers]
+    Transpose[Select[solvers, MemberQ[solversToDo, #[[1]]] &]]
 ];
 
 Export["!cat", results, "JSON"];
