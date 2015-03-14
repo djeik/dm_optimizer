@@ -7,6 +7,12 @@ RandomAwayFrom[point_, distance_] :=
 
 ShiftOverBy[vect_, fun_] := fun[# - vect] &; 
 
+ParseNumber[s_] := With[{ss = StringToStream[s]},
+    n = Read[ss, Number];
+    Close[ss];
+    Return[n];
+];
+
 EndPackage[];
 
 (* vim: set filetype=mma: *)
