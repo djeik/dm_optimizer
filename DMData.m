@@ -8,7 +8,9 @@ functions = {
     {"griewank", griewankN},
     {"rosenbrock", rosenbrockN},
     {"schwefel", schwefelN},
-    {"schaffer", schafferN}
+    {"schaffer", schafferN},
+    {"rastrigin", rastriginN},
+    {"ackley", ackleyN}
 };
 
 (* Do everything with the same number of dimensions. *)

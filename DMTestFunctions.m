@@ -18,7 +18,18 @@ schafferN[v_List /; And @@ Map[NumberQ, v]] :=
             {i, 1, Length[v] - 1}]
     ];
 
+rastriginN[v_List /; And @@ Map[NumberQ, v]] :=
+    With[{N = Length[v]},
+        10.0 N Sum[v[[i]]^2.0 - 10.0 Cos[2.0 Pi v[[i]]], {i, 1, N}]
+    ];
 
+ackleyN[v_List /; And @@ Map[NumberQ, v]] :=
+    With[{N = Length[v]},
+        20.0 -
+        20.0 Exp[-0.2 Sqrt[(1/N) Sum[v[[i]]^2, {i, 1, N}]]] +
+        Exp[1] -
+        Exp[(1.0/N) Sum[Cos[2 Pi v[[i]]], {i, 1, N}]]
+    ];
 
 EndPackage[];
 
