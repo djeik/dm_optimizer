@@ -75,20 +75,22 @@ provided we're consistent.*)
 vars = Table[xx[i], {i, 1, dim}];
 
 solvers = {
-    {"dm", Module[{r = DifferenceMapOptimizer[
-            #1 @ vars, vars, niter, tolerance, startpoint -> #2,
-            LocalMaxIterations -> innerNiter]}, r]&},
+    {"dm", Quiet[DifferenceMapOptimizer[
+                #1 @ vars, vars, niter, tolerance, startpoint -> #2,
+                LocalMaxIterations -> innerNiter]] &
+    },
     {"sa",
         (* shiftAmount takes just the first part of the second slot because the
         passed in value is a pair of points, since DM requires a pair, whereas
         SA requires just a single one. *)
         Module[{r, t, nfev, fun = #1, shiftAmount = #2[[1]]},
             nfev = 0;
-            r = NMinimize[ShiftOverBy[shiftAmount, fun][vars], vars,
+            r = Quiet[NMinimize[ShiftOverBy[shiftAmount, fun][vars], vars,
                 EvaluationMonitor -> Hold[nfev = nfev + 1],
                 MaxIterations -> niter];
-            { "fun" -> r[[1]], "x" -> vars /. r[[2]], "nfev" -> nfev
-            }] &}
+            { "fun" -> r[[1]], "x" -> vars /. r[[2]], "nfev" -> nfev }]
+        ] &
+    }
 };
 
 test[mysolver_, f_] :=
