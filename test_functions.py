@@ -21,9 +21,9 @@
         "function": the name of the function such that `getattr(tf,
             function_name)` returns the callable to compute the function, where
             tf is an alias for this module.
-        "optimization_type": the sign of the function, which is really the optimization
-            type, provided by the constants MAXIMIZATION and MINIMIZATION in this
-            module.
+        "optimization_type": the sign of the function, which is really the
+            optimization type, provided by the constants MAXIMIZATION and
+            MINIMIZATION in this module.
         "dimensions": the number of dimensions to evaluate this function in.
         "range": (misnomer) the range of values from which to draw input
             values, for each dimensions. e.g. ranges[0] gives a tuple (min,
@@ -160,8 +160,8 @@ def _simon_f1(xy):
 
 def simonf2(xs):
     """ A variation on Simon's function. To prevent "origin-bias", which can be
-        a problem with optimizers, we simply shift over the function, so that the
-        minimum is now at (100, 100).
+        a problem with optimizers, we simply shift over the function, so that
+        the minimum is now at (100, 100).
         """
     xy = xs - np.array([100, 100])
     return _simon_f1(xy)
