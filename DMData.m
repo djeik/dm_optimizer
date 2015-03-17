@@ -129,7 +129,21 @@ results = MapThread[
     Transpose[Select[solvers, MemberQ[solversToDo, #[[1]]] &]]
 ];
 
-Export["!cat", results, "JSON"];
+Export[
+    "!cat", {
+        "results" -> results,
+        "settings" -> {
+            "dimensions" -> dim,
+            "iterations" -> niter,
+            "tolerance" -> tolerance,
+            "run_count" -> runCount,
+            "inner_iterations" -> innerNiter,
+            "range" -> range,
+            "second_point_distance" -> secondPointDistance
+        }
+    },
+    "JSON"
+];
 
 (*
  vim: set filetype=mma: *)
