@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-import dm_utils as dmu
+import util.dm_utils as dmu
 from numpy.linalg import norm
 
 mp_subproc_count = 4

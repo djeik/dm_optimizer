@@ -9,7 +9,7 @@ import scipy as sp
 import scipy.optimize as opt
 
 from itertools import repeat
-from dm_utils import random_vector
+from util.dm_utils import random_vector
 
 # Different verbosity settings.
 QUIET = (None, -1)

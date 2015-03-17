@@ -3,9 +3,9 @@
 from __future__ import print_function
 import dm_tests_config as dmtc
 import dm_tests as dmt
-import dm_utils as dmu
+import util.dm_utils as dmu
 
-from dm_utils import unwrap_bench
+from util.dm_utils import unwrap_bench
 import deap.benchmarks as bench
 
 from time import time

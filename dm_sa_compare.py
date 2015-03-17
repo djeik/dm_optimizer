@@ -5,7 +5,7 @@ from __future__ import print_function
 from sys import argv as args
 from os import path
 
-import dm_utils as dmu
+import util.dm_utils as dmu
 
 NAME_COL = 0
 PERF_COL = 4

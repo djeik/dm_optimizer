@@ -29,7 +29,7 @@ import dm_optimizer as dm
 from dm_optimizer   import dm_optimizer
 
 from dm_tests_config import *
-from dm_utils        import *
+from util.dm_utils        import *
 
 import jerrington_tools as j
 
