@@ -1,9 +1,10 @@
 BeginPackage["DMTestFunctions`"];
 
 ClearAll[griewankN];
-griewankN[v_List /; And @@ Map[NumberQ, v]] := 1 / 4000 v . v
-            - Times @@ MapIndexed[Cos[#1 / Sqrt[#2[[1]]]] &, v]
-            + 1;
+griewankN[v_List /; And @@ Map[NumberQ, v]] :=
+    With[{N = Length[v]},
+        1 / 4000 v . v - Product[Cos[v[[i]] / Sqrt[i]], {i, 1, N}] + 1
+    ];
 
 ClearAll[rosenbrockN];
 rosenbrockN[v_List /; And @@ Map[NumberQ, v]] :=
