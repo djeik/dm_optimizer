@@ -3,7 +3,7 @@ Difference Map Optimizer
 
 DMO is a reasearch project aimed at developing a new method for the
 unconstrained global minimization of multivariate scalar functions. It is based
-on the Divide and Concur method for solving high-dimensional constraint
+on the Divide and Conquer method for solving high-dimensional constraint
 satisfaction problems, which is itself using the Difference Map method.
 
 In brief, DMO is an iterative method, performing a local minimization of the
