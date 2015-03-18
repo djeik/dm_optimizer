@@ -4,15 +4,6 @@ Needs["DifferenceMapOptimizer`"];
 Needs["DMTestFunctions`"];
 Needs["DMUtils`"];
 
-functions = {
-    {"griewank", griewankN},
-    {"rosenbrock", rosenbrockN},
-    {"schwefel", schwefelN},
-    {"schaffer", schafferN},
-    {"rastrigin", rastriginN},
-    {"ackley", ackleyN}
-};
-
 (* Do everything with the same number of dimensions. *)
 dim = Environment["DM_DIMENSIONS"];
 If[dim === $Failed,
@@ -103,25 +94,25 @@ test[mysolver_, f_] :=
             DMUtils`RandomAwayFrom).
         *)
         starts = Table[
-            With[{firstPoint = Table[RandomReal[range], {dim}]},
+            With[{firstPoint = Table[RandomReal["range" /. f], {dim}]},
                 {firstPoint, RandomAwayFrom[firstPoint, secondPointDistance]}],
             {runCount}],
         (* Define the function that does just one run. *)
-        run = mysolver[f, #] &},
+        run = mysolver["function" /. f, #] &},
         (* Compute the run result for each pair of starting points. *)
         Map[run, starts]
     ];
 
-resultsPerSolver[solver_] := MapThread[
-    Module[{fname = #1, fun = #2, r},
-        Write[Streams["stderr"], "Beginning test: ", fname];
-        r = test[solver, fun];
-        fname -> r
+resultsPerSolver[solver_] := Map[
+    Module[{f = asRules[#], r},
+        Write[Streams["stderr"], "Beginning test: ", "name" /. f];
+        r = test[solver, f];
+        ("name" /. f) -> r
     ] &,
-    Transpose[functions]
+    testFunctions
 ];
 
-results = MapThread[
+results := MapThread[
     Module[{solverName = #1, solver = #2},
         Write[Streams["stderr"], "### Solver: ", solverName];
         solverName -> resultsPerSolver[solver]
