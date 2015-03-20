@@ -120,6 +120,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                 ];
             ];
 
+            (* Find the nearest past local minimum. *)
             near = Nearest[pastMinima[[1;;, 2]], localMinimum[[2]], 2];
 
             (* If the true nearest one is too near, then take the
