@@ -57,7 +57,7 @@ If[secondPointDistance === $Failed,
 (* The solvers to collect data for. *)
 solversToDo = Environment["DM_SOLVERS"];
 If[solversToDo === $Failed,
-    solversToDo = {"dm", "sa"},
+    solversToDo = {"dm", "sa", "de", "nm", "rs"},
     solversToDo = StringSplit[solversToDo, ","]
 ];
 
@@ -65,23 +65,37 @@ If[solversToDo === $Failed,
 provided we're consistent.*)
 vars = Table[xx[i], {i, 1, dim}];
 
+makeBuiltinSolver[solverType_] :=
+    (* shiftAmount takes just the first part of the second slot because the
+    passed in value is a pair of points, since DM requires a pair, whereas SA
+    requires just a single one. *)
+    Module[{r, t, nfev, fun = #1, shiftAmount = #2[[1]]},
+        nfev = 0;
+        {{fun, argmin}, {steps}} = Reap[Quiet[NMinimize[
+            ShiftOverBy[shiftAmount, fun][vars], vars,
+            EvaluationMonitor -> Hold[nfev = nfev + 1 ; Sow[vars]],
+            MaxIterations -> niter,
+            Method -> solverType]]];
+        {
+            "fun" -> fun,
+            "x" -> vars /. argmin,
+            "nfev" -> nfev,
+            "iterate" -> steps
+        }
+    ] &;
+
 solvers = {
     {"dm", Quiet[DifferenceMapOptimizer[
                 #1 @ vars, vars, niter, tolerance, startpoint -> #2,
                 LocalMaxIterations -> innerNiter]] &
     },
+    {"auto", makeBuiltinSolver[Automatic]},
     {"sa",
-        (* shiftAmount takes just the first part of the second slot because the
-        passed in value is a pair of points, since DM requires a pair, whereas
-        SA requires just a single one. *)
-        Module[{r, t, nfev, fun = #1, shiftAmount = #2[[1]]},
-            nfev = 0;
-            r = Quiet[NMinimize[ShiftOverBy[shiftAmount, fun][vars], vars,
-                EvaluationMonitor -> Hold[nfev = nfev + 1],
-                MaxIterations -> niter];
-            { "fun" -> r[[1]], "x" -> vars /. r[[2]], "nfev" -> nfev }]
-        ] &
-    }
+        makeBuiltinSolver["SimulatedAnnealing"]
+    },
+    {"de", makeBuiltinSolver["DifferentialEvolution"]},
+    {"nm", makeBuiltinSolver["NelderMead"]},
+    {"rs", makeBuiltinSolver["RandomSearch"]}
 };
 
 test[mysolver_, f_] :=
