@@ -40,12 +40,12 @@ for dim in {2..15} ; do
 
     # Simulated annealing doesn't care about the DM_INNERNITER parameter, so we
     # just record it separately, for each dimension.
-    DM_SOLVERS="sa" ./DMData.m > "$resultdir/$dim/sa-x.json"
+    DM_SOLVERS="sa" ./RunDMData.m > "$resultdir/$dim/sa-x.json"
 
     for innerniter in {10,25,50,100,250,500} ; do
         echo "DM dim $dim / innerniter $innerniter" >&2
 
         outpath="$resultdir/$dim/dm-${innerniter}.json"
-        DM_SOLVERS="dm" DM_INNERNITER=$innerniter ./DMData.m > "$outpath"
+        DM_SOLVERS="dm" DM_INNERNITER=$innerniter ./RunDMData.m > "$outpath"
     done
 done
