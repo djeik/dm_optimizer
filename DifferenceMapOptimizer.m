@@ -53,6 +53,10 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             ];
 
         maxit = OptionValue[LocalMaxIterations];
+        autoTarget = OptionValue[Target] === Automatic;
+        If[Not[autoTarget],
+            target = OptionValue[Target];
+        ];
         dim = Length[vars];
         steps = {};
         messages = {};
@@ -79,8 +83,10 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         from there. *)
         pastMinima = {{N[expr /. vecToRep[vars, x0]], x0}, solToVec[val1]};
         PrintLog[2, pastMinima];
-        target = firsttargetratio * val1[[1]];
-        PrintLog[3, "Initial target value: ", target];
+        If[autoTarget,
+            target = firsttargetratio * val1[[1]];
+            PrintLog[3, "Initial target value: ", target];
+        ];
 
         iterate = x1;
         iteratePositions = {iterate};
@@ -104,8 +110,14 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             delta = localMinimum[[1]] - target;
 
             If [delta < 0, (* found solution, update target *)
-                target = newtarget[pastMinima[[1;;, 1]], localMinimum[[1]]];
-                delta = localMinimum[[1]]-target (* Update *)
+                    (* The given target was beaten. Thus we can exit. *)
+                If[autoTarget,
+                    target = newtarget[pastMinima[[1;;, 1]], localMinimum[[1]]];
+                    delta = localMinimum[[1]] - target, (* Update *)
+                (* else we beat the user-given target and can quit *)
+                    AppendTo[messages, "user-defined target achieved"];
+                    Break[];
+                ];
             ];
 
             near = Nearest[pastMinima[[1;;, 2]], localMinimum[[2]], 2];
@@ -131,7 +143,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             these deltas. *)
             If[(delta - deltan)^2 < pseudo^2,
                 PrintLog[1,"Past minimum too close in y. Using pseudo."];
-                step =- (delta / pseudo) 
+                step =- (delta / pseudo)
                     * (localMinimum[[2]] - nnear),
                 step =- (delta / (delta - deltan))
                     * (localMinimum[[2]] - nnear)
@@ -153,7 +165,8 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                 Break[];
             ];
 
-            If[iterationNumber ~Mod~ OptionValue[refreshrate] == 0,
+            If[Not[autoTarget] &&
+                    Divisible[iterationNumber, OptionValue[refreshrate]],
                 Module[{oldtarget},
                     (* Update target *)
                     oldtarget = target;
@@ -191,7 +204,8 @@ Options[DifferenceMapOptimizer] = {
         startpoint -> Automatic,
         refreshrate -> 10,
         verbosity -> 0,
-        LocalMaxIterations -> 100
+        LocalMaxIterations -> 100,
+        Target -> Automatic
 };
 
 End[];
