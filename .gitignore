@@ -1,10 +1,5 @@
 *.pyc
 experiments/
-results*
 run_reproducible_pipeline.py
 log/
-jerrington_tools.py
-bin/
-lib/
-include/
 venv/

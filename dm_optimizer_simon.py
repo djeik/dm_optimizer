@@ -22,6 +22,11 @@ NOISE = ("NOISE", 4)
 # Default verbosity is to show only error messages.
 verbosity = ERROR
 
+def random_vector(dim=2, length=1):
+    """ Construct a vector in a random direction with the given length. """
+    ran_unit_ = np.random.sample(dim) - 0.5;
+    return ran_unit_ / np.linalg.norm(ran_unit_) * length
+
 def log(priority, *args, **kwargs):
     """ Forward arguments and keyword arguments to the print function only if
         the given message priority is at most the global verbosity level.
