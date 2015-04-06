@@ -84,7 +84,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         pastMinima = {{N[expr /. vecToRep[vars, x0]], x0}, solToVec[val1]};
         PrintLog[2, pastMinima];
         If[autoTarget,
-            target = firsttargetratio * val1[[1]];
+            target = val[[1]] - firsttargetratio * Abs[pastMinima[[1]][[1]] - val1[[1]]]
             PrintLog[3, "Initial target value: ", target];
         ];
 
