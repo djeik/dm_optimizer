@@ -15,19 +15,22 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
         (* shiftAmount takes just the first part of the second slot because the
         passed in value is a pair of points, since DM requires a pair, whereas SA
         requires just a single one. *)
-        Module[{r, t, nfev, fun = #1, shiftAmount = #2[[1]]},
-            nfev = 0;
+        Module[{r, t, nfev, function = #1, shiftAmount = #2[[1]]},
             {{fun, argmin}, {steps}} = Reap[Quiet[NMinimize[
                 ShiftOverBy[shiftAmount, fun][vars], vars,
-                EvaluationMonitor -> Hold[nfev = nfev + 1 ; Sow[vars]],
+                EvaluationMonitor -> Hold[Sow[vars]],
                 MaxIterations -> settings["niter"],
                 Method -> solverType]]];
-            {
+            Print[settings["niter"]];
+            Print[function @ vars];
+            r = {
                 "fun" -> fun,
                 "x" -> vars /. argmin,
-                "nfev" -> nfev,
+                "nfev" -> Length[steps],
                 "iterate" -> steps
-            }
+            };
+            Print[Length[steps]];
+            Return[r];
         ] &;
 
     solvers = {
