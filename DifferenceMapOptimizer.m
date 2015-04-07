@@ -27,7 +27,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
         PrintLog[priority_, messages__] :=
             If[priority <= verboseLevel,
-                Write[Streams["stderr"], messages]];
+                Print[messages]];
 
         (* Solutions produced by FindMinimum are of the form {functionValue,
         variableAssociation}, where the variableAssociation is a list like
