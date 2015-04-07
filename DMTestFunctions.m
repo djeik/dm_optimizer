@@ -44,7 +44,6 @@ testFunctions = {
     {"rosenbrock", rosenbrockN, {-1000.0, 1000.0}, 0.0},
     {"schwefel", schwefelN, {-500.0, 500.0}, 0.0},
     {"schaffer", schafferN, {-100.0, 100.0}, 0.0},
-    {"rastrigin", rastriginN, {-5.12, 5.12}, 0.0},
     {"ackley", ackleyN, {-15.0, 30.0}, 0.0}
 };
 
