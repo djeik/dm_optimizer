@@ -84,7 +84,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         pastMinima = {{N[expr /. vecToRep[vars, x0]], x0}, solToVec[val1]};
         PrintLog[2, pastMinima];
         If[autoTarget,
-            target = val[[1]] - firsttargetratio * Abs[pastMinima[[1]][[1]] - val1[[1]]]
+            target = val1[[1]] - firsttargetratio * Abs[pastMinima[[1]][[1]] - val1[[1]]];
             PrintLog[3, "Initial target value: ", target];
         ];
 
@@ -159,11 +159,15 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             (* Keep track of the iterate position over time. *)
             AppendTo[iteratePositions, iterate];
 
-            If[Norm[step]<tol,
-                AppendTo[messages, "Fixed-point found."];
-                PrintLog[1,"Step size really small (fixed-point). ",
-                    "Returning current value."];
-                Break[];
+            If[Norm[step] < tol,
+                Module[{oldtarget},
+                    oldtarget = target;
+                    refreshtarget[pastMinima[[1 ;;, 1]]];
+                    If[(oldtarget - target)^2 < tol^2,
+                        AppendTo[messages, "Stuck"];
+                        Break[];
+                    ];
+                ];
             ];
 
             If[Not[autoTarget] &&
