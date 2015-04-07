@@ -17,20 +17,16 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
         requires just a single one. *)
         Module[{r, t, nfev, function = #1, shiftAmount = #2[[1]]},
             {{fun, argmin}, {steps}} = Reap[Quiet[NMinimize[
-                ShiftOverBy[shiftAmount, fun][vars], vars,
+                ShiftOverBy[shiftAmount, function][vars], vars,
                 EvaluationMonitor -> Hold[Sow[vars]],
                 MaxIterations -> settings["niter"],
                 Method -> solverType]]];
-            Print[settings["niter"]];
-            Print[function @ vars];
-            r = {
+            {
                 "fun" -> fun,
                 "x" -> vars /. argmin,
                 "nfev" -> Length[steps],
                 "iterate" -> steps
-            };
-            Print[Length[steps]];
-            Return[r];
+            }
         ] &;
 
     solvers = {
@@ -39,9 +35,7 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
                     LocalMaxIterations -> settings["innerNiter"]]] &
         },
         {"auto", makeBuiltinSolver[Automatic]},
-        {"sa",
-            makeBuiltinSolver["SimulatedAnnealing"]
-        },
+        {"sa", makeBuiltinSolver["SimulatedAnnealing"]},
         {"de", makeBuiltinSolver["DifferentialEvolution"]},
         {"nm", makeBuiltinSolver["NelderMead"]},
         {"rs", makeBuiltinSolver["RandomSearch"]}
