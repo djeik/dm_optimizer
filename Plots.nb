@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[   3735995,      62094]
-NotebookOptionsPosition[   3734404,      62042]
-NotebookOutlinePosition[   3734742,      62057]
-CellTagsIndexPosition[   3734699,      62054]
+NotebookDataLength[   3745698,      62286]
+NotebookOptionsPosition[   3744067,      62232]
+NotebookOutlinePosition[   3744405,      62247]
+CellTagsIndexPosition[   3744362,      62244]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -22,10 +22,11 @@ Cell[BoxData[{
  RowBox[{"Get", "[", "\"\<DMTestFunctions`\>\"", "]"}], "\[IndentingNewLine]", 
  RowBox[{"Get", "[", "\"\<DifferenceMapOptimizer`\>\"", 
   "]"}], "\[IndentingNewLine]", 
- RowBox[{"Get", "[", "\"\<DMData`\>\"", "]"}]}], "Input",
+ RowBox[{"Get", "[", "\"\<DMData`\>\"", "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Get", "[", "\"\<DMUtils`\>\"", "]"}]}], "Input",
  CellChangeTimes->{{3.63580881450357*^9, 3.6358088213482723`*^9}, {
   3.635821151664055*^9, 3.635821162701482*^9}, {3.6358324708555813`*^9, 
-  3.6358324768784943`*^9}}],
+  3.6358324768784943`*^9}, {3.637593726839376*^9, 3.6375937315191307`*^9}}],
 
 Cell[CellGroupData[{
 
@@ -60596,8 +60597,9 @@ Cell[BoxData[{
      RowBox[{"\"\<secondPointDistance\>\"", " ", "\[Rule]", " ", "5.0"}], ",",
       "\[IndentingNewLine]", 
      RowBox[{"\"\<solversToDo\>\"", " ", "\[Rule]", " ", 
-      RowBox[{"{", "\"\<dm\>\"", "}"}]}]}], "\[IndentingNewLine]", "|>"}]}], 
-  ";"}], "\[IndentingNewLine]", 
+      RowBox[{"{", "\"\<dm\>\"", "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"\"\<maxnfev\>\"", " ", "\[Rule]", " ", "20000"}]}], 
+    "\[IndentingNewLine]", "|>"}]}], ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"dmResults", " ", "=", " ", 
    RowBox[{"makeResults", "[", "dmSettings", "]"}]}], ";"}]}], "Input",
@@ -60607,7 +60609,8 @@ Cell[BoxData[{
    3.637262025555646*^9, 3.637262026485783*^9}, {3.6372620915478907`*^9, 
    3.637262285114694*^9}, {3.637267753501379*^9, 3.637267765022169*^9}, 
    3.637268912744218*^9, {3.6373752474660587`*^9, 3.6373752829677143`*^9}, {
-   3.6374283689743958`*^9, 3.637428372092906*^9}}],
+   3.6374283689743958`*^9, 3.637428372092906*^9}, {3.637592812752453*^9, 
+   3.637592820288378*^9}}],
 
 Cell[CellGroupData[{
 
@@ -60928,37 +60931,24 @@ Cell[BoxData[{
       "\[IndentingNewLine]", 
      RowBox[{"\"\<solversToDo\>\"", " ", "\[Rule]", " ", 
       RowBox[{"{", 
-       RowBox[{
-       "\"\<sa\>\"", ",", " ", "\"\<de\>\"", ",", " ", "\"\<nm\>\"", ",", 
-        " ", "\"\<rs\>\""}], "}"}]}]}], "\[IndentingNewLine]", "|>"}]}], 
-  ";"}], "\n", 
+       RowBox[{"\"\<de\>\"", ",", " ", "\"\<nm\>\"", ",", " ", "\"\<rs\>\""}],
+        "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"\"\<maxnfev\>\"", " ", "\[Rule]", " ", "20000"}]}], 
+    "\[IndentingNewLine]", "|>"}]}], ";"}], "\n", 
  RowBox[{
   RowBox[{"builtinResults", " ", "=", " ", 
    RowBox[{"makeResults", "[", "builtinSettings", "]"}]}], ";"}]}], "Input",
  CellChangeTimes->{{3.6372626523181353`*^9, 3.637262722769661*^9}, {
    3.6372811446362267`*^9, 3.63728114501359*^9}, 3.6374215992742863`*^9, 
-   3.6374284282750998`*^9}],
-
-Cell[BoxData[
- RowBox[{
-  RowBox[{
-   RowBox[{"ToAssociations", "[", "rules_", "]"}], " ", ":=", " ", 
-   RowBox[{"Replace", "[", 
-    RowBox[{"rules", ",", " ", 
-     RowBox[{
-      RowBox[{"x", " ", ":", " ", 
-       RowBox[{"{", "__Rule", "}"}]}], " ", "\[RuleDelayed]", " ", 
-      RowBox[{"Association", "[", "x", "]"}]}], ",", " ", 
-     RowBox[{"{", 
-      RowBox[{"0", ",", " ", "Infinity"}], "}"}]}], "]"}]}], ";"}]], "Input",
- CellChangeTimes->{{3.635842470160482*^9, 3.635842493727467*^9}, 
-   3.635847324997822*^9, {3.637280842029889*^9, 3.637280845566021*^9}, 
-   3.637379524730857*^9}],
+   3.6374284282750998`*^9, {3.63759282457611*^9, 3.637592829423912*^9}, {
+   3.637592947125286*^9, 3.637592947990025*^9}}],
 
 Cell[CellGroupData[{
 
-Cell[BoxData["as"], "Input",
- CellChangeTimes->{{3.6372808730545673`*^9, 3.637280873094775*^9}}],
+Cell[BoxData[
+ RowBox[{"as", " ", "=", " ", 
+  RowBox[{"ToAssociations", "[", "builtinResults", "]"}]}]], "Input",
+ CellChangeTimes->{{3.63759575911439*^9, 3.6375957783231087`*^9}}],
 
 Cell[BoxData[
  InterpretationBox[
@@ -60969,59 +60959,23 @@ Cell[BoxData[
         TagBox[
          RowBox[{"\[LeftAssociation]", 
           RowBox[{
-           RowBox[{"\<\"sa\"\>", "\[Rule]", 
+           RowBox[{"\<\"de\"\>", "\[Rule]", 
             RowBox[{"\[LeftAssociation]", 
              RowBox[{
               RowBox[{"\<\"griewank\"\>", "\[Rule]", 
                RowBox[{"{", 
-                TemplateBox[{"1"},
-                 "OutputSizeLimit`Skeleton",
-                 DisplayFunction->(FrameBox[
-                   
-                   RowBox[{
-                    "\" \[CenterEllipsis]\"", #, "\"\[CenterEllipsis] \""}], 
-                   Background -> GrayLevel[0.75], 
-                   BaseStyle -> {
-                    "Deploy", FontColor -> GrayLevel[1], FontSize -> Smaller, 
-                    ShowStringCharacters -> False}, BaselinePosition -> 
-                   Baseline, ContentPadding -> False, FrameMargins -> 1, 
-                   FrameStyle -> GrayLevel[0.75], RoundingRadius -> 7]& )], 
-                "}"}]}], ",", 
-              TemplateBox[{"4"},
-               "OutputSizeLimit`Skeleton",
-               DisplayFunction->(FrameBox[
-                 
-                 RowBox[{
-                  "\" \[CenterEllipsis]\"", #, "\"\[CenterEllipsis] \""}], 
-                 Background -> GrayLevel[0.75], 
-                 BaseStyle -> {
-                  "Deploy", FontColor -> GrayLevel[1], FontSize -> Smaller, 
-                   ShowStringCharacters -> False}, BaselinePosition -> 
-                 Baseline, ContentPadding -> False, FrameMargins -> 1, 
-                 FrameStyle -> GrayLevel[0.75], RoundingRadius -> 7]& )], ",", 
-              RowBox[{"\<\"ackley\"\>", "\[Rule]", 
-               RowBox[{"{", 
                 RowBox[{
                  RowBox[{"\[LeftAssociation]", 
                   RowBox[{
-                   RowBox[{"\<\"fun\"\>", "\[Rule]", "18.130956490398418`"}], 
-                   ",", 
+                   
+                   RowBox[{"\<\"fun\"\>", "\[Rule]", 
+                    "0.007396040334115006`"}], ",", 
                    RowBox[{"\<\"x\"\>", "\[Rule]", 
                     RowBox[{"{", 
-                    RowBox[{"0.23975416313549375`", ",", 
-                    TemplateBox[{"2"},
-                    "OutputSizeLimit`Skeleton",
-                    DisplayFunction->(FrameBox[
                     RowBox[{
-                    "\" \[CenterEllipsis]\"", #, "\"\[CenterEllipsis] \""}], 
-                    Background -> GrayLevel[0.75], 
-                    BaseStyle -> {
-                    "Deploy", FontColor -> GrayLevel[1], FontSize -> Smaller, 
-                    ShowStringCharacters -> False}, BaselinePosition -> 
-                    Baseline, ContentPadding -> False, FrameMargins -> 1, 
-                    FrameStyle -> GrayLevel[0.75], RoundingRadius -> 7]& )], 
-                    ",", 
-                    TemplateBox[{"19"},
+                    RowBox[{"-", "252.12133084897988`"}], ",", 
+                    RowBox[{"-", "69.52953754186451`"}], ",", 
+                    TemplateBox[{"1"},
                     "OutputSizeLimit`Skeleton",
                     DisplayFunction->(FrameBox[
                     
@@ -61032,8 +60986,9 @@ Cell[BoxData[
                     "Deploy", FontColor -> GrayLevel[1], FontSize -> Smaller, 
                     ShowStringCharacters -> False}, BaselinePosition -> 
                     Baseline, ContentPadding -> False, FrameMargins -> 1, 
-                    FrameStyle -> GrayLevel[0.75], RoundingRadius -> 7]& )]}],
-                     "}"}]}], ",", 
+                    FrameStyle -> GrayLevel[0.75], RoundingRadius -> 7]& )], 
+                    ",", 
+                    RowBox[{"-", "221.53981419444233`"}]}], "}"}]}], ",", 
                    TemplateBox[{"1"},
                     "OutputSizeLimit`Skeleton",
                     DisplayFunction->(FrameBox[
@@ -61061,7 +61016,12 @@ Cell[BoxData[
                     RowBox[{"-", "0.21138467295000704`"}], ",", 
                     "0.9360099852095045`", ",", 
                     RowBox[{"-", "0.2932378136089723`"}]}], "}"}], ",", 
-                    TemplateBox[{"109"},
+                    RowBox[{"{", 
+                    RowBox[{
+                    "0.31239196760046783`", ",", "0.43299797945501817`", ",", 
+                    "0.408506400940184`", ",", 
+                    RowBox[{"-", "0.29058501284177374`"}]}], "}"}], ",", 
+                    TemplateBox[{"20038"},
                     "OutputSizeLimit`Skeleton",
                     DisplayFunction->(FrameBox[
                     
@@ -61076,10 +61036,23 @@ Cell[BoxData[
                     ",", 
                     RowBox[{"{", 
                     RowBox[{
-                    "0.23975416313549375`", ",", "0.332187333378939`", ",", 
-                    RowBox[{"-", "1.1184286846094271`"}], ",", 
-                    "0.7452215676038746`"}], "}"}]}], "}"}]}]}], 
-                  "\[RightAssociation]"}], ",", 
+                    RowBox[{"-", "252.12133084897988`"}], ",", 
+                    RowBox[{"-", "69.52953754186451`"}], ",", 
+                    RowBox[{"-", "327.7066251774275`"}], ",", 
+                    RowBox[{"-", "221.53981419444233`"}]}], "}"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"-", "252.12133084897988`"}], ",", 
+                    RowBox[{"-", "69.52953754186451`"}], ",", 
+                    RowBox[{"-", "327.7066251774275`"}], ",", 
+                    RowBox[{"-", "221.53981419444233`"}]}], "}"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"-", "252.12133084897988`"}], ",", 
+                    RowBox[{"-", "69.52953754186451`"}], ",", 
+                    RowBox[{"-", "327.7066251774275`"}], ",", 
+                    RowBox[{"-", "221.53981419444233`"}]}], "}"}]}], 
+                    "}"}]}]}], "\[RightAssociation]"}], ",", 
                  TemplateBox[{"49"},
                   "OutputSizeLimit`Skeleton",
                   DisplayFunction->(FrameBox[
@@ -61092,17 +61065,33 @@ Cell[BoxData[
                     ShowStringCharacters -> False}, BaselinePosition -> 
                     Baseline, ContentPadding -> False, FrameMargins -> 1, 
                     FrameStyle -> GrayLevel[0.75], RoundingRadius -> 7]& )]}],
-                 "}"}]}]}], "\[RightAssociation]"}]}], ",", 
-           TemplateBox[{"2"},
-            "OutputSizeLimit`Skeleton",
-            DisplayFunction->(FrameBox[
-              RowBox[{"\" \[CenterEllipsis]\"", #, "\"\[CenterEllipsis] \""}],
+                 "}"}]}], ",", 
+              TemplateBox[{"4"},
+               "OutputSizeLimit`Skeleton",
+               DisplayFunction->(FrameBox[
+                 
+                 RowBox[{
+                  "\" \[CenterEllipsis]\"", #, "\"\[CenterEllipsis] \""}], 
+                 Background -> GrayLevel[0.75], 
+                 BaseStyle -> {
+                  "Deploy", FontColor -> GrayLevel[1], FontSize -> Smaller, 
+                   ShowStringCharacters -> False}, BaselinePosition -> 
+                 Baseline, ContentPadding -> False, FrameMargins -> 1, 
+                 FrameStyle -> GrayLevel[0.75], RoundingRadius -> 7]& )]}], 
+             "\[RightAssociation]"}]}], ",", 
+           RowBox[{"\<\"nm\"\>", "\[Rule]", 
+            TemplateBox[{"1"},
+             "OutputSizeLimit`Skeleton",
+             DisplayFunction->(FrameBox[
+               
+               RowBox[{
+                "\" \[CenterEllipsis]\"", #, "\"\[CenterEllipsis] \""}], 
                Background -> GrayLevel[0.75], 
-              BaseStyle -> {
-               "Deploy", FontColor -> GrayLevel[1], FontSize -> Smaller, 
-                ShowStringCharacters -> False}, BaselinePosition -> Baseline, 
-              ContentPadding -> False, FrameMargins -> 1, FrameStyle -> 
-              GrayLevel[0.75], RoundingRadius -> 7]& )], ",", 
+               BaseStyle -> {
+                "Deploy", FontColor -> GrayLevel[1], FontSize -> Smaller, 
+                 ShowStringCharacters -> False}, BaselinePosition -> Baseline,
+                ContentPadding -> False, FrameMargins -> 1, FrameStyle -> 
+               GrayLevel[0.75], RoundingRadius -> 7]& )]}], ",", 
            RowBox[{"\<\"rs\"\>", "\[Rule]", 
             RowBox[{"\[LeftAssociation]", 
              TemplateBox[{"1"},
@@ -61160,8 +61149,7 @@ Cell[BoxData[
              StyleBox[
               DynamicBox[ToBoxes[
                 FEPrivate`FrontEndResource["FEStrings", "sizeShowLess"], 
-                StandardForm],
-               ImageSizeCache->{67., {0., 8.}}],
+                StandardForm]],
               StripOnInput->False,
               DynamicUpdating->True], "SuggestionsBarControlActive",
              StripOnInput->False]}, Dynamic[
@@ -61172,7 +61160,7 @@ Cell[BoxData[
            Appearance->None,
            
            ButtonFunction:>OutputSizeLimit`ButtonFunction[
-            Identity, 24, 20858652540292168369, 5/2],
+            Identity, 22, 32269825438676824231, 5/2],
            Enabled->True,
            Evaluator->Automatic,
            Method->"Queued"], 
@@ -61191,8 +61179,7 @@ Cell[BoxData[
              StyleBox[
               DynamicBox[ToBoxes[
                 FEPrivate`FrontEndResource["FEStrings", "sizeShowMore"], 
-                StandardForm],
-               ImageSizeCache->{70., {0., 9.}}],
+                StandardForm]],
               StripOnInput->False,
               DynamicUpdating->True], "SuggestionsBarControlActive",
              StripOnInput->False]}, Dynamic[
@@ -61203,7 +61190,7 @@ Cell[BoxData[
            Appearance->None,
            
            ButtonFunction:>OutputSizeLimit`ButtonFunction[
-            Identity, 24, 20858652540292168369, 5 2],
+            Identity, 22, 32269825438676824231, 5 2],
            Enabled->True,
            Evaluator->Automatic,
            Method->"Queued"], 
@@ -61233,7 +61220,7 @@ Cell[BoxData[
            Appearance->None,
            
            ButtonFunction:>OutputSizeLimit`ButtonFunction[
-            Identity, 24, 20858652540292168369, Infinity],
+            Identity, 22, 32269825438676824231, Infinity],
            Enabled->True,
            Evaluator->Automatic,
            Method->"Queued"], 
@@ -61252,8 +61239,7 @@ Cell[BoxData[
              StyleBox[
               DynamicBox[ToBoxes[
                 FEPrivate`FrontEndResource["FEStrings", "sizeChangeLimit"], 
-                StandardForm],
-               ImageSizeCache->{100., {0., 8.}}],
+                StandardForm]],
               StripOnInput->False,
               DynamicUpdating->True], "SuggestionsBarControlActive",
              StripOnInput->False]}, Dynamic[
@@ -61301,8 +61287,8 @@ Cell[BoxData[
     StripOnInput->False],
    Deploy,
    DefaultBaseStyle->"Deploy"],
-  Out[24]]], "Output",
- CellChangeTimes->{3.637280960346457*^9}]
+  Out[22]]], "Output",
+ CellChangeTimes->{3.637595887459901*^9, 3.63759608232016*^9}]
 }, Open  ]],
 
 Cell[BoxData[
@@ -61377,36 +61363,240 @@ Cell[BoxData[
             RowBox[{"[", 
              RowBox[{";;", ",", "1"}], "]"}], "]"}]}], "]"}]}]}], "]"}], ",", 
       " ", "\[IndentingNewLine]", 
-      RowBox[{"(*", " ", 
-       RowBox[{
-        RowBox[{
-         RowBox[{"Don", "'"}], "t", " ", "include", " ", "the", " ", "`auto`",
-          " ", "method", " ", "in", " ", "the", " ", "analysis", " ", "since",
-          " ", "we", " ", 
-         RowBox[{"don", "'"}], "t", " ", "collect", " ", "data", " ", "for", 
-         " ", "it", " ", "by", " ", 
-         RowBox[{"default", ".", "\[IndentingNewLine]", "The"}], " ", 
-         "automatic", " ", "method", " ", "is", " ", "just", " ", 
-         "DifferentialEvolution", " ", "or", " ", "NelderMead"}], ",", " ", 
-        RowBox[{"depending", " ", "on", " ", "the", " ", 
-         RowBox[{"situation", "."}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
       RowBox[{"builtinSettings", "[", "\"\<solversToDo\>\"", "]"}]}], 
      "\[IndentingNewLine]", "]"}], "\[IndentingNewLine]", "]"}]}], 
   ";"}]], "Input",
- CellChangeTimes->CompressedData["
-1:eJxTTMoPSmViYGAQBWIQrclRVHVR7LWj0kmVWhBtsM1zOYi2Xb1rM4ieF6Oz
-G0Q7FrIdBdE2t4/LXALSX29uVQDRu9I6VEH0pd3aWiB61X05PRDdd6ofTDNP
-fWgEooPb/oDp3oRpNiA65/seMF2imsV8GUgf2s3BBqLfvDsmCKL3Of4VBtGr
-X72VANEW2fJSIHrSC1cVEJ3z1tcARGc43zYD0Wr/11uAaKUgz0QQPblHPQtE
-f1IsKwTREr/+dYNooW8aS0B06YRNm0F0l8XLHSD62qSCwyBabvqh2yA6z5Tp
-KYj+M1PpNYhW2X7qP4ienZbAfgVId1cLCILoT6tOKUyQfO1YaxesBKIB4nmp
-Iw==
-  "]],
+ CellChangeTimes->{{3.635842003563496*^9, 3.6358420251495523`*^9}, {
+   3.6358423623034897`*^9, 3.635842461833403*^9}, {3.635842521386306*^9, 
+   3.635842600201325*^9}, {3.635843302245512*^9, 3.635843333682856*^9}, {
+   3.63584337226254*^9, 3.6358434093666773`*^9}, {3.6358434409648027`*^9, 
+   3.635843444493476*^9}, {3.63584347904944*^9, 3.635843479891397*^9}, {
+   3.635843556699286*^9, 3.635843557905203*^9}, {3.635845147317072*^9, 
+   3.6358451682729197`*^9}, {3.6358452622166653`*^9, 3.635845279914275*^9}, {
+   3.635845319434896*^9, 3.635845328981838*^9}, {3.63584541018464*^9, 
+   3.635845506435232*^9}, {3.6358455588519783`*^9, 3.635845573499896*^9}, {
+   3.635845898291276*^9, 3.63584596923591*^9}, {3.6358460276916437`*^9, 
+   3.635846239968029*^9}, {3.635846433280038*^9, 3.635846557580134*^9}, {
+   3.6358465992881517`*^9, 3.6358466835179243`*^9}, {3.635846878080947*^9, 
+   3.635846952069022*^9}, {3.635847001081297*^9, 3.635847166334856*^9}, {
+   3.635847227012525*^9, 3.635847304515081*^9}, {3.6372810303333673`*^9, 
+   3.637281042601378*^9}, 3.637596116857613*^9}],
+
+Cell[CellGroupData[{
 
 Cell[BoxData["stats"], "Input",
  CellChangeTimes->{{3.635844976224641*^9, 3.635844977259499*^9}, {
   3.635846040249545*^9, 3.635846042042163*^9}, {3.635847307016218*^9, 
   3.635847307576833*^9}}],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"de\"\>", "\[Rule]", 
+    RowBox[{"\[LeftAssociation]", 
+     RowBox[{
+      RowBox[{"\<\"griewank\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "0.8121927450874427`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", 
+          "6.720235479207304`*^-12"}], ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "1.1102230246251565`*^-16"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "21324.32`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "20644.5`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "20044.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"rosenbrock\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "0.22228134367725386`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", 
+          "6.357530626750369`*^-7"}], ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "1.7829818512045066`*^-9"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "29789.54`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "25646.5`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "20045.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"schwefel\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "1675.9315490897359`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "1675.9315490897357`"}],
+          ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "1675.9315490897357`"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "20444.`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "20444.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "20444.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"schaffer\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "25.619410325606605`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "26.706797797979092`"}],
+          ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", "9.754530857137055`"}],
+          ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "20341.1`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "20046.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "20044.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"ackley\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", "5.61799760388448`"}], 
+         ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "0.`"}], ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", "0.`"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "20092.04`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "20044.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "20044.`"}]}], 
+        "\[RightAssociation]"}]}]}], "\[RightAssociation]"}]}], ",", 
+   RowBox[{"\<\"nm\"\>", "\[Rule]", 
+    RowBox[{"\[LeftAssociation]", 
+     RowBox[{
+      RowBox[{"\<\"griewank\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", "47.05637928399394`"}],
+          ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "36.241796083234796`"}],
+          ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "0.1995577008880125`"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "484.92`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "474.5`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "198.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"rosenbrock\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "0.5182048261959054`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", 
+          "2.399229495024781`*^-6"}], ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "9.031269551224673`*^-13"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "899.82`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "584.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "334.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"schwefel\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "1675.9315490897359`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "1675.9315490897357`"}],
+          ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "1675.9315490897357`"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "2009.`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "2009.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "2009.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"schaffer\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "25.718898646189146`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "26.196139328133835`"}],
+          ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", "19.65740344243155`"}],
+          ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "201.72`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "184.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "116.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"ackley\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "18.003451998411915`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "18.89140980712748`"}], 
+         ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", "8.715877516856931`"}],
+          ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "257.62`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "253.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "167.`"}]}], 
+        "\[RightAssociation]"}]}]}], "\[RightAssociation]"}]}], ",", 
+   RowBox[{"\<\"rs\"\>", "\[Rule]", 
+    RowBox[{"\[LeftAssociation]", 
+     RowBox[{
+      RowBox[{"\<\"griewank\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "1.4224859908544505`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "1.0712753064016054`"}],
+          ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "0.03696050625632552`"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "164.06`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "163.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "163.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"rosenbrock\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "5.396129373901493`*^-6"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", 
+          "3.7845429590973233`*^-6"}], ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "5.927861312101507`*^-8"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "184.54`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "180.5`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "173.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"schwefel\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "1675.9315490897359`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "1675.9315490897357`"}],
+          ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "1675.9315490897357`"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "123.`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "123.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "123.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"schaffer\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "20.605538769708854`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "21.991081991456923`"}],
+          ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", "6.754699304280212`"}],
+          ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "170.48`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "170.5`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "163.`"}]}], 
+        "\[RightAssociation]"}]}], ",", 
+      RowBox[{"\<\"ackley\"\>", "\[Rule]", 
+       RowBox[{"\[LeftAssociation]", 
+        RowBox[{
+         RowBox[{"\<\"averageSolution\"\>", "\[Rule]", 
+          "15.057444659854227`"}], ",", 
+         RowBox[{"\<\"medianSolution\"\>", "\[Rule]", "16.615035158258745`"}],
+          ",", 
+         RowBox[{"\<\"minimumSolution\"\>", "\[Rule]", 
+          "2.0621805818521466`*^-7"}], ",", 
+         RowBox[{"\<\"averageNfevs\"\>", "\[Rule]", "164.1`"}], ",", 
+         RowBox[{"\<\"medianNfevs\"\>", "\[Rule]", "164.`"}], ",", 
+         RowBox[{"\<\"minimumNfevs\"\>", "\[Rule]", "163.`"}]}], 
+        "\[RightAssociation]"}]}]}], "\[RightAssociation]"}]}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{3.6375961500099487`*^9}]
+}, Open  ]],
 
 Cell[BoxData[
  RowBox[{
@@ -62040,8 +62230,8 @@ Cell[BoxData[{
   ";"}], "\[IndentingNewLine]"}], "Input",
  CellChangeTimes->{{3.637420858826993*^9, 3.6374208727387943`*^9}}]
 },
-WindowSize->{1438, 1047},
-WindowMargins->{{5, Automatic}, {9, Automatic}},
+WindowSize->{1920, 1061},
+WindowMargins->{{0, Automatic}, {0, Automatic}},
 FrontEndVersion->"10.0 for Linux x86 (64-bit) (September 9, 2014)",
 StyleDefinitions->"Default.nb"
 ]
@@ -62056,46 +62246,48 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[558, 20, 411, 7, 77, "Input"],
+Cell[558, 20, 531, 8, 99, "Input"],
 Cell[CellGroupData[{
-Cell[994, 31, 3620, 89, 451, "Input"],
-Cell[4617, 122, 3627440, 59754, 207, "Output"]
+Cell[1114, 32, 3620, 89, 451, "Input"],
+Cell[4737, 123, 3627440, 59754, 207, "Output"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[3632094, 59881, 4061, 118, 363, "Input"],
-Cell[3636158, 60001, 4585, 86, 361, "Output"]
+Cell[3632214, 59882, 4061, 118, 363, "Input"],
+Cell[3636278, 60002, 4585, 86, 361, "Output"]
 }, Open  ]],
-Cell[3640758, 60090, 4525, 127, 363, "Input"],
-Cell[3645286, 60219, 15011, 261, 864, 4753, 90, "CachedBoxData", "BoxData", \
+Cell[3640878, 60091, 4525, 127, 363, "Input"],
+Cell[3645406, 60220, 15011, 261, 864, 4753, 90, "CachedBoxData", "BoxData", \
 "Input"],
 Cell[CellGroupData[{
-Cell[3660322, 60484, 3201, 83, 187, "Input"],
-Cell[3663526, 60569, 253, 6, 32, "Output"]
+Cell[3660442, 60485, 3201, 83, 165, "Input"],
+Cell[3663646, 60570, 253, 6, 32, "Output"]
 }, Open  ]],
-Cell[3663794, 60578, 1564, 31, 231, "Input"],
+Cell[3663914, 60579, 1709, 33, 253, "Input"],
 Cell[CellGroupData[{
-Cell[3665383, 60613, 266, 6, 32, "Input"],
-Cell[3665652, 60621, 115, 1, 32, "Output"]
+Cell[3665648, 60616, 266, 6, 32, "Input"],
+Cell[3665917, 60624, 115, 1, 32, "Output"]
 }, Open  ]],
-Cell[3665782, 60625, 193, 4, 32, "Input"],
+Cell[3666047, 60628, 193, 4, 32, "Input"],
 Cell[CellGroupData[{
-Cell[3666000, 60633, 268, 6, 32, "Input"],
-Cell[3666271, 60641, 10765, 265, 115, "Output"]
+Cell[3666265, 60636, 268, 6, 32, "Input"],
+Cell[3666536, 60644, 10765, 265, 115, "Output"]
 }, Open  ]],
-Cell[3677051, 60909, 1347, 30, 231, "Input"],
-Cell[3678401, 60941, 599, 14, 32, "Input"],
+Cell[3677316, 60912, 1504, 31, 253, "Input"],
 Cell[CellGroupData[{
-Cell[3679025, 60959, 96, 1, 32, "Input"],
-Cell[3679124, 60962, 14937, 342, 137, "Output"]
+Cell[3678845, 60947, 181, 3, 32, "Input"],
+Cell[3679029, 60952, 14674, 338, 137, "Output"]
 }, Open  ]],
-Cell[3694076, 61307, 4669, 96, 495, "Input"],
-Cell[3698748, 61405, 195, 3, 32, "Input"],
-Cell[3698946, 61410, 1374, 27, 275, "Input"],
+Cell[3693718, 61293, 4627, 89, 451, "Input"],
 Cell[CellGroupData[{
-Cell[3700345, 61441, 1450, 35, 99, "Input"],
-Cell[3701798, 61478, 32327, 553, 507, "Output"]
+Cell[3698370, 61386, 195, 3, 32, "Input"],
+Cell[3698568, 61391, 10026, 206, 365, "Output"]
 }, Open  ]],
-Cell[3734140, 62034, 260, 6, 77, "Input"]
+Cell[3708609, 61600, 1374, 27, 275, "Input"],
+Cell[CellGroupData[{
+Cell[3710008, 61631, 1450, 35, 99, "Input"],
+Cell[3711461, 61668, 32327, 553, 507, "Output"]
+}, Open  ]],
+Cell[3743803, 62224, 260, 6, 77, "Input"]
 }
 ]
 *)
