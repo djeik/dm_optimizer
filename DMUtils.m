@@ -13,6 +13,9 @@ ParseNumber[s_] := With[{ss = StringToStream[s]},
     Return[n];
 ];
 
+ToAssociations[rules_] :=
+    Replace[rules, x : {__Rule} :> Association[x], {0, Infinity}];
+
 EndPackage[];
 
 (* vim: set filetype=mma: *)
