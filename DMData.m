@@ -21,12 +21,12 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
                 EvaluationMonitor -> Hold[Sow[vars]],
                 MaxIterations -> settings["niter"],
                 Method -> solverType]]];
-            {
+            <|
                 "fun" -> fun,
                 "x" -> vars /. argmin,
                 "nfev" -> Length[steps],
                 "iterate" -> steps
-            }
+            |>
         ] &;
 
     solvers = {

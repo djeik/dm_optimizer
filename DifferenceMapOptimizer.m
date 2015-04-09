@@ -193,7 +193,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
         (* Return the best value so far *)
         bestMinimum = Sort[pastMinima, #1[[1]] < #2[[1]] &][[1]];
-        Return[{
+        Return[<|
             "iterate" -> iteratePositions,
             "minima" -> pastMinima,
             "x" -> bestMinimum[[2]],
@@ -201,7 +201,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             "steps" -> steps,
             "messages" -> messages,
             "nfev" -> nfev
-        }];
+        |>];
     ]; (* End of DifferenceMapOptimizer function *)
 
 (* Set up the default arguments for the DifferenceMapOptimizer function. *)
