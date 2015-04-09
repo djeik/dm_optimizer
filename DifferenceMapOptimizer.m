@@ -2,6 +2,7 @@
 
 BeginPackage["DifferenceMapOptimizer`"];
 
+ClearAll[DifferenceMapOptimizer];
 DifferenceMapOptimizer::usage = "Optimize a given expression of some given" <>
         "variables, for a given number of iterations using a given tolerance.";
 
