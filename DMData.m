@@ -35,7 +35,29 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
                     LocalMaxIterations -> settings["innerNiter"]]] &
         },
         {"auto", makeBuiltinSolver[Automatic]},
-        {"sa", makeBuiltinSolver["SimulatedAnnealing"]},
+        {"sa",
+        (* For Simulated Annealing, implement a system of random restarts to
+        ensure that the desired number of function evaluations take place.
+        *)
+        Function[{function, startpoints},
+            Module[{innerSolver, newStart, nfev = 0, s, ss = {}},
+                innerSolver = makeBuiltinSolver["SimulatedAnnealing"];
+                newStart = startpoints[[1]];
+                While[nfev < settings["maxnfev"],
+                    s = innerSolver[function, {newStart, Null}];
+                    nfev += s["nfev"];
+                    AppendTo[ss, s];
+                    newStart = RandomReal[{-10, 10}, Length[startpoints[[1]]]];
+                    (* Rescale newStart to have the same length as the original
+                    startpoint. *)
+                    newStart = (Norm[startpoints[[1]]] / Norm[newStart]) newStart;
+                    Print[nfev];
+                ];
+                s = MinimalBy[ss, #["fun"]][[1]];
+                s["nfev"] = nfev;
+                Return[s];
+            ]
+        ]},
         {"de", makeBuiltinSolver["DifferentialEvolution"]},
         {"nm", makeBuiltinSolver["NelderMead"]},
         {"rs", makeBuiltinSolver["RandomSearch"]}
