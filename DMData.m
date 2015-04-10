@@ -5,7 +5,7 @@ Needs["DMTestFunctions`"];
 Needs["DMUtils`"];
 
 makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
-    resultsPerSolver},
+    resultsPerSolver, randomRestartStrategy},
 
     (* The names of the variables we're operating on (not really important),
     provided we're consistent.*)
@@ -15,52 +15,49 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
         (* shiftAmount takes just the first part of the second slot because the
         passed in value is a pair of points, since DM requires a pair, whereas SA
         requires just a single one. *)
-        Module[{r, t, nfev, function = #1, shiftAmount = #2[[1]]},
-            {{fun, argmin}, {steps}} = Reap[Quiet[NMinimize[
-                ShiftOverBy[shiftAmount, function][vars], vars,
-                EvaluationMonitor -> Hold[Sow[vars]],
-                MaxIterations -> settings["niter"],
-                Method -> solverType]]];
-            <|
-                "fun" -> fun,
-                "x" -> vars /. argmin,
-                "nfev" -> Length[steps],
-                "iterate" -> steps
-            |>
-        ] &;
+        Function[{function, startpoints},
+            Module[{r, t, nfev, shiftAmount = startpoints[[1]]},
+                {{fun, argmin}, {steps}} = Reap[Quiet[NMinimize[
+                    ShiftOverBy[shiftAmount, function][vars], vars,
+                    EvaluationMonitor -> Hold[Sow[vars]],
+                    MaxIterations -> settings["niter"],
+                    Method -> solverType]]];
+                <|
+                    "fun" -> fun,
+                    "x" -> vars /. argmin,
+                    "nfev" -> Length[steps],
+                    "iterate" -> steps
+                |>
+            ]
+        ];
+
+    randomRestartStrategy[solver_] := Function[{function, startpoints},
+        Module[{newStart, nfev = 0, s, ss = {}},
+            While[nfev < settings["maxnfev"],
+                s = solver[function, {newStart, Null}];
+                nfev += s["nfev"];
+                AppendTo[ss, s];
+                newStart = RandomReal[{-10, 10}, Length[startpoints[[1]]]];
+                (* Rescale newStart to have the same length as the original
+                startpoint. *)
+                newStart = (Norm[startpoints[[1]]] / Norm[newStart]) newStart;
+                Print[nfev];
+            ];
+            s = MinimalBy[ss, #["fun"]][[1]];
+            s["nfev"] = nfev;
+            Return[s];
+        ]
+    ];
 
     solvers = {
         {"dm", Quiet[DifferenceMapOptimizer[
                     #1 @ vars, vars, settings["niter"], settings["tolerance"], startpoint -> #2,
                     LocalMaxIterations -> settings["innerNiter"]]] &
         },
-        {"auto", makeBuiltinSolver[Automatic]},
-        {"sa",
-        (* For Simulated Annealing, implement a system of random restarts to
-        ensure that the desired number of function evaluations take place.
-        *)
-        Function[{function, startpoints},
-            Module[{innerSolver, newStart, nfev = 0, s, ss = {}},
-                innerSolver = makeBuiltinSolver["SimulatedAnnealing"];
-                newStart = startpoints[[1]];
-                While[nfev < settings["maxnfev"],
-                    s = innerSolver[function, {newStart, Null}];
-                    nfev += s["nfev"];
-                    AppendTo[ss, s];
-                    newStart = RandomReal[{-10, 10}, Length[startpoints[[1]]]];
-                    (* Rescale newStart to have the same length as the original
-                    startpoint. *)
-                    newStart = (Norm[startpoints[[1]]] / Norm[newStart]) newStart;
-                    Print[nfev];
-                ];
-                s = MinimalBy[ss, #["fun"]][[1]];
-                s["nfev"] = nfev;
-                Return[s];
-            ]
-        ]},
         {"de", makeBuiltinSolver["DifferentialEvolution"]},
-        {"nm", makeBuiltinSolver["NelderMead"]},
-        {"rs", makeBuiltinSolver["RandomSearch"]}
+        {"sa", randomRestartStrategy[makeBuiltinSolver["SimulatedAnnealing"]]},
+        {"nm", randomRestartStrategy[makeBuiltinSolver["NelderMead"]]},
+        {"rs", randomRestartStrategy[makeBuiltinSolver["RandomSearch"]]}
     };
 
     test[mysolver_, f_] :=
