@@ -16,48 +16,39 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
         passed in value is a pair of points, since DM requires a pair, whereas SA
         requires just a single one. *)
         Function[{function, startpoints},
-            Module[{r, t, nfev, shiftAmount = startpoints[[1]]},
-                {{fun, argmin}, {steps}} = Reap[Quiet[NMinimize[
-                    ShiftOverBy[shiftAmount, function][vars], vars,
-                    EvaluationMonitor -> Hold[Sow[vars]],
+            Module[
+                {r, t, nfev, shiftAmount = startpoints[[1]],
+                tracker = TrackExpr[
+                    "function" /. function,
+                    Unevaluated[Sow[1, 1]]],
+                range = "range" /. function
+                },
+                {{{fun, argmin}, {steps}}, {nfev}} = Reap[Reap[Quiet[NMinimize[
+                    tracker @ vars,
+                    Map[{#, range[[1]], range[[2]]} &, vars],
+                    EvaluationMonitor :> Sow[vars, 0],
                     MaxIterations -> settings["niter"],
-                    Method -> solverType]]];
+                    Method -> solverType]], 0], 1];
+                Print[nfev];
                 <|
                     "fun" -> fun,
                     "x" -> vars /. argmin,
-                    "nfev" -> Length[steps],
+                    "nfev" -> Length[nfev],
                     "iterate" -> steps
                 |>
             ]
         ];
 
-    randomRestartStrategy[solver_] := Function[{function, startpoints},
-        Module[{newStart, nfev = 0, s, ss = {}},
-            While[nfev < settings["maxnfev"],
-                s = solver[function, {newStart, Null}];
-                nfev += s["nfev"];
-                AppendTo[ss, s];
-                newStart = RandomReal[{-10, 10}, Length[startpoints[[1]]]];
-                (* Rescale newStart to have the same length as the original
-                startpoint. *)
-                newStart = (Norm[startpoints[[1]]] / Norm[newStart]) newStart;
-                Print[nfev];
-            ];
-            s = MinimalBy[ss, #["fun"]][[1]];
-            s["nfev"] = nfev;
-            Return[s];
-        ]
-    ];
-
     solvers = {
         {"dm", Quiet[DifferenceMapOptimizer[
-                    #1 @ vars, vars, settings["niter"], settings["tolerance"], startpoint -> #2,
+                    ("function" /. #1) @ vars, vars, settings["niter"],
+                    settings["tolerance"], startpoint -> #2,
                     LocalMaxIterations -> settings["innerNiter"]]] &
         },
         {"de", makeBuiltinSolver["DifferentialEvolution"]},
-        {"sa", randomRestartStrategy[makeBuiltinSolver["SimulatedAnnealing"]]},
-        {"nm", randomRestartStrategy[makeBuiltinSolver["NelderMead"]]},
-        {"rs", randomRestartStrategy[makeBuiltinSolver["RandomSearch"]]}
+        {"sa", makeBuiltinSolver["SimulatedAnnealing"]},
+        {"nm", makeBuiltinSolver["NelderMead"]},
+        {"rs", makeBuiltinSolver["RandomSearch"]}
     };
 
     test[mysolver_, f_] :=
@@ -76,7 +67,7 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
                     ]}],
                 {settings["runCount"]}],
             (* Define the function that does just one run. *)
-            run = mysolver["function" /. f, #] &},
+            run = mysolver[f, #] &},
             (* Compute the run result for each pair of starting points. *)
             Map[run, starts]
         ];
