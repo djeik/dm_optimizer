@@ -39,8 +39,8 @@ ParseNumber[s_] := With[{ss = StringToStream[s]},
 ToAssociations[rules_] :=
     Replace[rules, x : {__Rule} :> Association[x], {0, Infinity}];
 
-TrackExpr[fun_, expr_] := Module[{},
-    expr;
+TrackExpr[fun_, expr_] := With[{},
+    ReleaseHold[expr];
     fun @ ##
 ] &;
 

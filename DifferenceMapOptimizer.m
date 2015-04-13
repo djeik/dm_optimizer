@@ -19,7 +19,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
     Module[{x0, x1, val1, iterate, sol1, localMinimum, delta, target, nnear,
             near, deltan, fnear, step, dim, iterationNumber, maxit,
             bestMinimum, pastMinima, iteratePositions, steps, messages,
-            verboseLevel, nfev},
+            verboseLevel, nfev, vrep},
         (* Convenience function for printing things out depending on how
         verbose we want to be, governed by a global verbosity level. *)
         verboseLevel = OptionValue[verbosity];
@@ -72,7 +72,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             Automatic -> Table[RandomReal[2, dim], {i, 2}];
 
         val1 = Quiet[
-            FindMinimum[expr, Table[{vars[[i]], x0[[i]]}, {i, 1, dim}],
+            FindMinimum[ReleaseHold[expr], Table[{vars[[i]], x0[[i]]}, {i, 1, dim}],
                 MaxIterations -> maxit,
                 EvaluationMonitor -> Hold[nfev = nfev + 1]]
         ];
@@ -82,7 +82,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
         (* Set two past minima: one being the startpoint for the first local
         minimization, the other actually being the minimum found starting
         from there. *)
-        pastMinima = {{N[expr /. vecToRep[vars, x0]], x0}, solToVec[val1]};
+        pastMinima = {{N[ReleaseHold[expr] /. vecToRep[vars, x0]], x0}, solToVec[val1]};
         PrintLog[2, pastMinima];
         If[autoTarget,
             target = val1[[1]] - firsttargetratio * Abs[pastMinima[[1]][[1]] - val1[[1]]];
@@ -105,7 +105,7 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                     {i, 1, dim}], MaxIterations -> maxit,
                     EvaluationMonitor -> Hold[nfev = nfev + 1]]
             ] // solToVec;
-            PrintLog[2, localMinimum];
+            PrintLog[2, "found local minimum ", localMinimum];
 
             (* how far is the current local minimum from the target *)
             delta = localMinimum[[1]] - target;
@@ -131,12 +131,16 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                 nnear = near[[1]]
             ];
 
+            PrintLog[2, "found nearest past minima ", near];
+
             (* Calculate the function-value of the nearest past minimum. *)
+            vrep = vecToRep[vars, nnear];
+            PrintLog[2, "got vectorep ", vrep];
             fnear = ReleaseHold[expr] /. vecToRep[vars, nnear];
             (* See how far away it is from the target. *)
             deltan = fnear - target;
 
-            PrintLog[2,"delta: ", delta, "; deltan: ", deltan,
+            PrintLog[2, "fnear: ", fnear, "; delta: ", delta, "; deltan: ", deltan,
                 "; pmin: ", localMinimum[[2]], "; nnear: ", nnear, ";"];
 
             (* If the past minimum is too close in y-value to the current past
@@ -145,11 +149,11 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
             these deltas. *)
             If[(delta - deltan)^2 < pseudo^2,
                 PrintLog[1,"Past minimum too close in y. Using pseudo."];
-                step =- (delta / pseudo)
-                    * (localMinimum[[2]] - nnear),
-                step =- (delta / (delta - deltan))
-                    * (localMinimum[[2]] - nnear)
+                step =- (delta / pseudo) * (localMinimum[[2]] - nnear),
+                step =- (delta / (delta - deltan)) * (localMinimum[[2]] - nnear)
             ];
+
+            PrintLog[2, "calculated step ", step];
 
             iterate = iterate + step; (* Take the step. *)
 

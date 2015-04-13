@@ -18,37 +18,75 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
         Function[{function, startpoints},
             Module[
                 {r, t, nfev, shiftAmount = startpoints[[1]],
+                (* Create the tracker function that will count the function evaluations in earnest. *)
                 tracker = TrackExpr[
                     "function" /. function,
-                    Unevaluated[Sow[1, 1]]],
+                    Hold[Sow[1, 1]]],
                 range = "range" /. function
                 },
-                {{{fun, argmin}, {steps}}, {nfev}} = Reap[Reap[Quiet[NMinimize[
-                    tracker @ vars,
-                    Map[{#, range[[1]], range[[2]]} &, vars],
-                    EvaluationMonitor :> Sow[vars, 0],
-                    MaxIterations -> settings["niter"],
-                    Method -> solverType]], 0], 1];
-                Print[nfev];
+                {time, {{{fun, argmin}, {steps}}, {nfev}}} = AbsoluteTiming[
+                    Reap[
+                        Reap[
+                            NMinimize[
+                                Hold[tracker @ vars],
+                                Map[{#, range[[1]], range[[2]]} &, vars],
+                                EvaluationMonitor :> Sow[vars, 0],
+                                MaxIterations -> settings["niter"],
+                                Method -> solverType],
+                            0
+                        ],
+                        1
+                    ]
+                ];
                 <|
                     "fun" -> fun,
                     "x" -> vars /. argmin,
                     "nfev" -> Length[nfev],
-                    "iterate" -> steps
+                    "iterate" -> steps,
+                    "time" -> time
                 |>
             ]
         ];
 
+    (* Construct a builtin solver of the give type, and if it performs less than
+        the maximum allowed function evaluations as specified in the settings,
+        then it is retried with a different RandomSeed.  *)
+    builtinRandomRestartStrategy[solverType_] :=
+        Function[{function, startpoints},
+            Module[{nfev = 0, seed = 0, result, results, solver},
+                {result, {results}} = Reap[
+                    While[nfev < settings[["maxnfev"]],
+                        solver = makeBuiltinSolver[{solverType, "RandomSeed" -> seed}];
+                        result = solver[function, startpoints];
+                        nfev += result[["nfev"]];
+                        seed += 1;
+                        Sow[result];
+                        If[Not[settings[["randomrestart"]]],
+                            Break[];
+                        ];
+                    ]
+                ];
+                result = MinimalBy[results, #[["fun"]] &];
+                result[[1, "nfev"]] = nfev;
+                result[[1]]
+            ]
+        ];
+
     solvers = {
-        {"dm", Quiet[DifferenceMapOptimizer[
-                    ("function" /. #1) @ vars, vars, settings["niter"],
-                    settings["tolerance"], startpoint -> #2,
-                    LocalMaxIterations -> settings["innerNiter"]]] &
-        },
-        {"de", makeBuiltinSolver["DifferentialEvolution"]},
-        {"sa", makeBuiltinSolver["SimulatedAnnealing"]},
-        {"nm", makeBuiltinSolver["NelderMead"]},
-        {"rs", makeBuiltinSolver["RandomSearch"]}
+        {"dm", Function[{function, startpoints},
+            Module[{time, r},
+                {time, r} = AbsoluteTiming[Quiet[DifferenceMapOptimizer[
+                ("function" /. function) @ vars, vars, settings["niter"],
+                settings["tolerance"], startpoint -> startpoints,
+                LocalMaxIterations -> settings["innerNiter"]]]];
+                r[["time"]] = time;
+                r
+            ]
+        ]},
+        {"de", builtinRandomRestartStrategy["DifferentialEvolution"]},
+        {"sa", builtinRandomRestartStrategy["SimulatedAnnealing"]},
+        {"nm", builtinRandomRestartStrategy["NelderMead"]},
+        {"rs", builtinRandomRestartStrategy["RandomSearch"]}
     };
 
     test[mysolver_, f_] :=
@@ -83,7 +121,7 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
 
     results := MapThread[
         Module[{solverName = #1, solver = #2},
-            Write[Streams["stderr"], "### Solver: ", solverName];
+            Print["### Solver: ", solverName];
             solverName -> resultsPerSolver[solver]
         ] &,
         Transpose[Select[solvers, MemberQ[settings["solversToDo"], #[[1]]] &]]
@@ -92,5 +130,4 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
     Return[results];
 ];
 
-(*
- vim: set filetype=mma: *)
+(* vim: set filetype=mma: *)
