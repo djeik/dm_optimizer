@@ -1,8 +1,8 @@
 #!/usr/bin/env mscript
 
-Needs["DifferenceMapOptimizer`"];
-Needs["DMTestFunctions`"];
-Needs["DMUtils`"];
+Get["DifferenceMapOptimizer`"];
+Get["DMTestFunctions`"];
+Get["DMUtils`"];
 
 makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
     resultsPerSolver, randomRestartStrategy},
