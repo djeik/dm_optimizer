@@ -7,10 +7,6 @@ Get["DMUtils`"];
 makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
     resultsPerSolver, randomRestartStrategy},
 
-    (* The names of the variables we're operating on (not really important),
-    provided we're consistent.*)
-    vars = Table[xx[i], {i, 1, settings["dim"]}];
-
     makeBuiltinSolver[solverType_] :=
         (* shiftAmount takes just the first part of the second slot because the
         passed in value is a pair of points, since DM requires a pair, whereas SA
@@ -18,6 +14,10 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
         Function[{function, startpoints},
             Module[
                 {r, t, nfev, shiftAmount = startpoints[[1]],
+                range = "range" /. function,
+                tracker,
+                vars = Table[xx[i], {i, 1, "dim" /. function}]
+                },
                 (* Create the tracker function that will count the function evaluations in earnest. *)
                 tracker = TrackExpr[
                     "function" /. function,
@@ -74,7 +74,8 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
 
     solvers = {
         {"dm", Function[{function, startpoints},
-            Module[{time, r},
+            Module[{time, r, vars},
+                vars = Table[xx[i], {i, 1, "dim" /. function}];
                 {time, r} = AbsoluteTiming[Quiet[DifferenceMapOptimizer[
                 ("function" /. function) @ vars, vars, settings["niter"],
                 settings["tolerance"], startpoint -> startpoints,
@@ -99,7 +100,7 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
                 DMUtils`RandomAwayFrom).
             *)
             starts = Table[
-                With[{firstPoint = Table[RandomReal["range" /. f], {settings["dim"]}]},
+                With[{firstPoint = Table[RandomReal["range" /. f], {"dim" /. f}]},
                     {firstPoint, RandomAwayFrom[
                         firstPoint, settings["secondPointDistance"]
                     ]}],

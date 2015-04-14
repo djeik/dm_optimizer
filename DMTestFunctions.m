@@ -38,20 +38,35 @@ ackleyN[v_List /; And @@ Map[NumberQ, v]] :=
         Exp[(1.0/N) Sum[Cos[2 Pi v[[i]]], {i, 1, N}]]
     ];
 
+ClearAll[goldsteinPrice2];
+goldsteinPrice2[v_List /; And @@ Map[NumberQ, v]] :=
+    With[{
+        u = 1 + (v[[1]] + v[[2]] + 1)^2 * (19 - 14*v[[1]] + 3*v[[1]]^2 -
+            14*v[[2]] + 6*v[[1]]*v[[2]] + 3 * v[[2]]^2),
+        v = 30 + (2*v[[1]] - 3*v[[2]])^2 * (18 - 32*v[[1]] + 12*v[[1]]^2 +
+            48*v[[2]] - 36*v[[1]]*v[[2]] + 27*v[[2]]^2)
+        },
+        v * u
+    ];
+
+ClearAll[f1];
+f1[v_List /; And @@ Map[NumberQ, v]] := 0.2 * (v[[1]]^2 + v[[2]]^2) / 2 + 10 * Sin[v[[1]] + v[[2]]]^2 + 10 * Sin[100 * (v[[1]] - v[[2]])]^2
+
+ClearAll[h4];
 h4 = hN[4];
 
 ClearAll[testFunctions];
 testFunctions = {
-    {"griewank", griewankN, {-1200.0, 800.0}, 0.0},
-    {"rosenbrock", rosenbrockN, {-1200.0, 800.0}, 0.0},
-    {"schwefel", schwefelN, {-700.0, 350.0}, 0.0},
-    {"schaffer", schafferN, {-175.0, 75.0}, 0.0},
-    {"ackley", ackleyN, {-15.0, 30.0}, 0.0},
-    {"h4", h4, {-100.0, 150.0}, 0.0}
+    {"griewank", griewankN, {-1200.0, 800.0}, 0.0, 4},
+    {"rosenbrock", rosenbrockN, {-1200.0, 800.0}, 0.0, 4},
+    {"schaffer", schafferN, {-175.0, 75.0}, 0.0, 4},
+    {"ackley", ackleyN, {-15.0, 30.0}, 0.0, 4},
+    {"h4", h4, {-100.0, 150.0}, 0.0, 4},
+    {"f1", f1, {-100.0, 100.0}, 0.0, 2}
 };
 
 ClearAll[testFunctionLabels];
-testFunctionLabels = {"name", "function", "range", "optimum"};
+testFunctionLabels = {"name", "function", "range", "optimum", "dim"};
 
 ClearAll[asRules];
 asRules[fd_] := MapThread[#1 -> #2 &, {testFunctionLabels, fd}];
