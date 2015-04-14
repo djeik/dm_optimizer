@@ -20,10 +20,8 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
                 },
                 (* Create the tracker function that will count the function evaluations in earnest. *)
                 tracker = TrackExpr[
-                    "function" /. function,
-                    Hold[Sow[1, 1]]],
-                range = "range" /. function
-                },
+                    ShiftOverBy[shiftAmount, "function" /. function],
+                    Hold[Sow[1, 1]]];
                 {time, {{{fun, argmin}, {steps}}, {nfev}}} = AbsoluteTiming[
                     Reap[
                         Reap[
