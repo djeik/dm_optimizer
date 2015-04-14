@@ -53,7 +53,7 @@ makeResults[settings_] := Module[{solvers, results, makeBuiltinSolver, test,
         then it is retried with a different RandomSeed.  *)
     builtinRandomRestartStrategy[solverType_] :=
         Function[{function, startpoints},
-            Module[{nfev = 0, seed = 0, result, results, solver},
+            Module[{nfev = 0, seed = RandomInteger[1000000], result, results, solver},
                 {result, {results}} = Reap[
                     While[nfev < settings[["maxnfev"]],
                         solver = makeBuiltinSolver[{solverType, "RandomSeed" -> seed}];
