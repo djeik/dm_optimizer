@@ -38,13 +38,16 @@ ackleyN[v_List /; And @@ Map[NumberQ, v]] :=
         Exp[(1.0/N) Sum[Cos[2 Pi v[[i]]], {i, 1, N}]]
     ];
 
+h4 = hN[4];
+
 ClearAll[testFunctions];
 testFunctions = {
-    {"griewank", griewankN, {-1000.0, 1000.0}, 0.0},
-    {"rosenbrock", rosenbrockN, {-1000.0, 1000.0}, 0.0},
-    {"schwefel", schwefelN, {-500.0, 500.0}, 0.0},
-    {"schaffer", schafferN, {-100.0, 100.0}, 0.0},
-    {"ackley", ackleyN, {-15.0, 30.0}, 0.0}
+    {"griewank", griewankN, {-1200.0, 800.0}, 0.0},
+    {"rosenbrock", rosenbrockN, {-1200.0, 800.0}, 0.0},
+    {"schwefel", schwefelN, {-700.0, 350.0}, 0.0},
+    {"schaffer", schafferN, {-175.0, 75.0}, 0.0},
+    {"ackley", ackleyN, {-15.0, 30.0}, 0.0},
+    {"h4", h4, {-100.0, 150.0}, 0.0}
 };
 
 ClearAll[testFunctionLabels];
@@ -52,6 +55,17 @@ testFunctionLabels = {"name", "function", "range", "optimum"};
 
 ClearAll[asRules];
 asRules[fd_] := MapThread[#1 -> #2 &, {testFunctionLabels, fd}];
+
+Begin["Private`"];
+
+ClearAll[hN];
+hN[n_] := With[{random = RandomReal[{0, 1}, n]},
+    Function[x,
+        .2 Plus @@ (random*(x)^2) + 10 Sin[Dot[random*x^2, x]]^2 + 10 Sin[10 Dot[random*x, x]]^2
+    ]
+];
+
+End[];
 
 EndPackage[];
 
