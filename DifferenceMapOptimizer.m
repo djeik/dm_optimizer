@@ -49,8 +49,12 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
         refreshtarget[vals_] :=
             Module[{best, second},
-                {best, second} = Ordering[vals, 2];
-                Return[vals[[best]] + scal * (vals[[best]] - vals[[second]])];
+                If[Length[vals] < 2,
+                    AppendTo[messages, "Stuck"];
+                    Return[Null],
+                    {best, second} = Ordering[vals, 2];
+                    Return[vals[[best]] + scal * (vals[[best]] - vals[[second]])];
+                ];
             ];
 
         maxit = OptionValue[LocalMaxIterations];
@@ -159,15 +163,22 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
 
             (* Keep track of steps taken by the iterate. *)
             AppendTo[steps, step];
-            (* Keep track of previously discovered local minima. *)
-            AppendTo[pastMinima, localMinimum];
+            (* Don't add minima that are too close together ! *)
+            If[Norm[localMinimum[[2]] - near[[1]]] >= tol,
+                AppendTo[pastMinima, localMinimum];
+            ];
             (* Keep track of the iterate position over time. *)
             AppendTo[iteratePositions, iterate];
 
             If[Norm[step] < tol,
                 Module[{oldtarget},
                     oldtarget = target;
-                    refreshtarget[pastMinima[[1 ;;, 1]]];
+                    refreshtarget[
+                        Gather[
+                            pastMinima[[1 ;;, 1]],
+                            (#1 - #2)^2 < tol^2 &
+                        ] // Map[First]
+                    ];
                     If[(oldtarget - target)^2 < tol^2,
                         AppendTo[messages, "Stuck"];
                         Break[];
@@ -181,7 +192,11 @@ DifferenceMapOptimizer[expr_, vars_, iterationCount_, tol_, OptionsPattern[]] :=
                     (* Update target *)
                     oldtarget = target;
                     target = refreshtarget[pastMinima[[1 ;;, 1]]];
-                    If [((oldtarget - target) / target)^2 > 0.1^2,
+                    If[target === Null,
+                        PrintLog[1, "aborting because target cannot be determined."];
+                        Break[];
+                    ];
+                    If[((oldtarget - target) / target)^2 > 0.1^2,
                     PrintLog[1, "refreshed target to ", target]];
                 ];
             ];
